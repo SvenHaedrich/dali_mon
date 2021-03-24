@@ -1,21 +1,18 @@
-import serial
-import dali
-import sys
 import getopt
+import sys
+
+import serial
+
+import dali
 import dali_error
 import line
 import sender
+from termcolor import cprint
 
 
-def main(serial_port,input_filename):
-    print('# dali_py')
-    print('# interpret results from dali_usb connector')
-    print('# version 1.0.1')
-    print('# user serial: {}'.format(serial_port))
+def main(serial_port, input_filename, use_color):
     my_port = serial.Serial(port=serial_port, baudrate=115200)
     my_file = sender.Sender(file_name=input_filename, serial_port=my_port)
-    if my_file.active:
-        print('# send file {}'.format(input_filename))
     last_timestamp = 0
     delta = 0
     active_device_type = dali.DeviceTypes.NONE
@@ -26,11 +23,22 @@ def main(serial_port,input_filename):
             if last_timestamp != 0:
                 delta = input_line.timestamp - last_timestamp
             if input_line.type == input_line.COMMAND:
-                dali_frame = dali.Frame(input_line.length,input_line.data,active_device_type)
-                print('{:.03f} : {:8.03f} : {} : {}'.format(input_line.timestamp,delta,dali_frame,dali_frame.cmd()))
+                dali_frame = dali.Frame(input_line.length, input_line.data, active_device_type)
+                if use_color:
+                    cprint('{:.03f} : {:8.03f} : {} : '.format(input_line.timestamp, delta, dali_frame), color='green',
+                           end='')
+                    cprint('{}'.format(dali_frame.cmd()), color='white')
+                else:
+                    print('{:.03f} : {:8.03f} : {} : {}'.format(input_line.timestamp, delta, dali_frame,
+                                                                dali_frame.cmd()))
                 active_device_type = dali_frame.enable
             else:
-                print('{:.03f} : {:8.03f} : {}'.format(input_line.timestamp,delta,dali_error.msg(input_line.length,input_line.data)))
+                if use_color:
+                    cprint('{:.03f} : {:8.03f} : '.format(input_line.timestamp, delta), color='green', end='')
+                    cprint('{}'.format(dali_error.DALIError(input_line.length, input_line.data)), color='red')
+                else:
+                    print('{:.03f} : {:8.03f} : {}'.format(input_line.timestamp, delta,
+                                                           dali_error.DALIError(input_line.length, input_line.data)))
             last_timestamp = input_line.timestamp
     my_port.close()
 
@@ -42,24 +50,33 @@ def show_help():
     print('       --port')
     print('       -f <name>: send file name')
     print('       --file')
+    print('       -v : show version information')
+    print('       --version')
+    print('       --nocolor : don\'t use colors')
 
 
-# - - - - - - - - - - - - - - - - - - - - 
+# - - - - - - - - - - - - - - - - - - - -
 if __name__ == '__main__':
     port = '/dev/ttyUSB2'
     filename = ''
+    verbose = False
+    color = True
     try:
-        opts, args = getopt.getopt(sys.argv[1:],'hpf:',['help','port=','file='])
+        opts, args = getopt.getopt(sys.argv[1:], 'hpfvn:', ['help', 'port=', 'file=', 'version', 'nocolor'])
     except getopt.GetoptError:
         show_help()
         sys.exit(2)
     for opt, arg in opts:
-        if opt in ('-h','--help'):
+        if opt in ('-h', '--help'):
             show_help()
             sys.exit()
-        if opt in ('-p','--port'):
+        if opt in ('-p', '--port'):
             port = arg
-        if opt in ('-f','--file'):
+        if opt in ('-f', '--file'):
             filename = arg
-    main(port,filename)
+        if opt in ('-v', '--version'):
+            print('dali_py version 1.0.2')
+        if opt == '--nocolor':
+            color = False
 
+    main(port, filename, color)
