@@ -27,33 +27,33 @@ def main(serial_port, input_filename, use_color, absolute_time):
                 dali_frame = dali.Frame(input_line.length, input_line.data, active_device_type)
                 if use_color:
                     if absolute_time:
-                        cprint('{} : '.format(datetime.now().strftime("%H:%M:%S")), color='yellow', end='')
-                    cprint('{:.03f} : {:8.03f} : {} : '.format(input_line.timestamp, delta, dali_frame), color='green',
+                        cprint('{} | '.format(datetime.now().strftime("%H:%M:%S")), color='yellow', end='')
+                    cprint('{:.03f} | {:8.03f} | {} | '.format(input_line.timestamp, delta, dali_frame), color='green',
                            end='')
                     cprint('{}'.format(dali_frame.cmd()), color='white')
                 else:
                     if absolute_time:
-                        print('{} : '.format(datetime.now().strftime("%H:%M:%S")), end='')
-                    print('{:.03f} : {:8.03f} : {} : {}'.format(input_line.timestamp, delta, dali_frame,
+                        print('{} | '.format(datetime.now().strftime("%H:%M:%S")), end='')
+                    print('{:.03f} | {:8.03f} | {} | {}'.format(input_line.timestamp, delta, dali_frame,
                                                                 dali_frame.cmd()))
                 active_device_type = dali_frame.enable
             else:
                 if use_color:
                     if absolute_time:
-                        cprint('{} : '.format(datetime.now().strftime("%H:%M:%S")), color='yellow', end='')
-                    cprint('{:.03f} : {:8.03f} : '.format(input_line.timestamp, delta), color='green', end='')
+                        cprint('{} | '.format(datetime.now().strftime("%H:%M:%S")), color='yellow', end='')
+                    cprint('{:.03f} | {:8.03f} | '.format(input_line.timestamp, delta), color='green', end='')
                     cprint('{}'.format(dali_error.DALIError(input_line.length, input_line.data)), color='red')
                 else:
                     if absolute_time:
-                        print('{} : '.format(datetime.now().strftime("%H:%M:%S")), end='')
-                    print('{:.03f} : {:8.03f} : {}'.format(input_line.timestamp, delta,
+                        print('{} | '.format(datetime.now().strftime("%H:%M:%S")), end='')
+                    print('{:.03f} | {:8.03f} | {}'.format(input_line.timestamp, delta,
                                                            dali_error.DALIError(input_line.length, input_line.data)))
             last_timestamp = input_line.timestamp
     my_port.close()
 
 
 def show_version():
-    print('dali_py version 1.0.2')
+    print('dali_py version 1.0.3')
 
 
 def show_help():
