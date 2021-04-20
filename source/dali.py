@@ -227,12 +227,13 @@ class ForwardFrame16Bit:
         elif address_byte == 0xA3:
             return 'DTR0 (0x{:02X}) = {}'.format(opcode_byte, opcode_byte)
         elif address_byte == 0xA5:
-            if (opcode_byte >= 0x00) and (opcode_byte <= 0x3F) and (opcode_byte & 0x01):
+            if (opcode_byte>>1) >= 0x00 and (opcode_byte>>1) <= 0x3F and (opcode_byte & 0x01):
                 return 'INITIALISE (0x{:02X})'.format(opcode_byte)
             if opcode_byte == 0xFF:
                 return 'INITIALISE (unaddressed)'
             if opcode_byte == 0x00:
                 return 'INITIALISE (all)'
+            return 'INITIALISE (none) - 0x{:02x}'.format(opcode_byte)
         elif address_byte == 0xA7:
             return 'RANDOMIZE'
         elif address_byte == 0xA9:
