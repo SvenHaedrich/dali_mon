@@ -1,3 +1,5 @@
+import time
+
 class Sender:
 
     def __init__(self, file_name='', serial_port=''):
@@ -21,6 +23,9 @@ class Sender:
                 return
             command = line.decode('ascii').split('#')
             command = command[0].strip()
-            command += '\r'
-            self.serial_port.write(command.encode('ascii'))
+            if command == 'W' or command == "w":
+                time.sleep(2.0)
+            else:
+                command += '\r'
+                self.serial_port.write(command.encode('ascii'))
             return
