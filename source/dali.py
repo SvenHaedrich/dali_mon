@@ -29,7 +29,7 @@ class ForwardFrame16Bit:
             0x07: 'STEP DOWN AND OFF',
             0x08: 'ON AND STEP UP',
             0x09: 'ENABLE DAPC SEQUENCE',
-            0x0A: 'GO TO LAST ACTIV LEVEL',
+            0x0A: 'GO TO LAST ACTIVE LEVEL',
             0x10: 'GO TO SCENE 0',
             0x11: 'GO TO SCENE 1',
             0x12: 'GO TO SCENE 2',
