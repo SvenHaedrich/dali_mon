@@ -4,6 +4,11 @@ class DALIAddressing:
     BROADCAST_UNADDRESSED = 'broadcast unaddressed'
     BROADCAST = 'broadcast'
     SPECIAL_COMMAND = 'special command'
+    EVENT_DEVICE = 'event device'
+    EVENT_DEVICE_INSTANCE = 'event device instance'
+    EVENT_DEVICE_GROUP = 'event device group'
+    EVENT_INSTANCE = 'event instance'
+    EVENT_INSTANCE_GROUP = 'event instance group'
     RESERVED = 'reserved'
     INVALID = 'invalid'
 
@@ -430,6 +435,46 @@ class ForwardFrame24Bit:
         if address_byte == 0xc9:
             return 'DTR2:DTR1 (0x{:02X},0x{:02X})'.format(instance_byte, opcode_byte)
 
+    def get_event_source_type(self, frame):
+        if (frame & (1<<23)):
+            if (frame & (1<<22)):
+                return DALIAddressing.EVENT_INSTANCE_GROUP
+            else:
+                if (frame & (1<<15)):
+                    return DALIAddressing.EVENT_INSTANCE
+                else:
+                    return DALIAddressing.EVENT_DEVICE_GROUP
+        else:
+            if (frame & (1<<15)):
+                return DALIAddressing.EVENT_DEVICE_INSTANCE
+            else:
+                return DALIAddressing.EVENT_DEVICE;
+        return DALIAddressing.INVALID
+
+    def built_event_source_string (self, event_type, frame):
+        if (event_type == DALIAddressing.EVENT_DEVICE):
+            short_address = (frame >> 17) & 0x3F
+            instance_type = (frame >> 10) & 0x1F
+            return 'A{:02X},T{:02X}  '.format(short_address, instance_type)
+        elif (event_type == DALIAddressing.EVENT_DEVICE_INSTANCE):
+            short_address = (frame >> 17) & 0x3F
+            instance_number = (frame >> 10) & 0x1F
+            return 'A{:02X},I{:02X}  '.format(short_address, instance_number)
+        elif (event_type == DALIAddressing.EVENT_DEVICE_GROUP):
+            device_group = (frame >> 17) & 0x1F
+            instance_type = (frame >> 10) & 0x1F
+            return 'G{:02X},T{:02X}  '.format(device_group,instance_type)
+        elif (event_type == DALIAddressing.EVENT_INSTANCE):
+            instance_type = (frame >> 17) & 0x1F
+            instance_number = (low_byte >> 2) & 0x1F
+            return 'T{:02X},I{:02X}  '.fromat(instance_type,instance_number)
+        elif (event_tyoe == DALIAddressing.EVENT_INSTANCE_GROUP):
+            device_group = (frame >> 17) & 0x1F
+            instance_type = (frame >> 10) & 0x1F
+            return 'IG{:02X},T{:02X} '.format(device_group,instance_type)
+        else:
+            return 'invalid  '
+
     def __init__(self, frame):
         self.adressing = DALIAddressing.INVALID
         self.address_string = ''
@@ -439,6 +484,11 @@ class ForwardFrame24Bit:
         instance_byte = (frame >> 8) & 0xFF
         opcode_byte = frame & 0xFF
 
+        if not (address_byte &  0x01):
+            self.addressing = self.get_event_source_type(frame)
+            self.address_string = self.built_event_source_string(self.addressing,frame)
+            self.command_string = 'EVENT DATA 0x{:03X} = {}'.format((frame&0x3FF),(frame&0x3FF))
+            return
         if (address_byte >= 0x00) and (address_byte <= 0x7F):
             self.addressing = DALIAddressing.SHORT
             short_address = address_byte >> 1
