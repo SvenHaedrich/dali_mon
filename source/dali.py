@@ -686,7 +686,7 @@ class ForwardFrame25Bit:
 
     def e_DALI_command(self, device_class, opcode):
         if device_class == DeviceClasses.SENSOR:
-            return self.e_DALI_sensor_command(opocde)
+            return self.e_DALI_sensor_command(opcode)
         elif device_class == DeviceClasses.INPUT:
             return self.e_DALI_input_command(opcode)
         else:
