@@ -18,6 +18,10 @@ class DeviceTypes:
     SWITCH = 7
     COLOUR = 8
 
+class DeviceClasses:
+    SENSOR = 4
+    INPUT = 5
+
 
 class ForwardFrame16Bit:
 
@@ -522,8 +526,7 @@ class ForwardFrame24Bit:
 
 class ForwardFrame25Bit:
 
-    def e_DALI_command(self, opcode):
-        # TODO (Sven): actually the eDALI codes depend on the class
+    def e_DALI_sensor_command(self, opcode):
         code_dictionary = {
             0x00: 'QUERY SWITCH ADDRESS',
             0x01: 'QUERY CALCULATED CHECKSUM',
@@ -583,15 +586,111 @@ class ForwardFrame25Bit:
             0x74: 'STORE DTR0 AS TIME LONG PRESS',
             0x75: 'STORE DTR0 AS TIME CONFIG1 EVENT',
             0x76: 'STORE DTR0 AS TIME CONFIG2 EVENT',
+            0xC8: 'QUERY MOTION STATUS',
             0xD4: 'SET DTR0 AS DALI SHORT ADDRESS',
             0xD5: 'QUERY DALI SHORT ADDRESS',
-            0xD6: 'SET DTR0 AS DALI SHORT ADDRESS MODE',
-            0xD7: 'QUERY DALI SHORT ADDRESS MODE'
+            0xD7: 'QUERY SUPPORTED SENSORS',
+            0xD8: 'SET DTR0 AS DALI SHORT ADDRESS MODE',
+            0xD9: 'QUERY DALI SHORT ADDRESS MODE',
+            0xDA: 'STORE DTR0 AS CONSTANT LIGHT CONTROL MODE',
+            0xDB: 'QUERY CONSTANT LIGHT CONTROL MODE',
+            0xDC: 'STORE DTR0 AS CONSTANT LIGHT REFERENCE VALUE',
+            0xDD: 'QUERY CONSTANT LIGHT REFERENCE VALUE',
+            0xE1: 'SET DTR0 AS OPERATING MODE',
+            0xE2: 'QUERY OPERATING MODE',
+            0xE3: 'SET DTR0 AS EVENT MESSAGE DESTINATION ADDRESS',
+            0xE4: 'QUERY EVENT MESSAGE DESTINATION ADDRESS',
+            0xF0: 'ACTIVATE CUSTOM SCENE BEHAVIOUR',
+            0xFA: 'SET PRESET CONFIGURATION',
+            0xFB: 'QUERY CONFIGURATION BYTE'
         }
         if not opcode in code_dictionary:
-            return '---'
+            return '--- UNKNOWN COMMAND SENSOR CLASS'
         else:
             return code_dictionary.get(opcode)
+
+    def e_DALI_input_command(self, opcode):
+        code_dictionary = {
+            0x00: 'QUERY SWITCH ADDRESS',
+            0x01: 'QUERY CALCULATED CHECKSUM',
+            0x02: 'QUERY FIRMWARE VERSION',
+            0x03: 'QUERY EDALI VERSION',
+            0x10: 'START DATA DOWNLOAD',
+            0x11: 'STORE DTR0 AS DATA BYTE COUNTER',
+            0x12: 'ENABLE DIRECT MODE',
+            0x13: 'DISABLE DIRECT MODE',
+            0x14: 'ENTER BOOTLOADER',
+            0x15: 'HIDE MEMORY BANKS',
+            0x16: 'DISCOVER HIDDEN MEMORY BANKS',
+            0x20: 'ENHANCED RESET',
+            0x21: 'ENHANCED STORE SHORT ADDRESS',
+            0x26: 'QUERY ACTUATOR TYPE',
+            0x30: 'QUERY ENHANCED RESET STATE',
+            0x31: 'QUERY CONTROL TYPE NUMBER',
+            0x32: 'QUERY VERSION NUMBER CONTROL TYPE',
+            0x33: 'QUERY CLASS MEMBER 1-7',
+            0x34: 'QUERY CLASS MEMBER 8-14',
+            0x35: 'QUERY MULTIPLE CLASS ADDRESS',
+            0x36: 'QUERY MULTIPLE CLASS',
+            0x37: 'QUERY MISSING ENHANCED SHORT ADDRESS',
+            0x38: 'QUERY ENHANCED GROUPS 0-7',
+            0x39: 'QUERY ENHANCED GROUPS 8-15',
+            0x40: 'QUERY COMMISSIONING FEATURES',
+            0x41: 'QUERY CHANNEL SELECTOR',
+            0x42: 'QUERY PARAMETER POINTER',
+            0x43: 'QUERY PARAMTER',
+            0x44: 'QUERY NUMBER OF PARAMETERS',
+            0x45: 'START IDENTIFICATION',
+            0x46: 'STOP IDENTIFICATION',
+            0x47: 'MASSCONTROLLER ACTIVE',
+            0x50: 'STORE DTR0 AS PARAMETER SELECTOR',
+            0x51: 'STORE DTR0 AS PARAMETER POINTER',
+            0x52: 'STORE DTR0 AS PARAMETER',
+            0x53: 'START PARAMETER DOWMLOAD',
+            0x54: 'STOP PARAMETER DOWNLOAD',
+            0x60: 'QUERY MANUAL CONTROL FEATURES',
+            0x61: 'QUERY EVENT FEATURES',
+            0x62: 'QUERY MANUAL CONTROL STATUS',
+            0x65: 'MOTION SENSOR OFF-STATE',
+            0x66: 'MOTION SENSOR ON-STATE',
+            0x69: 'MOTION SENSOR MIN-STATE',
+            0xB4: 'EVENT MESSAGE BUTTON SHORT PRESS',
+            0xB5: 'EVENT MESSAGE BUTTON LONG PRESS',
+            0xB6: 'EVENT MESSAGE BUTTON RELEASED',
+            0xB7: 'EVENT MESSAGE BUTTON NEXT SHORT PRESS',
+            0xC8: 'QUERY MOTION STATUS',
+            0xCD: 'QUERY LIGHT LEVEL LOW',
+            0xCE: 'QUERY LIGHT LEVEL HIGH',
+            0xD2: 'QUERY TEMPERATURE',
+            0xD4: 'SET DTR0 AS DALI SHORT ADDRESS',
+            0xD5: 'QUERY DALI SHORT ADDRESS',
+            0xD7: 'QUERY SUPPORTED SENSORS',
+            0xD8: 'SET DTR0 AS DALI SHORT ADDRESS MODE',
+            0xD9: 'QUERY DALI SHORT ADDRESS MODE',
+            0xDA: 'STORE DTR0 AS CONSTANT LIGHT CONTROL MODE',
+            0xDB: 'QUERY CONSTANT LIGHT CONTROL MODE',
+            0xDC: 'STORE DTR0 AS CONSTANT LIGHT REFERENCE VALUE',
+            0xDD: 'QUERY CONSTANT LIGHT REFERENCE VALUE',
+            0xE1: 'SET DTR0 AS OPERATING MODE',
+            0xE2: 'QUERY OPERATING MODE',
+            0xE3: 'SET DTR0 AS EVENT MESSAGE DESTINATION ADDRESS',
+            0xE4: 'QUERY EVENT MESSAGE DESTINATION ADDRESS',
+            0xF0: 'ACTIVATE CUSTOM SCENE BEHAVIOUR',
+            0xFA: 'SET PRESET CONFIGURATION',
+            0xFB: 'QUERY CONFIGURATION BYTE'
+        }
+        if not opcode in code_dictionary:
+            return '--- UNKNOWN COMMAND INPUT CLASS'
+        else:
+            return code_dictionary.get(opcode)
+
+    def e_DALI_command(self, device_class, opcode):
+        if device_class == DeviceClasses.SENSOR:
+            return self.e_DALI_sensor_command(opocde)
+        elif device_class == DeviceClasses.INPUT:
+            return self.e_DALI_input_command(opcode)
+        else:
+            return '--- UNKNOWN CLASS'
 
     def __init__(self, frame):
         self.adressing = DALIAddressing.INVALID
@@ -632,7 +731,7 @@ class ForwardFrame25Bit:
                 self.address_string = 'C{:1d} G{:02d}   '.format(class_byte, ((address_byte >> 1) & 0x3F))
         else:
             self.address_string = 'C{:1d} E{:02d}   '.format(class_byte, ((address_byte >> 1) & 0x3F))
-        self.command_string = self.e_DALI_command(opcode_byte)
+        self.command_string = self.e_DALI_command(class_byte, opcode_byte)
 
 
 class Frame:
