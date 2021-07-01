@@ -53,7 +53,7 @@ def main(serial_port, input_filename, use_color, absolute_time):
 
 
 def show_version():
-    print('dali_py version 1.0.4')
+    print('dali_py version 1.0.5')
 
 
 def show_help():
