@@ -234,7 +234,7 @@ class ForwardFrame16Bit:
         if address_byte == 0xA1:
             return 'TERMINATE'
         elif address_byte == 0xA3:
-            return 'DTR0 (0x{:02X}) = {}'.format(opcode_byte, opcode_byte)
+            return 'DTR0 0x{:02X} = {:3} = {:08b}b'.format(opcode_byte, opcode_byte, opcode_byte)
         elif address_byte == 0xA5:
             if (opcode_byte>>1) >= 0x00 and (opcode_byte>>1) <= 0x3F and (opcode_byte & 0x01):
                 return 'INITIALISE (0x{:02X})'.format(opcode_byte)
@@ -268,9 +268,9 @@ class ForwardFrame16Bit:
         elif address_byte == 0xC1:
             return 'ENABLE DEVICE TYPE {}'.format(opcode_byte)
         elif address_byte == 0xC3:
-            return 'DTR1 (0x{:02X}) = {}'.format(opcode_byte, opcode_byte)
+            return 'DTR1 0x{:02X} = {:3} = {:08b}b'.format(opcode_byte, opcode_byte, opcode_byte)
         elif address_byte == 0xC5:
-            return 'DTR2 (0x{:02X}) = {}'.format(opcode_byte, opcode_byte)
+            return 'DTR2 0x{:02X} = {:3} = {:08b}b'.format(opcode_byte, opcode_byte, opcode_byte)
         elif address_byte == 0xC7:
             return 'WRITE MEMORY LOCATION DTR1, DTR0, (0x{:02X}) = {}'.format(opcode_byte, opcode_byte)
         elif address_byte == 0xC9:
@@ -425,11 +425,11 @@ class ForwardFrame24Bit:
             elif instance_byte == 0x21:
                 return 'WRITE MEMORY LOCATION - NO REPLY - DTR1, DTR0, (0x{:02X}) = {}'.format(opcode_byte, opcode_byte)
             elif instance_byte == 0x30:
-                return 'DTR0 (0x{:02X}) ={} dec'.format(opcode_byte, opcode_byte)
+                return 'DTR0 0x{:02X} = {:3} = {:08b}'.format(opcode_byte, opcode_byte, opcode_byte)
             elif instance_byte == 0x31:
-                return 'DTR1 (0x{:02X}) ={} dec'.format(opcode_byte, opcode_byte)
+                return 'DTR1 0x{:02X} = {:3} = {:08b}'.format(opcode_byte, opcode_byte, opcode_byte)
             elif instance_byte == 0x32:
-                return 'DTR2 (0x{:02X}) ={} dec'.format(opcode_byte, opcode_byte)
+                return 'DTR2 0x{:02X} = {:3} = {:08b}'.format(opcode_byte, opcode_byte, opcode_byte)
             elif instance_byte == 0x33:
                 return 'SEND TESTFRAME (0x{:02X}) = {}'.format(opcode_byte, opcode_byte)
         if address_byte == 0xc5:
@@ -491,7 +491,7 @@ class ForwardFrame24Bit:
         if not (address_byte &  0x01):
             self.addressing = self.get_event_source_type(frame)
             self.address_string = self.built_event_source_string(self.addressing,frame)
-            self.command_string = 'EVENT DATA 0x{:03X} = {}'.format((frame&0x3FF),(frame&0x3FF))
+            self.command_string = 'EVENT DATA 0x{:03X} = {} = {:012b}b'.format((frame&0x3FF),(frame&0x3FF),(frame&0x3FF))
             return
         if (address_byte >= 0x00) and (address_byte <= 0x7F):
             self.addressing = DALIAddressing.SHORT
@@ -773,6 +773,6 @@ class Frame:
             frame_type = ForwardFrame25Bit(self.frame)
             return frame_type.address_string + '   ' + frame_type.command_string
         if self.length == 8:
-            return '            DATA 0x{:02X} = {}'.format(self.frame, self.frame)
+            return '            DATA 0x{:02X} = {:3} = {:08b}b'.format(self.frame, self.frame, self.frame)
         else:
             return 'undefined, length = {}'.format(self.length)
