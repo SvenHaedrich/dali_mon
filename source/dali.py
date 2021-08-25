@@ -252,11 +252,11 @@ class ForwardFrame16Bit:
         elif address_byte == 0xAD:
             return 'PING'
         elif address_byte == 0xB1:
-            return 'SEARCHADDRH (0x{:02X}) = {}'.format(opcode_byte, opcode_byte)
+            return 'SEARCHADDRH 0x{:02X} = {:3} = {:08b}b'.format(opcode_byte, opcode_byte, opcode_byte)
         elif address_byte == 0xB3:
-            return 'SEARCHADDRM (0x{:02X}) = {}'.format(opcode_byte, opcode_byte)
+            return 'SEARCHADDRM 0x{:02X} = {:3} = {:08b}b'.format(opcode_byte, opcode_byte, opcode_byte)
         elif address_byte == 0xB5:
-            return 'SEARCHADDRL (0x{:02X}) = {}'.format(opcode_byte, opcode_byte)
+            return 'SEARCHADDRL 0x{:02X} = {:3} = {:08b}b'.format(opcode_byte, opcode_byte, opcode_byte)
         elif address_byte == 0xB7:
             return 'PROGRAM SHORT ADDRESS (0x{:02X}) = {}'.format(opcode_byte, opcode_byte)
         elif address_byte == 0xB9:
