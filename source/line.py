@@ -9,13 +9,18 @@ class Line:
         self.length = 0
         self.data = 0
 
-    def __init__(self, input_line):
+    def __init__(self, input_line, echo=False):
         self.reset_self()
+        if echo:
+            print(input_line.decode('utf-8'), end='')
         try:
-            self.timestamp = int(input_line[1:9], 16) / 1000.0
-            self.type = chr(input_line[10])
-            self.length = int(input_line[11:13], 16)
-            self.data = int(input_line[14:22], 16)
+            start = input_line.find(ord('{'))+1
+            end = input_line.find(ord('}'))
+            payload = input_line[start:end]
+            self.timestamp = int(payload[0:8], 16) / 1000.0
+            self.type = chr(payload[8])
+            self.length = int(payload[9:11], 16)
+            self.data = int(payload[12:20], 16)
         except ValueError:
             self.reset_self()
             self.type = self.INVALID
