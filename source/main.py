@@ -19,41 +19,47 @@ def main(serial_port, input_filename, use_color, absolute_time):
     active_device_type = dali.DeviceTypes.NONE
     while True:
         my_file.send_next_line()
-        input_line = line.Line(my_port.readline())
+        input_line = line.Line(my_port.readline(), transparent)
         if not input_line.type == input_line.INVALID:
             if last_timestamp != 0:
                 delta = input_line.timestamp - last_timestamp
             if input_line.type == input_line.COMMAND:
-                dali_frame = dali.Frame(input_line.length, input_line.data, active_device_type)
+                dali_frame = dali.Frame(
+                    input_line.length, input_line.data, active_device_type)
                 if use_color:
                     if absolute_time:
-                        cprint('{} | '.format(datetime.now().strftime("%H:%M:%S")), color='yellow', end='')
+                        cprint('{} | '.format(datetime.now().strftime(
+                            "%H:%M:%S")), color='yellow', end='')
                     cprint('{:.03f} | {:8.03f} | {} | '.format(input_line.timestamp, delta, dali_frame), color='green',
                            end='')
                     cprint('{}'.format(dali_frame.cmd()), color='white')
                 else:
                     if absolute_time:
-                        print('{} | '.format(datetime.now().strftime("%H:%M:%S")), end='')
+                        print('{} | '.format(
+                            datetime.now().strftime("%H:%M:%S")), end='')
                     print('{:.03f} | {:8.03f} | {} | {}'.format(input_line.timestamp, delta, dali_frame,
                                                                 dali_frame.cmd()))
                 active_device_type = dali_frame.enable
             else:
                 if use_color:
                     if absolute_time:
-                        cprint('{} | '.format(datetime.now().strftime("%H:%M:%S")), color='yellow', end='')
-                    cprint('{:.03f} | {:8.03f} | '.format(input_line.timestamp, delta), color='green', end='')
-                    cprint('{}'.format(dali_error.DALIError(input_line.length, input_line.data)), color='red')
+                        cprint('{} | '.format(datetime.now().strftime(
+                            "%H:%M:%S")), color='yellow', end='')
+                    cprint('{:.03f} | {:8.03f} | '.format(
+                        input_line.timestamp, delta), color='green', end='')
+                    cprint('{}'.format(dali_error.DALIError(
+                        input_line.length, input_line.data)), color='red')
                 else:
                     if absolute_time:
-                        print('{} | '.format(datetime.now().strftime("%H:%M:%S")), end='')
+                        print('{} | '.format(
+                            datetime.now().strftime("%H:%M:%S")), end='')
                     print('{:.03f} | {:8.03f} | {}'.format(input_line.timestamp, delta,
                                                            dali_error.DALIError(input_line.length, input_line.data)))
             last_timestamp = input_line.timestamp
-    my_port.close()
 
 
 def show_version():
-    print('dali_py version 1.0.5')
+    print('dali_py version 1.0.6')
 
 
 def show_help():
@@ -68,6 +74,7 @@ def show_help():
     print('       --version')
     print('       --nocolor : don\'t use colors')
     print('       --absolute : add stamp with absolute time')
+    print('       --transparent : print all input lines')
     print('output colums:')
     print('       if enabled: absolute timestamp (from this machine)')
     print('       relative timestamp in seconds (from interface)')
@@ -83,8 +90,10 @@ if __name__ == '__main__':
     verbose = False
     color = True
     absolute_time = False
+    transparent = False
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'hpfv:', ['help', 'port=', 'file=', 'version', 'nocolor', 'absolute'])
+        opts, args = getopt.getopt(sys.argv[1:], 'hpfv:', [
+                                   'help', 'port=', 'file=', 'version', 'nocolor', 'absolute', 'transparent'])
     except getopt.GetoptError:
         show_help()
         sys.exit(2)
@@ -102,5 +111,7 @@ if __name__ == '__main__':
             color = False
         if opt == '--absolute':
             absolute_time = True
+        if opt == '--transparent':
+            transparent = True
 
     main(port, filename, color, absolute_time)
