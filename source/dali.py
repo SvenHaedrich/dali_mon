@@ -18,6 +18,7 @@ class DeviceTypes:
     SWITCH = 7
     COLOUR = 8
 
+
 class DeviceClasses:
     SENSOR = 4
     INPUT = 5
@@ -236,7 +237,7 @@ class ForwardFrame16Bit:
         elif address_byte == 0xA3:
             return 'DTR0 0x{:02X} = {:3} = {:08b}b'.format(opcode_byte, opcode_byte, opcode_byte)
         elif address_byte == 0xA5:
-            if (opcode_byte>>1) >= 0x00 and (opcode_byte>>1) <= 0x3F and (opcode_byte & 0x01):
+            if (opcode_byte >> 1) >= 0x00 and (opcode_byte >> 1) <= 0x3F and (opcode_byte & 0x01):
                 return 'INITIALISE (0x{:02X})'.format(opcode_byte)
             if opcode_byte == 0xFF:
                 return 'INITIALISE (unaddressed)'
@@ -301,7 +302,8 @@ class ForwardFrame16Bit:
             self.address_string = 'G{:02}      '.format(group_address)
         elif (address_byte >= 0xA0) and (address_byte <= 0xCB):
             self.addressing = DALIAddressing.SPECIAL_COMMAND
-            self.command_string = '         ' + self.special_command(address_byte, opcode_byte, device_type)
+            self.command_string = '         ' + \
+                self.special_command(address_byte, opcode_byte, device_type)
         elif (address_byte >= 0xCC) and (address_byte <= 0xFB):
             self.addressing = DALIAddressing.RESERVED
         elif (address_byte == 0xFD) or (address_byte == 0xFC):
@@ -440,22 +442,22 @@ class ForwardFrame24Bit:
             return 'DTR2:DTR1 (0x{:02X},0x{:02X})'.format(instance_byte, opcode_byte)
 
     def get_event_source_type(self, frame):
-        if (frame & (1<<23)):
-            if (frame & (1<<22)):
+        if (frame & (1 << 23)):
+            if (frame & (1 << 22)):
                 return DALIAddressing.EVENT_INSTANCE_GROUP
             else:
-                if (frame & (1<<15)):
+                if (frame & (1 << 15)):
                     return DALIAddressing.EVENT_INSTANCE
                 else:
                     return DALIAddressing.EVENT_DEVICE_GROUP
         else:
-            if (frame & (1<<15)):
+            if (frame & (1 << 15)):
                 return DALIAddressing.EVENT_DEVICE_INSTANCE
             else:
-                return DALIAddressing.EVENT_DEVICE;
+                return DALIAddressing.EVENT_DEVICE
         return DALIAddressing.INVALID
 
-    def built_event_source_string (self, event_type, frame):
+    def built_event_source_string(self, event_type, frame):
         if (event_type == DALIAddressing.EVENT_DEVICE):
             short_address = (frame >> 17) & 0x3F
             instance_type = (frame >> 10) & 0x1F
@@ -467,15 +469,15 @@ class ForwardFrame24Bit:
         elif (event_type == DALIAddressing.EVENT_DEVICE_GROUP):
             device_group = (frame >> 17) & 0x1F
             instance_type = (frame >> 10) & 0x1F
-            return 'G{:02X},T{:02X}  '.format(device_group,instance_type)
+            return 'G{:02X},T{:02X}  '.format(device_group, instance_type)
         elif (event_type == DALIAddressing.EVENT_INSTANCE):
             instance_type = (frame >> 17) & 0x1F
             instance_number = (low_byte >> 2) & 0x1F
-            return 'T{:02X},I{:02X}  '.fromat(instance_type,instance_number)
-        elif (event_tyoe == DALIAddressing.EVENT_INSTANCE_GROUP):
+            return 'T{:02X},I{:02X}  '.fromat(instance_type, instance_number)
+        elif (event_type == DALIAddressing.EVENT_INSTANCE_GROUP):
             device_group = (frame >> 17) & 0x1F
             instance_type = (frame >> 10) & 0x1F
-            return 'IG{:02X},T{:02X} '.format(device_group,instance_type)
+            return 'IG{:02X},T{:02X} '.format(device_group, instance_type)
         else:
             return 'invalid  '
 
@@ -488,10 +490,12 @@ class ForwardFrame24Bit:
         instance_byte = (frame >> 8) & 0xFF
         opcode_byte = frame & 0xFF
 
-        if not (address_byte &  0x01):
+        if not (address_byte & 0x01):
             self.addressing = self.get_event_source_type(frame)
-            self.address_string = self.built_event_source_string(self.addressing,frame)
-            self.command_string = 'EVENT DATA 0x{:03X} = {} = {:012b}b'.format((frame&0x3FF),(frame&0x3FF),(frame&0x3FF))
+            self.address_string = self.built_event_source_string(
+                self.addressing, frame)
+            self.command_string = 'EVENT DATA 0x{:03X} = {} = {:012b}b'.format(
+                (frame & 0x3FF), (frame & 0x3FF), (frame & 0x3FF))
             return
         if (address_byte >= 0x00) and (address_byte <= 0x7F):
             self.addressing = DALIAddressing.SHORT
@@ -515,7 +519,9 @@ class ForwardFrame24Bit:
             self.command_string = self.device_command(opcode_byte)
         elif (address_byte >= 0xC1) and (address_byte <= 0xDF):
             self.addressing = DALIAddressing.SPECIAL_COMMAND
-            self.command_string = '         ' + self.device_special_command(address_byte, instance_byte, opcode_byte)
+            self.command_string = '         ' + \
+                self.device_special_command(
+                    address_byte, instance_byte, opcode_byte)
         elif (address_byte >= 0xE1) and (address_byte <= 0xEF):
             self.addressing = DALIAddressing.RESERVED
         elif (address_byte >= 0xF1) and (address_byte <= 0xF7):
@@ -704,11 +710,13 @@ class ForwardFrame25Bit:
         # ---- special broadcast commands
         if address_byte == 0xA1:
             self.address_string = 'C{:1d}       '.format(class_byte)
-            self.command_string = 'QUERY CONTROL TYPE (0x{:02X}) = {}'.format(opcode_byte, opcode_byte)
+            self.command_string = 'QUERY CONTROL TYPE (0x{:02X}) = {}'.format(
+                opcode_byte, opcode_byte)
             return
         if address_byte == 0xA3:
             self.address_string = 'C{:1d}       '.format(class_byte)
-            self.command_string = 'QUERY CONTROL CLASS (0x{:1X}) = {}'.format((opcode_byte & 0xf), (opcode_byte & 0xF))
+            self.command_string = 'QUERY CONTROL CLASS (0x{:1X}) = {}'.format(
+                (opcode_byte & 0xf), (opcode_byte & 0xF))
             return
         if address_byte == 0xA5:
             if opcode_byte == 0:
@@ -718,7 +726,8 @@ class ForwardFrame25Bit:
                 self.address_string = 'C{:1d}       '.format(class_byte)
                 self.command_string = 'ENHANCED INITIALISE (UNADDRESSED)'
             else:
-                self.address_string = 'C{:1d} E{:02d}   '.format(class_byte, ((opcode_byte >> 1) & 0x3F))
+                self.address_string = 'C{:1d} E{:02d}   '.format(
+                    class_byte, ((opcode_byte >> 1) & 0x3F))
                 self.command_string = 'ENHANCED INITIALISE'
             return
         # ---- other commands
@@ -728,9 +737,11 @@ class ForwardFrame25Bit:
             elif address_byte == 0xfd:
                 self.address_string = 'C{:1d} BC una'.format(class_byte)
             else:
-                self.address_string = 'C{:1d} G{:02d}   '.format(class_byte, ((address_byte >> 1) & 0x3F))
+                self.address_string = 'C{:1d} G{:02d}   '.format(
+                    class_byte, ((address_byte >> 1) & 0x3F))
         else:
-            self.address_string = 'C{:1d} E{:02d}   '.format(class_byte, ((address_byte >> 1) & 0x3F))
+            self.address_string = 'C{:1d} E{:02d}   '.format(
+                class_byte, ((address_byte >> 1) & 0x3F))
         self.command_string = self.e_DALI_command(class_byte, opcode_byte)
 
 
