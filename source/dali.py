@@ -238,7 +238,7 @@ class ForwardFrame16Bit:
             return 'DTR0 0x{:02X} = {:3} = {:08b}b'.format(opcode_byte, opcode_byte, opcode_byte)
         elif address_byte == 0xA5:
             if (opcode_byte >> 1) >= 0x00 and (opcode_byte >> 1) <= 0x3F and (opcode_byte & 0x01):
-                return 'INITIALISE (0x{:02X})'.format(opcode_byte)
+                return 'INITIALISE (0x{:02X})'.format(opcode_byte >> 1)
             if opcode_byte == 0xFF:
                 return 'INITIALISE (unaddressed)'
             if opcode_byte == 0x00:
@@ -259,7 +259,9 @@ class ForwardFrame16Bit:
         elif address_byte == 0xB5:
             return 'SEARCHADDRL 0x{:02X} = {:3} = {:08b}b'.format(opcode_byte, opcode_byte, opcode_byte)
         elif address_byte == 0xB7:
-            return 'PROGRAM SHORT ADDRESS (0x{:02X}) = {}'.format(opcode_byte, opcode_byte)
+            if (opcode_byte >> 1) >= 0x00 and (opcode_byte >> 1) <= 0x3F and (opcode_byte & 0x01):
+                return 'PROGRAM SHORT ADDRESS (0x{:02X}) = {}'.format(opcode_byte >> 1, opcode_byte >> 1)
+            return 'PROGRAM SHORT ADDRESS (none) - 0x{:02X}'.format(opcode_byte)
         elif address_byte == 0xB9:
             return 'VERIFY SHORT ADDRESS (0x{:02X}) = {}'.format(opcode_byte, opcode_byte)
         elif address_byte == 0xBD:
