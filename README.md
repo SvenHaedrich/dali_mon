@@ -34,7 +34,7 @@ Each DALI frame should use the following format:
 ```
 "{" <timestamp> <error> <bits> " " <data> "}"
 ```
-Only information framed by curly barces is interpreted. <br/>
+Only information framed by curly braces is interpreted. <br/>
 ```
 <timestamp> : integer number, 
               each tick represents 1 millisecond, 
