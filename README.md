@@ -2,7 +2,7 @@
 
 ## Description
 
-This skript takes input from a serial port and converts the information into
+This script takes input from a serial port and converts the information into
 human readable DALI command descriptions.
 
 ## Usage
@@ -27,6 +27,18 @@ python source/main.py [options]
 * hex data received
 * DALI command translation
 
+### Expected DALI frame format
+  
+Each DALI frame should use the following format:
+  
+"{" <timestamp> <error> <bits> " " <data> "}"
+
+Only information framed by curly barces is interpreted. <br/>
+<timestamp> : integer number, each tick represents 1 millisecond, number is given in hex presentation, fixed length of 8 digits<br/>
+<error> : either a "-" (minus) indicating normal state, or "*" (asteriks) inidcating an error<br/>
+<bits> : number of data bits received, number is given in hex presentation, fixed length of 2 digits<br/>
+<data> : received data payload, number is given in hex presentation, fixed length of 8 digits<br/> 
+  
 ## Run
 
 ```bash
