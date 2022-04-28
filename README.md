@@ -38,7 +38,11 @@ Only information framed by curly barces is interpreted. <br/>
 &lt;error&gt; : either a "-" (minus) indicating normal state, or "*" (asteriks) inidcating an error<br/>
 &lt;bits&gt; : number of data bits received, number is given in hex presentation, fixed length of 2 digits<br/>
 &lt;data&gt; : received data payload, number is given in hex presentation, fixed length of 8 digits<br/> 
-  
+
+In case of an error state:
+&lt;bits&gt; : codes the error code<br/>
+&lt;data&gt; : contains additional error information<br/>
+    
 ## Run
 
 ```bash
