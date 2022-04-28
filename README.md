@@ -31,21 +31,21 @@ python source/main.py [options]
 ### Expected DALI frame format
   
 Each DALI frame should use the following format:
-``  
-"{" &lt;timestamp&gt; &lt;error&gt; &lt;bits&gt; " " &lt;data&gt; "}"
-``
+```
+"{" <timestamp> <error> <bits> " " <data> "}"
+```
 Only information framed by curly barces is interpreted. <br/>
-``
-&lt;timestamp&gt; : integer number, each tick represents 1 millisecond, number is given in hex presentation, fixed length of 8 digits<br/>
-&lt;error&gt;     : either a "-" (minus) indicating normal state, or "*" (asteriks) inidcating an error<br/>
-&lt;bits&gt;      : number of data bits received, number is given in hex presentation, fixed length of 2 digits<br/>
-&lt;data&gt;      : received data payload, number is given in hex presentation, fixed length of 8 digits<br/> 
-``
+```
+<timestamp> : integer number, each tick represents 1 millisecond, number is given in hex presentation, fixed length of 8 digits
+<error>     : either a "-" (minus) indicating normal state, or "*" (asteriks) inidcating an error
+<bits>      : number of data bits received, number is given in hex presentation, fixed length of 2 digits
+<data>      : received data payload, number is given in hex presentation, fixed length of 8 digits
+```
 In case of an error state:<br/>
-``
-&lt;bits&gt; : codes the error code<br/>
-&lt;data&gt; : contains additional error information<br/>
-``    
+```
+<bits> : codes the error code
+<data> : contains additional error information
+```   
 ## Run
 
 ```bash
