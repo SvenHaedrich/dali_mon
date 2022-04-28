@@ -55,9 +55,13 @@ In case of an error state:<br/>
 <bits> : codes the error code
 <data> : contains additional error information
 ```   
+## Install
+```bash
+git clone git@github.com:SvenHaedrich/dali_py.git
+```
 ## Run
 
 ```bash
-source ~/Repos/dali_py/venv/bin/activate
+cd dali_py
 python source/main.py --port /dev/ttyUSB2
 ```
