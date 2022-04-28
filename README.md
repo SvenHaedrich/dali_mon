@@ -31,13 +31,13 @@ python source/main.py [options]
   
 Each DALI frame should use the following format:
   
-"{" <timestamp> <error> <bits> " " <data> "}"
+"{" &lt;timestamp&gt; &lt;error&gt; &lt;bits&gt; " " &lt;data&gt; "}"
 
 Only information framed by curly barces is interpreted. <br/>
-<timestamp> : integer number, each tick represents 1 millisecond, number is given in hex presentation, fixed length of 8 digits<br/>
-<error> : either a "-" (minus) indicating normal state, or "*" (asteriks) inidcating an error<br/>
-<bits> : number of data bits received, number is given in hex presentation, fixed length of 2 digits<br/>
-<data> : received data payload, number is given in hex presentation, fixed length of 8 digits<br/> 
+&lt;timestamp&gt; : integer number, each tick represents 1 millisecond, number is given in hex presentation, fixed length of 8 digits<br/>
+&lt;error&gt; : either a "-" (minus) indicating normal state, or "*" (asteriks) inidcating an error<br/>
+&lt;bits&gt; : number of data bits received, number is given in hex presentation, fixed length of 2 digits<br/>
+&lt;data&gt; : received data payload, number is given in hex presentation, fixed length of 8 digits<br/> 
   
 ## Run
 
