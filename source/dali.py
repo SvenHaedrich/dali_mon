@@ -341,7 +341,7 @@ class ForwardFrame24Bit:
             0x1D: 'START QUIESCENT MODE',
             0x1E: 'STOP QUIESCENT MODE',
             0x1F: 'ENABLE POWER CYCLE NOTIFICATION',
-            0x20: 'DISABKE POWER CYCLE NOTIFICATION',
+            0x20: 'DISABLE POWER CYCLE NOTIFICATION',
             0x21: 'SAVE PERSISTENT VARIABLES',
             0x30: 'QUERY DEVICE STATUS',
             0x31: 'QUERY APPLICTAION CONTROLLER ERROR',
@@ -492,6 +492,13 @@ class ForwardFrame24Bit:
         instance_byte = (frame >> 8) & 0xFF
         opcode_byte = frame & 0xFF
 
+        if address_byte == 0xFE:
+            if (opcode_byte & 0x40) == 0x40:
+                self.address_string = 'A{:02}      '.format(opcode_byte & 0x3f)
+            else:
+                self.address_string = 'BC       '
+            self.command_string = 'POWER CYCLE EVENT'
+            return
         if not (address_byte & 0x01):
             self.addressing = self.get_event_source_type(frame)
             self.address_string = self.built_event_source_string(
