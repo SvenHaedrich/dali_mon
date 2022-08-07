@@ -30,7 +30,7 @@ python source/main.py [options]
 
 ### Expected DALI frame format
   
-Each DALI frame should have the following format:
+Each DALI frame has to use the following format:
 ```
 "{" <timestamp> <error> <bits> " " <data> "}"
 ```
