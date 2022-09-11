@@ -28,7 +28,7 @@ python source/main.py [options]
 * hex data received
 * DALI command translation
 
-### Expected DALI frame format
+### Expected DALI frame format for serial input
   
 Each DALI frame has to use the following format:
 ```
