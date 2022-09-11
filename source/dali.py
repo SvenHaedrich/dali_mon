@@ -308,6 +308,7 @@ class ForwardFrame16Bit:
                 self.special_command(address_byte, opcode_byte, device_type)
         elif (address_byte >= 0xCC) and (address_byte <= 0xFB):
             self.addressing = DALIAddressing.RESERVED
+            self.command_string = 'reserved '
         elif (address_byte == 0xFD) or (address_byte == 0xFC):
             self.addressing = DALIAddressing.BROADCAST_UNADDRESSED
             self.address_string = 'BC unadr.'
