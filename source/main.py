@@ -59,7 +59,7 @@ def main(serial_port, input_filename, use_color, absolute_time):
 
 
 def show_version():
-    print('dali_py version 1.0.6 - SevenLab 2021')
+    print('dali_py version 1.0.7 - SevenLab 2022')
 
 
 def show_help():
