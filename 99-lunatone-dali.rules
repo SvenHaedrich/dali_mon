@@ -1,0 +1,26 @@
+# Lunatone DALI USB udev rules
+#
+# Instructions:
+# Copy this file to the udev rules
+#    sudo cp 99-lunatone-dali.rules /etc/udev/rules.d/
+# Reload the udev rules
+#    sudo udevadm control --reload-rules
+#
+#
+# This file grants everyone read/write access.  If you want to restrict access,
+# you should modify MODE to "0660".  You can then grant access to specific user
+# accounts by adding them to the plugdev group.  To grant yourself permission:
+#
+#    sudo usermod -a -G plugdev `whoami`
+#
+# You will have to log out and then back in for the group change to take effect.
+# To grant permission to a specific {user}:
+#
+#    sudo usermod -a -G plugdev {user}
+#
+# replacing {user} with the actual username.
+#
+#
+
+# Lunatone DALI USB
+SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTRS{idVendor}=="17b5", ATTRS{idProduct}=="0020", MODE="0666", GROUP="plugdev"
