@@ -2,12 +2,12 @@ import serial
 import logging
 import queue
 import threading
-import raw_frame
+import DALI
 
 logger = logging.getLogger(__name__)
 
 
-class Dali_Serial:
+class DALI_Serial:
     DEFAULT_PORT = "/dev/ttyUSB0"
     DEFAULT_BAUDRATE = 115200
     QUEUE_MAXSIZE = 40
@@ -24,7 +24,7 @@ class Dali_Serial:
 
     def read_worker_thread(self):
         logger.debug("read_worker_thread started")
-        raw = raw_frame.Raw_Frame(self.transparent)
+        raw = DALI.Raw_Frame(self.transparent)
         while self.worker_runnning:
             line = self.port.readline()
             logger.debug("received a line from serial")

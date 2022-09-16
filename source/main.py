@@ -1,15 +1,13 @@
 import getopt
 import sys
 import logging
-from datetime import datetime
+import datetime
 
 from termcolor import cprint
 
-import dali_error
-import dali_decode as dali_decode
+import DALI
 import dali_serial
 import dali_usb
-import raw_frame
 
 
 def print_command_color(absolute_time, timestamp, delta, dali_command):
@@ -32,7 +30,7 @@ def print_error_color(absolute_time, raw, delta):
         cprint("{} | ".format(datetime.now().strftime("%H:%M:%S")), color="yellow", end="")
         cprint("{:.03f} | {:8.03f} | ".format(
             raw.timestamp, delta), color="green", end="")
-        cprint("{}".format(dali_error.DALIError(
+        cprint("{}".format(DALI.DALIError(
             raw.length, raw.data)), color="red")
 
 
@@ -41,13 +39,13 @@ def print_error(absolute_time, raw, delta):
         print("{} | ".format(
             datetime.now().strftime("%H:%M:%S")), end="")
         print("{:.03f} | {:8.03f} | {}".format(raw.timestamp, delta,
-            dali_error.DALIError(raw.length, raw.data)))
+            DALI.DALIError(raw.length, raw.data)))
 
 
 def main(source, use_color, absolute_time):
     last_timestamp = 0
     delta = 0
-    active_device_type = dali_decode.DeviceTypes.NONE
+    active_device_type = DALI.DeviceType.NONE
     source.start_read()
     while True:
         raw = source.read_raw_frame()
@@ -55,7 +53,7 @@ def main(source, use_color, absolute_time):
             if last_timestamp != 0:
                 delta = raw.timestamp - last_timestamp
             if raw.type == raw.COMMAND:
-                dali_command = dali_decode.Frame(raw.length, raw.data, active_device_type)
+                dali_command = DALI.Decode(raw, active_device_type)
                 if use_color:
                     print_command_color(absolute_time, raw.timestamp, delta, dali_command)
                 else:
@@ -94,11 +92,10 @@ def show_help():
 
 # - - - - - - - - - - - - - - - - - - - -
 if __name__ == "__main__":
-    port = "/dev/ttyUSB2"
+    serial_port = None
     color = True
     absolute_time = False
     transparent = False
-    source_is_serial = False
     source_is_usb = False
     try:
         opts, args = getopt.getopt(sys.argv[1:], "hpvl:", [
@@ -111,8 +108,7 @@ if __name__ == "__main__":
             show_help()
             sys.exit()
         if opt in ("-p", "--port"):
-            source_is_serial = True
-            port = arg
+            serial_port = arg
         if opt in ("-l", "--lunatone"):
             source_is_usb = True
         if opt in ("-v", "--version"):
@@ -127,11 +123,11 @@ if __name__ == "__main__":
             logging.basicConfig(level=logging.DEBUG)
 
     my_source = None
-    if source_is_serial and not source_is_usb:
-        my_source = dali_serial.Dali_Serial(port=port,transparent=transparent)
+    if serial_port and not source_is_usb:
+        my_source = dali_serial.DALI_Serial(port=serial_port,transparent=transparent)
 
-    if source_is_usb and not source_is_serial:
-        my_source = dali_usb.Dali_Usb()
+    if source_is_usb and not serial_port:
+        my_source = dali_usb.DALI_Usb()
 
     if my_source == None:
         print ("illegal source settings")

@@ -6,7 +6,7 @@ import threading
 import time
 
 import usb
-import raw_frame
+import DALI
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ DALI_USB_TYPE_25BIT = 0x04
 DALI_USB_RECEIVE_MASK = 0x70
 
 
-class Dali_Usb:
+class DALI_Usb:
     def __init__(self, vendor=DALI_USB_VENDOR, product=DALI_USB_PRODUCT):
         # lookup devices by vendor and DALI_USB_PRODUCT
         self.interface = 0
@@ -140,7 +140,7 @@ class Dali_Usb:
 
     def read_worker_thread(self):
         logger.debug("read_worker_thread() started")
-        raw = raw_frame.Raw_Frame()
+        raw = DALI.Raw_Frame()
         while self.worker_running:
             try:
                 data = self.read_raw(timeout=200)
