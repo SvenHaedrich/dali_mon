@@ -8,15 +8,19 @@ class Decode:
         self.raw = raw_frame
         self.result = ""
         self.active = device_type
+        self.next_device_type = None
 
         if self.raw.length == 16:
             address_byte = (self.raw.data >> 8) & 0xFF
             if address_byte == 0xC1:
-                self.enable = (self.raw.data & 0xFF)
+                self.next_device_type = (self.raw.data & 0xFF)
             else:
-                self.enable = DeviceType.NONE
+                self.next_device_type = DeviceType.NONE
         else:
-            self.enable = DeviceType.NONE
+            self.next_device_type = DeviceType.NONE
+
+    def get_next_device_type(self):
+        return self.next_device_type
 
     def __str__(self):
         if self.raw.length == 8:

@@ -58,7 +58,7 @@ def main(source, use_color, absolute_time):
                     print_command_color(absolute_time, raw.timestamp, delta, dali_command)
                 else:
                     print_command(absolute_time, raw.timestamp, delta, dali_command)
-                active_device_type = dali_command.enable
+                active_device_type = dali_command.get_next_device_type()
             else:
                 if use_color:
                     print_error_color(absolute_time, raw, delta)
@@ -68,7 +68,7 @@ def main(source, use_color, absolute_time):
 
 
 def show_version():
-    print("dali_py version 1.0.7 - SevenLab 2022")
+    print("dali_py version 1.0.8 - SevenLab 2022")
 
 
 def show_help():

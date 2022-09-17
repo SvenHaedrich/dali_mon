@@ -1,5 +1,6 @@
 class DeviceType:
     NONE = 0
+    LED = 6
     SWITCH = 7
     COLOUR = 8
 
@@ -168,9 +169,11 @@ class ForwardFrame16Bit:
         if opcode in code_dictionary:
             return code_dictionary.get(opcode)
         else:
-            return F"CODE 0x{opcode:02X} (= {opcode}) UNKNOWN CONTROL GEAR COMMAND"
+            return F"--- CODE 0x{opcode:02X} = {opcode} UNKNOWN CONTROL GEAR COMMAND"
 
     def gear_colour_command(self, opcode):
+        # DT 8 commands
+        # iec 62386 - 209 11.3
         code_dictionary = {
             0xE0: "SET TEMPORARY X-COORDINATE",
             0xE1: "SET TEMPORARY Y-COORDINATE",
@@ -204,9 +207,10 @@ class ForwardFrame16Bit:
         if opcode in code_dictionary:
             return code_dictionary.get(opcode)
         else:
-            return F"CODE 0x{opcode:02X} (= {opcode}) UNKNOWN COLOUR GEAR COMMAND"
+            return F"--- CODE 0x{opcode:02X} = {opcode} UNKNOWN COLOUR GEAR COMMAND"
 
     def gear_switch_command(self, opcode):
+        # DT 7 commands
         # iec 62386 - 208 11.3.4.1
         code_dictionary = {
             0xE0: "REFERENCE SYSTEM POWER",
@@ -231,6 +235,32 @@ class ForwardFrame16Bit:
             return code_dictionary.get(opcode)
         else:
             return F"--- CODE 0x{opcode:02X} = {opcode} UNKNOWN SWITCH GEAR COMMAND"
+
+    def gear_led_command(self, opcode):
+        # DT 6 commands
+        # iec 62386 - 207 11.3
+        code_dictionary = {
+            0xE0: "REFERENCE SYTEM POWER",
+            0xE3: "SELECT DIMMING CURVE (DTR0)",
+            0xE4: "SET FAST FADE TIME (DTR0)",
+            0xED: "QUERY CONTROL GEAR TYPE",
+            0xEE: "QUERY DIMMING CURVE",
+            0xF0: "QUERY FEATURES",
+            0xF1: "QUERY FAILURE STATUS",
+            0xF4: "QUERY LOAD DECREASE",
+            0xF5: "QUERY LOAD INCREASE",
+            0xF7: "QUERY THERMAL SHUTDOWN",
+            0xF8: "QUERY THERMAL OVERLOAD",
+            0xF9: "QUERY REFERENCE RUNNING",
+            0xFA: "QUERY MEASUREMENT FAILED",
+            0xFD: "QUERY FAST FADE TIME",
+            0xFE: "QERYY MIN FAST FADE TIME",
+            0xFF: "QUERY EXTENDED VERSION NUMBER"
+        }
+        if opcode in code_dictionary:
+            return code_dictionary.get(opcode)
+        else:
+            return F"--- CODE 0x{opcode:02X} = {opcode} UNKNOWN LED GEAR COMMAND"
 
     def special_command(self, address_byte, opcode_byte):
         # see iec 62386-102 11.2
@@ -316,4 +346,6 @@ class ForwardFrame16Bit:
                 self.command_string = self.gear_colour_command(opcode_byte)
             elif device_type == DeviceType.SWITCH:
                 self.command_string = self.gear_switch_command(opcode_byte)
+            elif device_type == DeviceType.LED:
+                self.command_string = self.gear_led_command(opcode_byte)
         self.address_string = self.address_string.ljust(address_field_width, " ")        
