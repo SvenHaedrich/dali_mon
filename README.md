@@ -60,8 +60,8 @@ dali_py version 1.0.8 - SevenLab 2022
 ```
 git clone git@github.com:SvenHaedrich/dali_py.git
 ```
-For the Lunatone USB adapter you need to copy the file into the *udev* folder
-and reload the *udev* rules.
+For the Lunatone USB adapter you need to copy the file `99-lunatone-dali.rules` into the `udev` folder
+and reload the `udev` rules.
 
 ```
 sudo cp 99-lunatone-dali.rules /etc/udev/rules.d/
@@ -69,7 +69,7 @@ sudo udevadm control --reload-rules
 ```
 This file grants everyone read/write access.  If you want to restrict access,
 you should modify MODE to "0660".  You can then grant access to specific user
-accounts by adding them to the plugdev group.  To grant permission to a specific user:
+accounts by adding them to the plugdev group. Note that some Linux dirstibutions always require a per user permission. To grant permission to a specific user:
 ```
 sudo usermod -a -G plugdev username
 ```
