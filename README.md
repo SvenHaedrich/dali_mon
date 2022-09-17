@@ -6,7 +6,7 @@ This script converts DALI codes into human readable messages. DALI is the digita
 
 The souce for the DALI code be on of
 * serial port
-* Lunatone DALI / USB Converter (see: [Lunatone](https://www.lunatone.com/produkt/dali-usb/))
+* Lunatone DALI / USB converter (see: [Lunatone](https://www.lunatone.com/produkt/dali-usb/))
 
 This script is based on the following standards
 * IEC 62386-102 control gear
@@ -45,13 +45,13 @@ dali_py version 1.0.8 - SevenLab 2022
 |--nocolor      |            | don\'t use colors            |
 |--absolute     |            | add stamp with absolute time |
 |--transparent  |            | print serial input lines     |
-|--lunatone     | -l         | use a lunatone usb interface |
+|--lunatone     | -l         | use lunatone usb interface   |
 |--debug        |            | set messages to debug level  |
 
 ### Output Columns
   
 * if enabled: absolute timestamp (from host machine)
-* timestamp in seconds (from serial message)
+* timestamp in seconds (from serial message, or host machine for lunatone interface)
 * delta time to previous command
 * hex data received
 * DALI command translation

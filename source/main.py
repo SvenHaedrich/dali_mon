@@ -82,7 +82,7 @@ def show_help():
     print("       --nocolor : don\"t use colors")
     print("       --absolute : add stamp with absolute time")
     print("       --transparent : print all input lines")
-    print("       --lunatone, -l : use a lunatone usb interface")
+    print("       --lunatone, -l : use lunatone usb interface")
     print("       --debug : set messages to debug level")
     print("output colums:")
     print("       if enabled: absolute timestamp (from this machine)")
