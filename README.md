@@ -2,7 +2,7 @@
 
 ## Description
 
-This script converts DALI codes into human readable messages.
+This script converts DALI codes into human readable messages. DALI is the digital addressable lighting interface as described [here](https://www.dali-alliance.org).
 
 The souce for the DALI code be on of
 * serial port
