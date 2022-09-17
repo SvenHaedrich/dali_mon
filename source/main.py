@@ -1,7 +1,7 @@
 import getopt
 import sys
 import logging
-import datetime
+from datetime import datetime
 
 from termcolor import cprint
 
@@ -10,36 +10,38 @@ import dali_serial
 import dali_usb
 
 
+def print_local_time_color(enabled):
+    if enabled:
+        time_string = datetime.now().strftime("%H:%M:%S")
+        cprint(F"{time_string} | ", color="yellow", end="")
+
+
+def print_local_time(enabled):
+    if enabled:
+        time_string = datetime.now().strftime("%H:%M:%S")
+        print(F"{time_string} | ", end="")
+
+
 def print_command_color(absolute_time, timestamp, delta, dali_command):
-    if absolute_time:
-        cprint("{} | ".format(datetime.now().strftime("%H:%M:%S")), color="yellow", end="")
-    cprint("{:.03f} | {:8.03f} | {} | ".format(timestamp, delta, dali_command), color="green",
-            end="")
-    cprint("{}".format(dali_command.cmd()), color="white")
+    print_local_time_color(absolute_time)
+    cprint(F"{timestamp:.03f} | {delta:8.03f} | {dali_command} | ", color="green", end="")
+    cprint(F"{dali_command.cmd()}", color="white")
 
 
 def print_command(absolute_time, timestamp, delta, dali_command):
-    if absolute_time:
-        print("{} | ".format(datetime.now().strftime("%H:%M:%S")), end="")
-        print("{:.03f} | {:8.03f} | {} | {}".format(timestamp, delta, dali_command,
-                                                                dali_command.cmd()))
+    print_local_time(absolute_time)
+    print(F"{timestamp:.03f} | {delta:8.03f} | {dali_command} | {dali_command.cmd()}")
 
 
 def print_error_color(absolute_time, raw, delta):
-    if absolute_time:
-        cprint("{} | ".format(datetime.now().strftime("%H:%M:%S")), color="yellow", end="")
-        cprint("{:.03f} | {:8.03f} | ".format(
-            raw.timestamp, delta), color="green", end="")
-        cprint("{}".format(DALI.DALIError(
-            raw.length, raw.data)), color="red")
+    print_local_time_color(absolute_time)
+    cprint(F"{raw.timestamp:.03f} | {delta:8.03f} | ", color="green", end="")
+    cprint(F"{DALI.DALIError(raw.length, raw.data)}", color="red")
 
 
 def print_error(absolute_time, raw, delta):
-    if absolute_time:
-        print("{} | ".format(
-            datetime.now().strftime("%H:%M:%S")), end="")
-        print("{:.03f} | {:8.03f} | {}".format(raw.timestamp, delta,
-            DALI.DALIError(raw.length, raw.data)))
+    print_local_time(absolute_time)
+    print(F"{raw.timestamp:.03f} | {delta:8.03f} | {DALI.DALIError(raw.length, raw.data)}")
 
 
 def main(source, use_color, absolute_time):
@@ -75,7 +77,7 @@ def show_help():
     show_version()
     print("usage: -h : help")
     print("       --help")
-    print("       --port, -p <port> : use port")
+    print("       --port, -p <port> : use serial port")
     print("       --version, -v : show version information")
     print("       --nocolor : don\"t use colors")
     print("       --absolute : add stamp with absolute time")
@@ -133,5 +135,10 @@ if __name__ == "__main__":
         print ("illegal source settings")
         sys.exit(2)
 
-    main(my_source, color, absolute_time)
+    try:
+        main(my_source, color, absolute_time)
+    except KeyboardInterrupt:
+        print("\rinterrupted")
+        my_source.close()
+        sys.exit(0)
 
