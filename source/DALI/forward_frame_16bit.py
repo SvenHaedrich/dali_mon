@@ -46,7 +46,7 @@ class ForwardFrame16Bit:
             0x2A: "SET MAX LEVEL (DTR0)",
             0x2B: "SET MIN LEVEL (DTR0)",
             0x2C: "SET SYSTEM FAILURE LEVEL (DTR0)",
-            0x2D: "SET SYSTEM POWER ON LEVEL (DTR0)",
+            0x2D: "SET POWER ON LEVEL (DTR0)",
             0x2E: "SET FADE TIME (DTR0)",
             0x2F: "SET FADE RATE (DTR0)",
             0x30: "SET EXTENDED FADE TIME (DTR0)",
