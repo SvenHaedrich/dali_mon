@@ -181,33 +181,33 @@ class ForwardFrame24Bit:
 
         if address_byte == 0xFE:
             if (opcode_byte & 0x40) == 0x40:
-                self.address_string = F"A{(opcode_byte & 0x3f):02}".ljust(address_field_width," ")
+                self.address_string = F"A{(opcode_byte & 0x3f):02}".ljust(address_field_width)
             else:
-                self.address_string = "BC".ljust(address_field_width," ")
+                self.address_string = "BC".ljust(address_field_width)
             self.command_string = "POWER CYCLE EVENT"
             return
         if not (address_byte & 0x01):
             self.addressing = self.get_event_source_type(frame)
             self.address_string = self.built_event_source_string(
-                self.addressing, frame).ljust(address_field_width," ")
+                self.addressing, frame).ljust(address_field_width)
             self.command_string = "EVENT DATA 0x{:03X} = {} = {:012b}b".format(
                 (frame & 0x3FF), (frame & 0x3FF), (frame & 0x3FF))
             return
         if (address_byte >= 0x00) and (address_byte <= 0x7F):
             short_address = address_byte >> 1
-            self.address_string = F"A{short_address:02}".ljust(address_field_width," ")
+            self.address_string = F"A{short_address:02}".ljust(address_field_width)
             self.command_string = self.device_command(opcode_byte)
             return
         if (address_byte >= 0x80) and (address_byte <= 0xBF):
             group_address = ((address_byte >> 1) & 0x0F)
-            self.address_string = F"G{group_address:02}".ljust(address_field_width," ")
+            self.address_string = F"G{group_address:02}".ljust(address_field_width)
             self.command_string = self.device_command(opcode_byte)
             return
         if address_byte == 0xFD:
-            self.address_string = "BC unadr.".ljust(address_field_width," ")
+            self.address_string = "BC unadr.".ljust(address_field_width)
             self.command_string = self.device_command(opcode_byte)
         elif address_byte == 0xFF:
-            self.address_string = "BC".ljust(address_field_width," ")
+            self.address_string = "BC".ljust(address_field_width)
             self.command_string = self.device_command(opcode_byte)
         elif (address_byte >= 0xC1) and (address_byte <= 0xDF):
             self.command_string = self.device_special_command(
