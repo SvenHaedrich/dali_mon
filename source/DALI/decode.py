@@ -44,5 +44,5 @@ class Decode:
         elif self.raw.length == 8:
             command = Backframe8Bit(self.raw.data)
         else:
-            return F"         --- UNDEFINED FRAMELENGTH {self.raw.length} BITS"
-        return command.address_string + "   " + command.command_string
+            return " "*10 + F"--- UNDEFINED FRAMELENGTH {self.raw.length} BITS"
+        return command.address_string + command.command_string
