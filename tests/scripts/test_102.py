@@ -17,6 +17,7 @@ def test_broadcast_dapc():
         target_command = "BC".ljust(10) + F"DAPC {level}"
         assert decoded_command.cmd() == target_command
 
+
 def test_short_address_dapc():
     # refer to iec62386 102 7.2.1
     frame = DALI.Raw_Frame()
@@ -27,6 +28,7 @@ def test_short_address_dapc():
             decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
             target_command = F"A{short_address:02}".ljust(10) + F"DAPC {level}"
             assert decoded_command.cmd() == target_command
+
 
 def test_group_address_dapc():
     # refer to iec62386 102 7.2.1
@@ -39,6 +41,7 @@ def test_group_address_dapc():
             target_command = F"G{group_address:02}".ljust(10) + F"DAPC {level}"
             assert decoded_command.cmd() == target_command
 
+
 def test_reserved():
     # refer to iec62386 102 7.2.1
     frame = DALI.Raw_Frame()
@@ -47,6 +50,7 @@ def test_reserved():
     for frame.data in range(0xCC00, 0xFBFF):
         decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
         assert decoded_command.cmd() == target_command
+
 
 # refer to iec62386 102 Table 15
 @pytest.mark.parametrize("name,opcode",
@@ -63,6 +67,18 @@ def test_reserved():
      ("GO TO LAST ACTIVE LEVEL", 0x0A),
      ("RESET", 0x20),
      ("STORE ACTUAL LEVEL IN DTR0", 0x21),
+     ("SAVE PERSISTENT VARIABLES", 0x22),
+     ("SET OPERATING MODE (DTR0)", 0x23),
+     ("RESET MEMORY BANK (DTR0)", 0x24),
+     ("IDENTIFY DEVICE", 0x25),
+     ("SET MAX LEVEL (DTR0)", 0x2A),
+     ("SET MIN LEVEL (DTR0)", 0x2B),
+     ("SET SYSTEM FAILURE LEVEL (DTR0)", 0x2C),
+     ("SET POWER ON LEVEL (DTR0)", 0x2D),
+     ("SET FADE TIME (DTR0)", 0x2E),
+     ("SET FADE RATE (DTR0)", 0x2F),
+     ("SET EXTENDED FADE TIME (DTR0)", 0x30)
+
     ]
 )
 def test_command(name,opcode):
@@ -91,8 +107,12 @@ def test_command(name,opcode):
         target_command = F"G{group_address:02}".ljust(10) + name
         assert decoded_command.cmd() == target_command
 
+
 @pytest.mark.parametrize("name,opcode",
-    [("GO TO SCENE", 0x10)
+    [("GO TO SCENE", 0x10),
+     ("SET SCENE (DTR0)", 0x40),
+     ("REMOVE FROM SCENE", 0x50),
+     ("ADD TO GROUP", 0x60)
     ]
 )
 def test_count_command(name,opcode):
