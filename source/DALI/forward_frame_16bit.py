@@ -348,4 +348,4 @@ class ForwardFrame16Bit:
                 self.command_string = self.gear_switch_command(opcode_byte)
             elif device_type == DeviceType.LED:
                 self.command_string = self.gear_led_command(opcode_byte)
-        self.address_string = self.address_string.ljust(address_field_width, " ")        
+        self.address_string = self.address_string.ljust(address_field_width)        
