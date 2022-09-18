@@ -22,17 +22,17 @@ class Decode:
     def get_next_device_type(self):
         return self.next_device_type
 
-    def __str__(self):
+    def __str__(self,field_width=8):
         if self.raw.length == 8:
-            return "      {:02X}".format(self.raw.data)
+            return F"{self.raw.data:02X}".rjust(field_width)
         elif self.raw.length == 16:
-            return "    {:04X}".format(self.raw.data)
+            return F"{self.raw.data:04X}".rjust(field_width)
         elif self.raw.length == 24:
-            return "  {:06X}".format(self.raw.data)
+            return F"{self.raw.data:06X}".rjust(field_width)
         elif self.raw.length == 25:
-            return " {:07X}".format(self.raw.data)
+            return F"{self.raw.data:07X}".rjust(field_width)
         else:
-            return "{:08X}".format(self.raw.data)
+            return F"{self.raw.data:08X}".rjust(field_width)
 
     def cmd(self):
         if self.raw.length == 16:

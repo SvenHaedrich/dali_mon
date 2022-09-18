@@ -2,11 +2,11 @@
 
 ## Description
 
-This script converts DALI codes into human readable messages.
+This script converts DALI codes into human readable messages. DALI is the digital addressable lighting interface as described [here](https://www.dali-alliance.org).
 
 The souce for the DALI code be on of
 * serial port
-* Lunatone DALI / USB Converter (see: [Lunatone](https://www.lunatone.com/produkt/dali-usb/))
+* Lunatone DALI / USB converter (see: [Lunatone](https://www.lunatone.com/produkt/dali-usb/))
 
 This script is based on the following standards
 * IEC 62386-102 control gear
@@ -45,13 +45,13 @@ dali_py version 1.0.8 - SevenLab 2022
 |--nocolor      |            | don\'t use colors            |
 |--absolute     |            | add stamp with absolute time |
 |--transparent  |            | print serial input lines     |
-|--lunatone     | -l         | use a lunatone usb interface |
+|--lunatone     | -l         | use lunatone usb interface   |
 |--debug        |            | set messages to debug level  |
 
 ### Output Columns
   
 * if enabled: absolute timestamp (from host machine)
-* timestamp in seconds (from serial message)
+* timestamp in seconds (from serial message, or host machine for lunatone interface)
 * delta time to previous command
 * hex data received
 * DALI command translation
@@ -60,8 +60,8 @@ dali_py version 1.0.8 - SevenLab 2022
 ```
 git clone git@github.com:SvenHaedrich/dali_py.git
 ```
-For the Lunatone USB adapter you need to copy the file into the *udev* folder
-and reload the *udev* rules.
+For the Lunatone USB adapter you need to copy the file `99-lunatone-dali.rules` into the `udev` folder
+and reload the `udev` rules.
 
 ```
 sudo cp 99-lunatone-dali.rules /etc/udev/rules.d/
@@ -69,7 +69,7 @@ sudo udevadm control --reload-rules
 ```
 This file grants everyone read/write access.  If you want to restrict access,
 you should modify MODE to "0660".  You can then grant access to specific user
-accounts by adding them to the plugdev group.  To grant permission to a specific user:
+accounts by adding them to the plugdev group. Note that some Linux dirstibutions always require a per user permission. To grant permission to a specific user:
 ```
 sudo usermod -a -G plugdev username
 ```
