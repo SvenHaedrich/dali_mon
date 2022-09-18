@@ -81,10 +81,7 @@ class ForwardFrame24Bit:
             0x91: "QUERY EVENT FILTER 8-15",
             0x92: "QUERY EVENT FILTER 16-23"
         }
-        if opcode in code_dictionary:
-            return code_dictionary.get(opcode)
-        else:
-            return F"--- CODE 0x{opcode:02X} = {opcode} UNDEFINED CONTROL DEVICE COMMAND".format(opcode, opcode)
+        return code_dictionary.get(opcode,F"--- CODE 0x{opcode:02X} = {opcode} UNDEFINED CONTROL DEVICE COMMAND")
 
     def device_special_command(self, address_byte, instance_byte, opcode_byte):
         # see iec 62386-103 table 22
