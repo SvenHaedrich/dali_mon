@@ -110,3 +110,6 @@ In case of an error state:<br/>
 <bits> : codes the error code
 <data> : contains additional error information
 ```   
+## TO DO 
+* fix error codes for Lunatone adapter
+* use Click lib for CLI interface
