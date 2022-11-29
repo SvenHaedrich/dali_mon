@@ -160,7 +160,7 @@ class ForwardFrame24Bit:
         elif event_type == EventType.INSTANCE:
             instance_type = (frame >> 17) & 0x1F
             instance_number = (frame >> 10) & 0x1F
-            return "T{:02X},I{:02X}".fromat(instance_type, instance_number)
+            return "T{:02X},I{:02X}".format(instance_type, instance_number)
         elif event_type == EventType.INSTANCE_GROUP:
             device_group = (frame >> 17) & 0x1F
             instance_type = (frame >> 10) & 0x1F
