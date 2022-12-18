@@ -7,7 +7,7 @@ class DALIError:
     WRONG_STATE = 5
     SETTLING_TIME_VIOLATION = 6
     SYSTEM_IDLE = 11
-    SYSTEM_FAILUTE = 12
+    SYSTEM_FAILURE = 12
     SYSTEM_RECOVER = 13
     CAN_NOT_PROCESS = 20
     BAD_ARGUMENT = 21
@@ -25,7 +25,7 @@ class DALIError:
                             self.WRONG_STATE: 'ERROR: WRONG STATE',
                             self.SETTLING_TIME_VIOLATION: 'ERROR: SETTLING TIME VIOLATION',
                             self.SYSTEM_IDLE: 'ERROR: SYSTEM IDLE',
-                            self.SYSTEM_FAILUTE: 'ERROR: SYSTEM FAILURE',
+                            self.SYSTEM_FAILURE: 'ERROR: SYSTEM FAILURE',
                             self.SYSTEM_RECOVER: 'ERROR: SYSTEM RECOVER',
                             self.CAN_NOT_PROCESS: 'ERROR: CAN NOT PROCESS',
                             self.BAD_ARGUMENT: 'ERROR: BAD ARGUMENT',
