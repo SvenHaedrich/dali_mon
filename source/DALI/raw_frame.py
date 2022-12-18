@@ -28,7 +28,7 @@ class Raw_Frame:
         except ValueError:
             self.reset_self()
             self.type = self.INVALID
-        logger.debug("Raw frame, length {} data 0x{:08X}".format(self.length, self.data))
+        logger.debug(F"Raw frame, length {self.length} data 0x{self.data:08X}")
 
 
     def __init__(self, echo=False):

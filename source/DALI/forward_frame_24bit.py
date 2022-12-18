@@ -144,29 +144,44 @@ class ForwardFrame24Bit:
                 return EventType.DEVICE
         return EventType.INVALID
 
-    def built_event_source_string(self, event_type, frame):
+    @staticmethod
+    def build_event_source_string(event_type, frame):
         if event_type == EventType.DEVICE:
             short_address = (frame >> 17) & 0x3F
             instance_type = (frame >> 10) & 0x1F
-            return "A{:02X},T{:02X}".format(short_address, instance_type)
+            return F"A{short_address:02X},T{instance_type:02X}"
         elif event_type == EventType.DEVICE_INSTANCE:
             short_address = (frame >> 17) & 0x3F
             instance_number = (frame >> 10) & 0x1F
-            return "A{:02X},I{:02X}".format(short_address, instance_number)
+            return F"A{short_address:02X},I{instance_type:02X}"
         elif event_type == EventType.DEVICE_GROUP:
             device_group = (frame >> 17) & 0x1F
             instance_type = (frame >> 10) & 0x1F
-            return "G{:02X},T{:02X}".format(device_group, instance_type)
+            return F"G{device_group:02X},T{instance_type:02X}"
         elif event_type == EventType.INSTANCE:
             instance_type = (frame >> 17) & 0x1F
             instance_number = (frame >> 10) & 0x1F
-            return "T{:02X},I{:02X}".format(instance_type, instance_number)
+            return F"T{instance_type:02X},I{instance_number:02X}"
         elif event_type == EventType.INSTANCE_GROUP:
             device_group = (frame >> 17) & 0x1F
             instance_type = (frame >> 10) & 0x1F
-            return "IG{:02X},T{:02X}".format(device_group, instance_type)
+            return F"IG{device_group:02X},T{instance_type:02X}"
         else:
             return "INVALID "
+
+    @staticmethod
+    def build_power_event_device(frame):
+        # see iec 62386-103 9.6.2
+        if frame & (1 << 12):
+            device_group = (frame >> 7) & 0x1F
+            group_result = F"G{device_group:02X} "
+        else:
+            group_result =  ""
+        if frame & (1 << 6):
+            short_address = frame & 0x3F
+            return F"{group_result}A{short_address:02X}"
+        else:
+            return F"{group_result}".rstrip()
 
     def __init__(self, frame, address_field_width=10):
         self.address_string = " " * address_field_width
@@ -176,19 +191,16 @@ class ForwardFrame24Bit:
         instance_byte = (frame >> 8) & 0xFF
         opcode_byte = frame & 0xFF
 
-        if address_byte == 0xFE:
-            if (opcode_byte & 0x40) == 0x40:
-                self.address_string = F"A{(opcode_byte & 0x3f):02}".ljust(address_field_width)
-            else:
-                self.address_string = "BC".ljust(address_field_width)
-            self.command_string = "POWER CYCLE EVENT"
+        # see iec 62386-103 7.2.2.1
+        if (frame >> 13) == 0x7F7:
+            self.address_string = self.build_power_event_device(frame).ljust(address_field_width)
+            self.command_string = F"POWER CYCLE EVENT"
             return
         if not (address_byte & 0x01):
             self.addressing = self.get_event_source_type(frame)
-            self.address_string = self.built_event_source_string(
+            self.address_string = self.build_event_source_string(
                 self.addressing, frame).ljust(address_field_width)
-            self.command_string = "EVENT DATA 0x{:03X} = {} = {:012b}b".format(
-                (frame & 0x3FF), (frame & 0x3FF), (frame & 0x3FF))
+            self.command_string = F"EVENT DATA 0x{(frame & 0x3FF):03X} = {(frame & 0x3FF)} = {(frame & 0x3FF):012b}b"
             return
         if (address_byte >= 0x00) and (address_byte <= 0x7F):
             short_address = address_byte >> 1

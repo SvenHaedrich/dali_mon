@@ -28,6 +28,6 @@ class DALIError:
         bit = self.data & 0x0ff
         timer_us = (self.data >> 8) & 0x0fffff
         if self.error_code < 7:
-            return '{} - BIT: {} - TIME: {} USEC'.format(self.msg, bit, timer_us)
+            return F"{self.msg} - BIT: {bit} - TIME: {timer_us} USEC"
         else:
             return self.msg
