@@ -73,3 +73,30 @@ def test_device_undefined_codes(opcode):
         decoded_command = DALI.Decode(frame, DALI.DeviceType.LED)
         target_command = F"G{group_address:02}".ljust(10) + "---"
         assert decoded_command.cmd()[:len(target_command)] == target_command
+
+def test_power_cycle_event():
+    frame = DALI.Raw_Frame()
+    frame.length = 24
+    # undefined device
+    frame.data = 0xFEE000
+    decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
+    target_command = " ".ljust(10) + "POWER CYCLE EVENT"
+    assert decoded_command.cmd() == target_command
+    # device with short address
+    for short_address in range (0,0x40):
+        frame.data = 0xFEE000 + (1<<6) + short_address
+        decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
+        target_command = F"A{short_address:02X}".ljust(10) + "POWER CYCLE EVENT"
+        assert decoded_command.cmd() == target_command
+    # device is group member
+    for group_address in range(0,0x10):
+        frame.data = 0xFEE000 + (1<<12) + (group_address<<7)
+        decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
+        target_command = F"G{group_address:02X}".ljust(10) + "POWER CYCLE EVENT"
+        assert decoded_command.cmd() == target_command
+    # device with group and short address
+    for group_address in range(0,0x10):
+        frame.data = 0xFEE000 + (1<<12) + (group_address<<7) + (1<<6) + (group_address+1)
+        decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
+        target_command = F"G{group_address:02X} A{(group_address+1):02X}".ljust(10) + "POWER CYCLE EVENT"
+        assert decoded_command.cmd() == target_command
