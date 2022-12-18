@@ -12,7 +12,7 @@ This script is based on the following standards
 * IEC 62386-102 control gear
 * IEC 62386-103 control device
 * IEC 62386-207 LED module DT6
-* IEC 62386-208 switching ufnction DT7
+* IEC 62386-208 switching function DT7
 * IEC 62386-209 colour control DT8
 
 ## Run
