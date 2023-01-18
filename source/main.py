@@ -2,11 +2,11 @@ import getopt
 import sys
 import logging
 from datetime import datetime
+from sys import stdin
 
 from termcolor import cprint
 
 import DALI
-import dali_serial
 import dali_usb
 
 
@@ -44,33 +44,56 @@ def print_error(absolute_time, raw, delta):
     print(F"{raw.timestamp:.03f} | {delta:8.03f} | {DALI.DALIError(raw.length, raw.data)}")
 
 
-def main(source, use_color, absolute_time):
-    last_timestamp = 0
-    delta = 0
-    active_device_type = DALI.DeviceType.NONE
-    source.start_read()
-    while True:
-        raw = source.read_raw_frame()
-        if not raw.type == raw.INVALID:
-            if last_timestamp != 0:
-                delta = raw.timestamp - last_timestamp
-            if raw.type == raw.COMMAND:
-                dali_command = DALI.Decode(raw, active_device_type)
-                if use_color:
-                    print_command_color(absolute_time, raw.timestamp, delta, dali_command)
-                else:
-                    print_command(absolute_time, raw.timestamp, delta, dali_command)
-                active_device_type = dali_command.get_next_device_type()
+def process_line(raw,use_color,absolute_time):
+    if not raw.type == raw.INVALID:
+        if process_line.last_timestamp != 0:
+            delta = raw.timestamp - process_line.last_timestamp
+        else:
+            delta = 0
+        if raw.type == raw.COMMAND:
+            dali_command = DALI.Decode(raw, process_line.active_device_type)
+            if use_color:
+                print_command_color(absolute_time, raw.timestamp, delta, dali_command)
             else:
-                if use_color:
-                    print_error_color(absolute_time, raw, delta)
-                else:
-                    print_error(absolute_time, raw, delta)
-            last_timestamp = raw.timestamp
+                print_command(absolute_time, raw.timestamp, delta, dali_command)
+            process_line.active_device_type = dali_command.get_next_device_type()
+        else:
+            if use_color:
+                print_error_color(absolute_time, raw, delta)
+            else:
+                print_error(absolute_time, raw, delta)
+        process_line.last_timestamp = raw.timestamp
+
+def main_usb():
+    dali_usb.start_read()
+    try:
+        while True:
+            raw_frame = dali_usb.read_raw_frame()
+            process_line(raw_frame, color, absolute_time)
+    except KeyboardInterrupt:
+        print("\rinterrupted")
+        dali_usb.close()
+
+def main_tty():
+    raw = DALI.Raw_Frame(transparent)
+    while True:
+        line = sys.stdin.readline()
+        if len(line) > 0:
+            line = line.encode('utf-8')
+            raw.from_line(line)
+            process_line(raw, color, absolute_time)
+
+def main_file():
+    raw = DALI.Raw_Frame(transparent)
+    for line in sys.stdin:
+        if len(line) > 0:
+            line = line.encode('utf-8')
+            raw.from_line(line)
+            process_line(raw, color, absolute_time)
 
 
 def show_version():
-    print("dali_py version 1.0.8 - SevenLab 2022")
+    print("dali_py version 1.0.8 - SevenLab 2023")
 
 
 def show_help():
@@ -109,8 +132,6 @@ if __name__ == "__main__":
         if opt in ("-h", "--help"):
             show_help()
             sys.exit()
-        if opt in ("-p", "--port"):
-            serial_port = arg
         if opt in ("-l", "--lunatone"):
             source_is_usb = True
         if opt in ("-v", "--version"):
@@ -124,19 +145,15 @@ if __name__ == "__main__":
         if opt == "--debug":
             logging.basicConfig(level=logging.DEBUG)
 
-    my_source = None
-    if serial_port and not source_is_usb:
-        my_source = dali_serial.DALI_Serial(port=serial_port,transparent=transparent)
-
-    if source_is_usb and not serial_port:
-        my_source = dali_usb.DALI_Usb()
-
-    if my_source == None:
-        print ("illegal source settings")
-        sys.exit(2)
-
+    process_line.last_timestamp = 0
+    process_line.active_device_type = DALI.DeviceType.NONE
     try:
-        main(my_source, color, absolute_time)
+        if source_is_usb:
+            main_usb()
+        elif sys.stdin.isatty():
+            main_tty()
+        else:
+            main_file()
     except KeyboardInterrupt:
         print("\rinterrupted")
         my_source.close()
