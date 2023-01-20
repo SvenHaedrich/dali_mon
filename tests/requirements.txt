@@ -2,4 +2,5 @@ pytest
 coverage
 pyserial
 pyusb
+click
 termcolor

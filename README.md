@@ -18,13 +18,12 @@ This script is based on the following standards
 ## Run
 
 ```bash
-dali_py.sh [options]
+dali_mon [options]
 ```
 
 ## Sample Output
 
-<pre> ./dali_py.sh --port /dev/ttyUSB2
-dali_py version 1.0.8 - SevenLab 2022
+<pre> ./dali_mon < /dev/ttyUSB0
 <font color="#26A269">11618.586 |    0.000 |     FF00 | </font><font color="#D0CFCC">BC        OFF</font>
 <font color="#26A269">11619.459 |    0.873 |     FF06 | </font><font color="#D0CFCC">BC        RECALL MIN LEVEL</font>
 <font color="#26A269">11620.596 |    1.137 |     FF05 | </font><font color="#D0CFCC">BC        RECALL MAX LEVEL</font>
@@ -37,16 +36,15 @@ dali_py version 1.0.8 - SevenLab 2022
 
 ### Commandline Parameters
 
-| Option        | Short      | Usage                        |
-|---------------|------------|------------------------------|
-|--help         |            | display                      |
-|--port \<port> | -p \<port> | use serial port              |
-|--version      | -v         | show version information     |
-|--nocolor      |            | don\'t use colors            |
-|--absolute     |            | add stamp with absolute time |
-|--transparent  |            | print serial input lines     |
-|--lunatone     | -l         | use lunatone usb interface   |
-|--debug        |            | set messages to debug level  |
+| Option    | Short | Usage                                                       |
+|-----------|-------|-------------------------------------------------------------|
+|--help     |       | Show help message and exit.                                 |
+|--version  |       | Show the version information and exit.                      |
+|--nocolor  |       | Do not use color coding for output.                         |
+|--absolute |       | Add absolute local time to output.                          |
+|--echo     |       | Echo unprocessed input line to output.                      |
+|--lunatone | -l    | Try to use a Lunatone USB connector for DALI communication. |
+|--debug    |       | Enable debug level logging.                                 |
 
 ### Output Columns
   
