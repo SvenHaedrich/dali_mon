@@ -9,8 +9,7 @@ import usb
 import DALI
 
 logger = logging.getLogger(__name__)
-
-DALI_USB_VENDOR = 0x17b5
+DALI_USB_VENDOR = 0x17B5
 DALI_USB_PRODUCT = 0x0020
 
 DALI_USB_DIRECTION_FROM_DALI = 0x11
@@ -23,6 +22,8 @@ DALI_USB_TYPE_24BIT = 0x06
 DALI_USB_TYPE_STATUS = 0x07
 DALI_USB_RECEIVE_MASK = 0x70
 
+# TODO translate error codes
+
 
 class DALI_Usb:
     def __init__(self, vendor=DALI_USB_VENDOR, product=DALI_USB_PRODUCT):
@@ -33,13 +34,12 @@ class DALI_Usb:
         self.message_counter = 1
 
         logger.debug("Try to discover DALI interfaces")
-        devices = [dev for dev in usb.core.find(
-            find_all=True,
-            idVendor=vendor,
-            idProduct=product
-        )]
+        devices = [
+            dev
+            for dev in usb.core.find(find_all=True, idVendor=vendor, idProduct=product)
+        ]
 
-        logger.info(F"DALI interfaces found: {devices}")
+        logger.info(f"DALI interfaces found: {devices}")
 
         # if not found
         if not devices:
@@ -66,16 +66,20 @@ class DALI_Usb:
         # get read and write endpoints
         self.ep_write = usb.util.find_descriptor(
             intf,
-            custom_match=lambda e: usb.util.endpoint_direction(e.bEndpointAddress) == usb.util.ENDPOINT_OUT
+            custom_match=lambda e: usb.util.endpoint_direction(e.bEndpointAddress)
+            == usb.util.ENDPOINT_OUT,
         )
 
         self.ep_read = usb.util.find_descriptor(
             intf,
-            custom_match=lambda e: usb.util.endpoint_direction(e.bEndpointAddress) == usb.util.ENDPOINT_IN
+            custom_match=lambda e: usb.util.endpoint_direction(e.bEndpointAddress)
+            == usb.util.ENDPOINT_IN,
         )
 
         if not self.ep_read or not self.ep_write:
-            raise usb.core.USBError(F"Could not determine read or write endpoint on {self.device}")
+            raise usb.core.USBError(
+                f"Could not determine read or write endpoint on {self.device}"
+            )
 
         # read pending messages and disregard
         try:
@@ -86,28 +90,27 @@ class DALI_Usb:
             pass
 
     def read_raw(self, timeout=None):
-        """Read data from USB device.
-        """
+        """Read data from USB device."""
         return self.ep_read.read(self.ep_read.wMaxPacketSize, timeout=timeout)
 
     def write(self, cmd):
-        """ Write data to DALI bus.
-            cmd : tupel of bytes to send
-            
-            Data expected by DALI USB
-            dr sn ?? ty ?? ec ad oc.. .. .. .. .. .. .. ..
-            12 xx 00 03 00 00 ff 08 00 00 00 00 00 00 00 00
+        """Write data to DALI bus.
+        cmd : tupel of bytes to send
 
-            dr: direction
-                0x12 = USB side
-            sn: sequence number
-            ec: eCommand
-            ad: address
-            oc: opcode
+        Data expected by DALI USB
+        dr sn ?? ty ?? ec ad oc.. .. .. .. .. .. .. ..
+        12 xx 00 03 00 00 ff 08 00 00 00 00 00 00 00 00
+
+        dr: direction
+            0x12 = USB side
+        sn: sequence number
+        ec: eCommand
+        ad: address
+        oc: opcode
         """
         dr = DALI_USB_DIRECTION_TO_DALI
         sn = self.message_counter
-        self.message_counter = (self.message_counter + 1) & 0xff
+        self.message_counter = (self.message_counter + 1) & 0xFF
         if len(cmd) == 3:
             ec = cmd[0]
             ad = cmd[1]
@@ -124,17 +127,20 @@ class DALI_Usb:
             oc = cmd[0]
             ty = DALI_USB_TYPE_8BIT
         else:
-            raise Exception(F"DALI commands must be 1-3 bytes long but {cmd} is {len(cmd)} bytes long")
+            raise Exception(
+                f"DALI commands must be 1-3 bytes long but {cmd} is {len(cmd)} bytes long"
+            )
 
-        data = struct.pack("BBxBxBBB" + (64 - 8) * 'x', dr, sn, ty, ec, ad, oc)
+        data = struct.pack("BBxBxBBB" + (64 - 8) * "x", dr, sn, ty, ec, ad, oc)
 
-        logger.debug(F"DALI[OUT]: SN=0x{sn:02X} TY=0x{ty:02X} EC=0x{ec:02X} AD=0x{ad:02X} OC=0x{oc:02X}")
+        logger.debug(
+            f"DALI[OUT]: SN=0x{sn:02X} TY=0x{ty:02X} EC=0x{ec:02X} AD=0x{ad:02X} OC=0x{oc:02X}"
+        )
 
         return self.ep_write.write(data)
 
     def close(self):
-        """Close connection to USB device.
-        """
+        """Close connection to USB device."""
         self.worker_running = False
         usb.util.dispose_resources(self.device)
 
@@ -162,7 +168,9 @@ class DALI_Usb:
                 """
                 if data:
                     if data[0] == DALI_USB_DIRECTION_FROM_DALI:
-                        logger.debug(F"DALI[IN]: SN=0x{data[8]:02X} TY=0x{data[1]:02X} EC=0x{data[3]:02X} AD=0x{data[4]:02X} OC=0x{data[5]:02X}")
+                        logger.debug(
+                            f"DALI[IN]: SN=0x{data[8]:02X} TY=0x{data[1]:02X} EC=0x{data[3]:02X} AD=0x{data[4]:02X} OC=0x{data[5]:02X}"
+                        )
                         raw.type = raw.COMMAND
                         raw.timestamp = time.time()
                         if data[1] == (DALI_USB_RECEIVE_MASK + DALI_USB_TYPE_8BIT):
@@ -170,10 +178,10 @@ class DALI_Usb:
                             raw.data = data[5]
                         elif data[1] == (DALI_USB_RECEIVE_MASK + DALI_USB_TYPE_16BIT):
                             raw.length = 16
-                            raw.data = data[5] + (data[4]<<8)
+                            raw.data = data[5] + (data[4] << 8)
                         elif data[1] == (DALI_USB_RECEIVE_MASK + DALI_USB_TYPE_24BIT):
                             raw.length = 24
-                            raw.data = data[5] + (data[4]<<8) + (data[3]<<16)
+                            raw.data = data[5] + (data[4] << 8) + (data[3] << 16)
                         elif data[1] == (DALI_USB_RECEIVE_MASK + DALI_USB_TYPE_STATUS):
                             raw.type = raw.ERROR
                             raw.data = 0
@@ -186,7 +194,9 @@ class DALI_Usb:
                         self.queue.put(raw)
 
                     if data[0] == DALI_USB_DIRECTION_TO_DALI:
-                        logger.debug(F"DALI[OUT]: SN=0x{data[8]:02X} TY=0x{data[1]:02X} EC=0x{data[3]:02X} AD=0x{data[4]:02X} OC=0x{data[5]:02X}")
+                        logger.debug(
+                            f"DALI[OUT]: SN=0x{data[8]:02X} TY=0x{data[1]:02X} EC=0x{data[3]:02X} AD=0x{data[4]:02X} OC=0x{data[5]:02X}"
+                        )
 
             except usb.USBError as e:
                 if e.errno not in (errno.ETIMEDOUT, errno.ENODEV):
@@ -199,10 +209,8 @@ class DALI_Usb:
         thread.daemon = True
         thread.start()
 
-
     def read_raw_frame(self):
         return self.queue.get(block=True)
-
 
     def clear_buffers(self):
         while not self.queue.empty():

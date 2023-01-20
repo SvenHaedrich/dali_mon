@@ -8,7 +8,6 @@ class EventType:
 
 
 class ForwardFrame24Bit:
-
     def device_command(self, opcode):
         # see iec 62386-102 11.2
         code_dictionary = {
@@ -79,17 +78,20 @@ class ForwardFrame24Bit:
             0x8F: "QUERY NEXT FEATURE TYPE",
             0x90: "QUERY EVENT FILTER 0-7",
             0x91: "QUERY EVENT FILTER 8-15",
-            0x92: "QUERY EVENT FILTER 16-23"
+            0x92: "QUERY EVENT FILTER 16-23",
         }
-        return code_dictionary.get(opcode,F"--- CODE 0x{opcode:02X} = {opcode} UNDEFINED CONTROL DEVICE COMMAND")
+        return code_dictionary.get(
+            opcode,
+            f"--- CODE 0x{opcode:02X} = {opcode} UNDEFINED CONTROL DEVICE COMMAND",
+        )
 
     def device_special_command(self, address_byte, instance_byte, opcode_byte):
         # see iec 62386-103 table 22
-        if address_byte == 0xc1:
+        if address_byte == 0xC1:
             if instance_byte == 0x00:
                 return "TERMINATE"
             elif instance_byte == 0x01:
-                return F"INITIALISE (0x{opcode_byte:02X})"
+                return f"INITIALISE (0x{opcode_byte:02X})"
             elif instance_byte == 0x02:
                 return "RANDOMISE"
             elif instance_byte == 0x03:
@@ -97,48 +99,48 @@ class ForwardFrame24Bit:
             elif instance_byte == 0x04:
                 return "WITHDRAW"
             elif instance_byte == 0x05:
-                return F"SEARCHADDRH (0x{opcode_byte:02X}) = {opcode_byte}"
+                return f"SEARCHADDRH (0x{opcode_byte:02X}) = {opcode_byte}"
             elif instance_byte == 0x06:
-                return F"SEARCHADDRM (0x{opcode_byte:02X}) = {opcode_byte}"
+                return f"SEARCHADDRM (0x{opcode_byte:02X}) = {opcode_byte}"
             elif instance_byte == 0x07:
-                return F"SEARCHADDRL (0x{opcode_byte:02X}) = {opcode_byte}"
+                return f"SEARCHADDRL (0x{opcode_byte:02X}) = {opcode_byte}"
             elif instance_byte == 0x08:
-                return F"PROGRAM SHORT ADDRESS (0x{opcode_byte:02X}) = {opcode_byte}"
+                return f"PROGRAM SHORT ADDRESS (0x{opcode_byte:02X}) = {opcode_byte}"
             elif instance_byte == 0x09:
-                return F"VERIFY SHORT ADDRESS (0x{opcode_byte:02X}) = {opcode_byte}"
-            elif instance_byte == 0x0a:
-                return F"QUERY SHORT ADDRESS"
+                return f"VERIFY SHORT ADDRESS (0x{opcode_byte:02X}) = {opcode_byte}"
+            elif instance_byte == 0x0A:
+                return f"QUERY SHORT ADDRESS"
             elif instance_byte == 0x20:
-                return F"WRITE MEMORY LOCATION DTR1, DTR0, (0x{opcode_byte:02X}) = {opcode_byte}"
+                return f"WRITE MEMORY LOCATION DTR1, DTR0, (0x{opcode_byte:02X}) = {opcode_byte}"
             elif instance_byte == 0x21:
-                return F"WRITE MEMORY LOCATION - NO REPLY - DTR1, DTR0, (0x{opcode_byte:02X}) = {opcode_byte}"
+                return f"WRITE MEMORY LOCATION - NO REPLY - DTR1, DTR0, (0x{opcode_byte:02X}) = {opcode_byte}"
             elif instance_byte == 0x30:
-                return F"DTR0 0x{opcode_byte:02X} = {opcode_byte:3} = {opcode_byte:08b}"
+                return f"DTR0 0x{opcode_byte:02X} = {opcode_byte:3} = {opcode_byte:08b}"
             elif instance_byte == 0x31:
-                return F"DTR1 0x{opcode_byte:02X} = {opcode_byte:3} = {opcode_byte:08b}"
+                return f"DTR1 0x{opcode_byte:02X} = {opcode_byte:3} = {opcode_byte:08b}"
             elif instance_byte == 0x32:
-                return F"DTR2 0x{opcode_byte:02X} = {opcode_byte:3} = {opcode_byte:08b}"
+                return f"DTR2 0x{opcode_byte:02X} = {opcode_byte:3} = {opcode_byte:08b}"
             elif instance_byte == 0x33:
-                return F"SEND TESTFRAME (0x{opcode_byte:02X}) = {opcode_byte}"
-        if address_byte == 0xc5:
-            return F"DIRECT WRITE MEMORY (DTR0,0x{instance_byte:02X}) : 0x{opcode_byte:02X}"
-        if address_byte == 0xc7:
-            return F"DTR1:DTR0 (0x{instance_byte:02X},0x{opcode_byte:02X})"
-        if address_byte == 0xc9:
-            return F"DTR2:DTR1 (0x{instance_byte:02X},0x{opcode_byte:02X})"
-        return F"--- CODE 0x{address_byte:02X} = {address_byte} UNKNOWN CONTROL DEVICE SPECIAL COMMAND"
+                return f"SEND TESTFRAME (0x{opcode_byte:02X}) = {opcode_byte}"
+        if address_byte == 0xC5:
+            return f"DIRECT WRITE MEMORY (DTR0,0x{instance_byte:02X}) : 0x{opcode_byte:02X}"
+        if address_byte == 0xC7:
+            return f"DTR1:DTR0 (0x{instance_byte:02X},0x{opcode_byte:02X})"
+        if address_byte == 0xC9:
+            return f"DTR2:DTR1 (0x{instance_byte:02X},0x{opcode_byte:02X})"
+        return f"--- CODE 0x{address_byte:02X} = {address_byte} UNKNOWN CONTROL DEVICE SPECIAL COMMAND"
 
     def get_event_source_type(self, frame):
-        if (frame & (1 << 23)):
-            if (frame & (1 << 22)):
+        if frame & (1 << 23):
+            if frame & (1 << 22):
                 return EventType.INSTANCE_GROUP
             else:
-                if (frame & (1 << 15)):
+                if frame & (1 << 15):
                     return EventType.INSTANCE
                 else:
                     return EventType.DEVICE_GROUP
         else:
-            if (frame & (1 << 15)):
+            if frame & (1 << 15):
                 return EventType.DEVICE_INSTANCE
             else:
                 return EventType.DEVICE
@@ -149,23 +151,23 @@ class ForwardFrame24Bit:
         if event_type == EventType.DEVICE:
             short_address = (frame >> 17) & 0x3F
             instance_type = (frame >> 10) & 0x1F
-            return F"A{short_address:02X},T{instance_type:02X}"
+            return f"A{short_address:02X},T{instance_type:02X}"
         elif event_type == EventType.DEVICE_INSTANCE:
             short_address = (frame >> 17) & 0x3F
             instance_number = (frame >> 10) & 0x1F
-            return F"A{short_address:02X},I{instance_type:02X}"
+            return f"A{short_address:02X},I{instance_type:02X}"
         elif event_type == EventType.DEVICE_GROUP:
             device_group = (frame >> 17) & 0x1F
             instance_type = (frame >> 10) & 0x1F
-            return F"G{device_group:02X},T{instance_type:02X}"
+            return f"G{device_group:02X},T{instance_type:02X}"
         elif event_type == EventType.INSTANCE:
             instance_type = (frame >> 17) & 0x1F
             instance_number = (frame >> 10) & 0x1F
-            return F"T{instance_type:02X},I{instance_number:02X}"
+            return f"T{instance_type:02X},I{instance_number:02X}"
         elif event_type == EventType.INSTANCE_GROUP:
             device_group = (frame >> 17) & 0x1F
             instance_type = (frame >> 10) & 0x1F
-            return F"IG{device_group:02X},T{instance_type:02X}"
+            return f"IG{device_group:02X},T{instance_type:02X}"
         else:
             return "INVALID "
 
@@ -174,14 +176,14 @@ class ForwardFrame24Bit:
         # see iec 62386-103 9.6.2
         if frame & (1 << 12):
             device_group = (frame >> 7) & 0x1F
-            group_result = F"G{device_group:02X} "
+            group_result = f"G{device_group:02X} "
         else:
-            group_result =  ""
+            group_result = ""
         if frame & (1 << 6):
             short_address = frame & 0x3F
-            return F"{group_result}A{short_address:02X}"
+            return f"{group_result}A{short_address:02X}"
         else:
-            return F"{group_result}".rstrip()
+            return f"{group_result}".rstrip()
 
     def __init__(self, frame, address_field_width=10):
         self.address_string = " " * address_field_width
@@ -193,23 +195,26 @@ class ForwardFrame24Bit:
 
         # see iec 62386-103 7.2.2.1
         if (frame >> 13) == 0x7F7:
-            self.address_string = self.build_power_event_device(frame).ljust(address_field_width)
-            self.command_string = F"POWER CYCLE EVENT"
+            self.address_string = self.build_power_event_device(frame).ljust(
+                address_field_width
+            )
+            self.command_string = f"POWER CYCLE EVENT"
             return
         if not (address_byte & 0x01):
             self.addressing = self.get_event_source_type(frame)
             self.address_string = self.build_event_source_string(
-                self.addressing, frame).ljust(address_field_width)
-            self.command_string = F"EVENT DATA 0x{(frame & 0x3FF):03X} = {(frame & 0x3FF)} = {(frame & 0x3FF):012b}b"
+                self.addressing, frame
+            ).ljust(address_field_width)
+            self.command_string = f"EVENT DATA 0x{(frame & 0x3FF):03X} = {(frame & 0x3FF)} = {(frame & 0x3FF):012b}b"
             return
         if (address_byte >= 0x00) and (address_byte <= 0x7F):
             short_address = address_byte >> 1
-            self.address_string = F"A{short_address:02}".ljust(address_field_width)
+            self.address_string = f"A{short_address:02}".ljust(address_field_width)
             self.command_string = self.device_command(opcode_byte)
             return
         if (address_byte >= 0x80) and (address_byte <= 0xBF):
-            group_address = ((address_byte >> 1) & 0x0F)
-            self.address_string = F"G{group_address:02}".ljust(address_field_width)
+            group_address = (address_byte >> 1) & 0x0F
+            self.address_string = f"G{group_address:02}".ljust(address_field_width)
             self.command_string = self.device_command(opcode_byte)
             return
         if address_byte == 0xFD:
@@ -220,11 +225,11 @@ class ForwardFrame24Bit:
             self.command_string = self.device_command(opcode_byte)
         elif (address_byte >= 0xC1) and (address_byte <= 0xDF):
             self.command_string = self.device_special_command(
-                    address_byte, instance_byte, opcode_byte)
+                address_byte, instance_byte, opcode_byte
+            )
         elif (address_byte >= 0xE1) and (address_byte <= 0xEF):
             self.command_string = "RESERVED"
         elif (address_byte >= 0xF1) and (address_byte <= 0xF7):
             self.command_string = "RESERVED"
         elif (address_byte >= 0xF8) and (address_byte <= 0xFB):
             self.command_string = "RESERVED"
-

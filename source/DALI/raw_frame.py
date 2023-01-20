@@ -2,10 +2,11 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class Raw_Frame:
-    COMMAND = '-'
-    ERROR = '*'
-    INVALID = ' '
+    COMMAND = "-"
+    ERROR = "*"
+    INVALID = " "
 
     def reset_self(self):
         self.timestamp = 0
@@ -13,13 +14,12 @@ class Raw_Frame:
         self.length = 0
         self.data = 0
 
-
     def from_line(self, line):
         if self.echo:
-            print(line.decode('utf-8'), end='')
+            print(line.decode("utf-8"), end="")
         try:
-            start = line.find(ord('{'))+1
-            end = line.find(ord('}'))
+            start = line.find(ord("{")) + 1
+            end = line.find(ord("}"))
             payload = line[start:end]
             self.timestamp = int(payload[0:8], 16) / 1000.0
             self.type = chr(payload[8])
@@ -28,8 +28,7 @@ class Raw_Frame:
         except ValueError:
             self.reset_self()
             self.type = self.INVALID
-        logger.debug(F"Raw frame, length {self.length} data 0x{self.data:08X}")
-
+        logger.debug(f"Raw frame, length {self.length} data 0x{self.data:08X}")
 
     def __init__(self, echo=False):
         self.echo = echo

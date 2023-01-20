@@ -108,3 +108,4 @@ In case of an error state:<br/>
 <bits> : codes the error code
 <data> : contains additional error information
 ```   
+ TODO Document error codes
