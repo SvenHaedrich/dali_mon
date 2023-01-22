@@ -113,11 +113,11 @@ class ForwardFrame24Bit:
             elif instance_byte == 0x21:
                 return F"WRITE MEMORY LOCATION - NO REPLY - DTR1, DTR0, (0x{opcode_byte:02X}) = {opcode_byte}"
             elif instance_byte == 0x30:
-                return F"DTR0 0x{opcode_byte:02X} = {opcode_byte:3} = {opcode_byte:08b}"
+                return F"DTR0 0x{opcode_byte:02X} = {opcode_byte:3} = {opcode_byte:08b}b"
             elif instance_byte == 0x31:
-                return F"DTR1 0x{opcode_byte:02X} = {opcode_byte:3} = {opcode_byte:08b}"
+                return F"DTR1 0x{opcode_byte:02X} = {opcode_byte:3} = {opcode_byte:08b}b"
             elif instance_byte == 0x32:
-                return F"DTR2 0x{opcode_byte:02X} = {opcode_byte:3} = {opcode_byte:08b}"
+                return F"DTR2 0x{opcode_byte:02X} = {opcode_byte:3} = {opcode_byte:08b}b"
             elif instance_byte == 0x33:
                 return F"SEND TESTFRAME (0x{opcode_byte:02X}) = {opcode_byte}"
         if address_byte == 0xc5:
