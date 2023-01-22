@@ -22,8 +22,6 @@ DALI_USB_TYPE_24BIT = 0x06
 DALI_USB_TYPE_STATUS = 0x07
 DALI_USB_RECEIVE_MASK = 0x70
 
-# TODO translate error codes
-
 
 class DALI_Usb:
     def __init__(self, vendor=DALI_USB_VENDOR, product=DALI_USB_PRODUCT):
@@ -186,11 +184,11 @@ class DALI_Usb:
                             raw.type = raw.ERROR
                             raw.data = 0
                             if data[5] == 0x04:
-                                raw.length = DALI.DALIError.RECOVER
+                                raw.length = DALI.DALIError.SYSTEM_RECOVER
                             elif data[5] == 0x03:
                                 raw.length = DALI.DALIError.FRAME
                             else:
-                                raw.length = DALI.DALIError.GENERAL
+                                raw.length = DALI.DALIError.FAILURE
                         self.queue.put(raw)
 
                     if data[0] == DALI_USB_DIRECTION_TO_DALI:
