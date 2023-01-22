@@ -1,7 +1,7 @@
-from DALI.backframe_8bit import Backframe8Bit
-from DALI.forward_frame_16bit import ForwardFrame16Bit, DeviceType
-from DALI.forward_frame_24bit import ForwardFrame24Bit
-from DALI.forward_frame_25bit import ForwardFrame25Bit
+from .backframe_8bit import Backframe8Bit
+from .forward_frame_16bit import ForwardFrame16Bit, DeviceType
+from .forward_frame_24bit import ForwardFrame24Bit
+from .forward_frame_25bit import ForwardFrame25Bit
 
 
 class Decode:
