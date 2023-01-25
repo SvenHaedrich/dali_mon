@@ -209,7 +209,3 @@ class DALI_Usb:
 
     def read_raw_frame(self):
         return self.queue.get(block=True)
-
-    def clear_buffers(self):
-        while not self.queue.empty():
-            self.queue.get(block=False)
