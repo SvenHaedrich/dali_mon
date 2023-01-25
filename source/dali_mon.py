@@ -46,7 +46,7 @@ def print_error(absolute_time, raw, delta):
     )
 
 
-def process_line(raw, use_color, absolute_time):
+def process_line(raw, no_color, absolute_time):
     if not raw.type == raw.INVALID:
         if process_line.last_timestamp != 0:
             delta = raw.timestamp - process_line.last_timestamp
@@ -54,48 +54,48 @@ def process_line(raw, use_color, absolute_time):
             delta = 0
         if raw.type == raw.COMMAND:
             dali_command = DALI.Decode(raw, process_line.active_device_type)
-            if use_color:
-                print_command_color(absolute_time, raw.timestamp, delta, dali_command)
-            else:
+            if no_color:
                 print_command(absolute_time, raw.timestamp, delta, dali_command)
+            else:
+                print_command_color(absolute_time, raw.timestamp, delta, dali_command)
             process_line.active_device_type = dali_command.get_next_device_type()
         else:
-            if use_color:
-                print_error_color(absolute_time, raw, delta)
-            else:
+            if no_color:
                 print_error(absolute_time, raw, delta)
+            else:
+                print_error_color(absolute_time, raw, delta)
         process_line.last_timestamp = raw.timestamp
 
 
-def main_usb(color, absolute_time):
+def main_usb(no_color, absolute_time):
     dali_connection = dali_usb.DALI_Usb()
     dali_connection.start_read()
     try:
         while True:
             raw_frame = dali_connection.read_raw_frame()
-            process_line(raw_frame, color, absolute_time)
+            process_line(raw_frame, no_color, absolute_time)
     except KeyboardInterrupt:
         print("\rinterrupted")
         dali_connection.close()
 
 
-def main_tty(transparent, color, absolute_time):
+def main_tty(transparent, no_color, absolute_time):
     raw = DALI.Raw_Frame(transparent)
     while True:
         line = sys.stdin.readline()
         if len(line) > 0:
             line = line.encode("utf-8")
             raw.from_line(line)
-            process_line(raw, color, absolute_time)
+            process_line(raw, no_color, absolute_time)
 
 
-def main_file(transparent, color, absolute_time):
+def main_file(transparent, no_color, absolute_time):
     raw = DALI.Raw_Frame(transparent)
     for line in sys.stdin:
         if len(line) > 0:
             line = line.encode("utf-8")
             raw.from_line(line)
-            process_line(raw, color, absolute_time)
+            process_line(raw, no_color, absolute_time)
 
 
 @click.command()
@@ -103,7 +103,7 @@ def main_file(transparent, color, absolute_time):
 @click.option(
     "-l",
     "--lunatone",
-    help="Try to use a Lunatone USB connector for DALI communication.",
+    help="Use a Lunatone USB connector for DALI communication.",
     is_flag=True,
 )
 @click.option("--debug", help="Enable debug level logging.", is_flag=True)
@@ -118,20 +118,15 @@ def dali_mon(lunatone, debug, nocolor, echo, absolute):
     if debug:
         logging.basicConfig(level=logging.DEBUG)
 
-    if nocolor:
-        color = False
-    else:
-        color = True
-
     process_line.last_timestamp = 0
     process_line.active_device_type = DALI.DeviceType.NONE
     try:
         if lunatone:
-            main_usb(color, absolute)
+            main_usb(nocolor, absolute)
         elif sys.stdin.isatty():
-            main_tty(echo, color, absolute)
+            main_tty(echo, nocolor, absolute)
         else:
-            main_file(echo, color, absolute)
+            main_file(echo, nocolor, absolute)
     except KeyboardInterrupt:
         print("\rinterrupted")
 
