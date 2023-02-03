@@ -188,7 +188,7 @@ class DALI_Usb:
                             elif data[5] == 0x03:
                                 raw.length = DALI.DALIError.FRAME
                             else:
-                                raw.length = DALI.DALIError.FAILURE
+                                raw.length = DALI.DALIError.SYSTEM_FAILURE
                         self.queue.put(raw)
 
                     if data[0] == DALI_USB_DIRECTION_TO_DALI:

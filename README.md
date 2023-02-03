@@ -34,16 +34,24 @@ dali_mon [options]
 <font color="#26A269">11635.703 |    1.937 |     FF00 | </font><font color="#D0CFCC">BC        OFF</font>
 </pre>
 
-### Commandline Parameters
+## Read from Serial Port
+
+Remember to set the serial port communication parammeters before starting the monitor routine. For instance readind a serial port connected to `ttyUSB0` that uses a baudrate of 115200 Baud.
+```bash
+stty -F /dev/ttyUSB0 115200 liout -crtscts
+./dali_mon < /dev/ttyUSB0
+```
+
+## Commandline Parameters
 
 | Option    | Short | Usage                                                       |
 |-----------|-------|-------------------------------------------------------------|
 |--help     |       | Show help message and exit.                                 |
 |--version  |       | Show the version information and exit.                      |
 |--nocolor  |       | Do not use color coding for output.                         |
-|--absolute |       | Add absolute local time to output.                          |
+|--absolute |       | Add absolute time from host machine to output.              |
 |--echo     |       | Echo unprocessed input line to output.                      |
-|--lunatone | -l    | Try to use a Lunatone USB connector for DALI communication. |
+|--lunatone | -l    | Use Lunatone USB connector for DALI communication.          |
 |--debug    |       | Enable debug level logging.                                 |
 
 ### Output Columns
@@ -56,7 +64,7 @@ dali_mon [options]
 
 ## Install
 ```
-git clone git@github.com:SvenHaedrich/dali_py.git
+git clone git@github.com:SvenHaedrich/dali_mon.git
 ```
 For the Lunatone USB adapter you need to copy the file `99-lunatone-dali.rules` into the `udev` folder
 and reload the `udev` rules.
