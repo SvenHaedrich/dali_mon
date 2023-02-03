@@ -7,6 +7,8 @@ from termcolor import cprint
 import DALI
 import dali_usb
 
+logger = logging.getLogger(__name__)
+
 
 def print_local_time_color(enabled):
     if enabled:
@@ -68,6 +70,7 @@ def process_line(raw, no_color, absolute_time):
 
 
 def main_usb(no_color, absolute_time):
+    logger.debug("read from Lunatone usb device")
     dali_connection = dali_usb.DALI_Usb()
     dali_connection.start_read()
     try:
@@ -80,6 +83,7 @@ def main_usb(no_color, absolute_time):
 
 
 def main_tty(transparent, no_color, absolute_time):
+    logger.debug("read from tty device")
     raw = DALI.Raw_Frame(transparent)
     while True:
         line = sys.stdin.readline()
@@ -90,6 +94,7 @@ def main_tty(transparent, no_color, absolute_time):
 
 
 def main_file(transparent, no_color, absolute_time):
+    logger.debug("read from file")
     raw = DALI.Raw_Frame(transparent)
     for line in sys.stdin:
         if len(line) > 0:
@@ -103,7 +108,7 @@ def main_file(transparent, no_color, absolute_time):
 @click.option(
     "-l",
     "--lunatone",
-    help="Use a Lunatone USB connector for DALI communication.",
+    help="Use Lunatone USB connector for DALI communication.",
     is_flag=True,
 )
 @click.option("--debug", help="Enable debug level logging.", is_flag=True)
