@@ -66,6 +66,8 @@ stty -F /dev/ttyUSB0 115200 liout -crtscts
 ## Install
 ```
 git clone git@github.com:SvenHaedrich/dali_mon.git
+cd dali_mon
+python -m venv env
 ```
 For the Lunatone USB adapter you need to copy the file `99-lunatone-dali.rules` into the `udev` folder
 and reload the `udev` rules.
