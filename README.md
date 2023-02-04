@@ -39,7 +39,7 @@ dali_mon [options]
 
 Remember to set the serial port communication parammeters before starting the monitor routine. This example reads from a serial port connected to `ttyUSB0` using a baudrate of 115200 Baud.
 ```bash
-stty -F /dev/ttyUSB0 115200 liout -crtscts
+stty -F /dev/ttyUSB0 115200 litout -crtscts
 ./dali_mon < /dev/ttyUSB0
 ```
 
