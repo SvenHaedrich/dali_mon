@@ -104,7 +104,7 @@ def main_file(transparent, no_color, absolute_time):
 
 
 @click.command()
-@click.version_option("1.1.0")
+@click.version_option("1.1.2")
 @click.option(
     "-l",
     "--lunatone",
