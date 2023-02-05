@@ -1,4 +1,4 @@
-# DALI PY
+# DALI MON
 
 ## Description
 
@@ -39,7 +39,7 @@ dali_mon [options]
 
 Remember to set the serial port communication parammeters before starting the monitor routine. This example reads from a serial port connected to `ttyUSB0` using a baudrate of 115200 Baud.
 ```bash
-stty -F /dev/ttyUSB0 115200 liout -crtscts
+stty -F /dev/ttyUSB0 115200 litout -crtscts
 ./dali_mon < /dev/ttyUSB0
 ```
 
@@ -66,6 +66,8 @@ stty -F /dev/ttyUSB0 115200 liout -crtscts
 ## Install
 ```
 git clone git@github.com:SvenHaedrich/dali_mon.git
+cd dali_mon
+python -m venv env
 ```
 For the Lunatone USB adapter you need to copy the file `99-lunatone-dali.rules` into the `udev` folder
 and reload the `udev` rules.
