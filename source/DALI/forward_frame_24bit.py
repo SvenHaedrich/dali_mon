@@ -130,7 +130,8 @@ class ForwardFrame24Bit:
             return f"DTR2:DTR1 (0x{instance_byte:02X},0x{opcode_byte:02X})"
         return f"--- CODE 0x{address_byte:02X} = {address_byte} UNKNOWN CONTROL DEVICE SPECIAL COMMAND"
 
-    def get_event_source_type(self, frame):
+    @staticmethod
+    def get_event_source_type(frame):
         if frame & (1 << 23):
             if frame & (1 << 22):
                 return EventType.INSTANCE_GROUP
@@ -155,7 +156,7 @@ class ForwardFrame24Bit:
         elif event_type == EventType.DEVICE_INSTANCE:
             short_address = (frame >> 17) & 0x3F
             instance_number = (frame >> 10) & 0x1F
-            return f"A{short_address:02X},I{instance_type:02X}"
+            return f"A{short_address:02X},I{instance_number:02X}"
         elif event_type == EventType.DEVICE_GROUP:
             device_group = (frame >> 17) & 0x1F
             instance_type = (frame >> 10) & 0x1F
@@ -170,6 +171,25 @@ class ForwardFrame24Bit:
             return f"IG{device_group:02X},T{instance_type:02X}"
         else:
             return "INVALID "
+
+    @staticmethod
+    def build_address_from_instance_byte(frame):
+        # see iec 82386-103 7.2.2.1 Table 2
+        instance_addressing = (frame >> 13) & 0x7
+        instance_number = (frame >> 8) & 0x1F
+        if instance_addressing == 0:
+            return f"I{instance_number:02X}"
+        elif instane_addressing == 1:
+            return f"FI{instance_number:02X}"
+        elif instance_addressing == 3:
+            return f"FT{instance_number:02X}"
+        elif instance_addressing == 4:
+            return f"IG{instance_number:02X}"
+        elif instance_addressing == 5:
+            return f"FIG{instance_number:02X}"
+        elif instance_addressing == 6:
+            return f"T{instance_number:02X}"
+            
 
     @staticmethod
     def build_power_event_device(frame):
@@ -209,19 +229,31 @@ class ForwardFrame24Bit:
             return
         if (address_byte >= 0x00) and (address_byte <= 0x7F):
             short_address = address_byte >> 1
-            self.address_string = f"A{short_address:02}".ljust(address_field_width)
+            self.address_string = f"A{short_address:02}"
+            if (opcode_byte >= 0x61) and (opcode_byte <= 0x94):
+                self.address_string +=  "," + self.build_address_from_instance_byte(frame)               
+            self.address_string = self.address_string.ljust(address_field_width)
             self.command_string = self.device_command(opcode_byte)
             return
         if (address_byte >= 0x80) and (address_byte <= 0xBF):
             group_address = (address_byte >> 1) & 0x0F
             self.address_string = f"G{group_address:02}".ljust(address_field_width)
+            if (opcode_byte >= 0x61) and (opcode_byte <= 0x94):
+                self.address_string +=  "," + self.build_address_from_instance_byte(frame)               
+            self.address_string = self.address_string.ljust(address_field_width)
             self.command_string = self.device_command(opcode_byte)
             return
         if address_byte == 0xFD:
             self.address_string = "BC unadr.".ljust(address_field_width)
+            if (opcode_byte >= 0x61) and (opcode_byte <= 0x94):
+                self.address_string +=  "," + self.build_address_from_instance_byte(frame)               
+            self.address_string = self.address_string.ljust(address_field_width)
             self.command_string = self.device_command(opcode_byte)
         elif address_byte == 0xFF:
             self.address_string = "BC".ljust(address_field_width)
+            if (opcode_byte >= 0x61) and (opcode_byte <= 0x94):
+                self.address_string +=  "," + self.build_address_from_instance_byte(frame)               
+            self.address_string =  self.address_string.ljust(address_field_width)
             self.command_string = self.device_command(opcode_byte)
         elif (address_byte >= 0xC1) and (address_byte <= 0xDF):
             self.command_string = self.device_special_command(
