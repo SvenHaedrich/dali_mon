@@ -156,7 +156,7 @@ class ForwardFrame24Bit:
         elif event_type == EventType.DEVICE_INSTANCE:
             short_address = (frame >> 17) & 0x3F
             instance_number = (frame >> 10) & 0x1F
-            return f"A{short_address:02X},I{instance_type:02X}"
+            return f"A{short_address:02X},I{instance_number:02X}"
         elif event_type == EventType.DEVICE_GROUP:
             device_group = (frame >> 17) & 0x1F
             instance_type = (frame >> 10) & 0x1F
