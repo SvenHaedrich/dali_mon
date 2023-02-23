@@ -173,6 +173,25 @@ class ForwardFrame24Bit:
             return "INVALID "
 
     @staticmethod
+    def build_address_from_instance_byte(frame):
+        # see iec 82386-103 7.2.2.1 Table 2
+        instance_addressing = (frame >> 13) & 0x7
+        instance_number = (frame >> 8) & 0x1F
+        if instance_addressing == 0:
+            return f"I{instance_number:02X}"
+        elif instane_addressing == 1:
+            return f"FI{instance_number:02X}"
+        elif instance_addressing == 3:
+            return f"FT{instance_number:02X}"
+        elif instance_addressing == 4:
+            return f"IG{instance_number:02X}"
+        elif instance_addressing == 5:
+            return f"FIG{instance_number:02X}"
+        elif instance_addressing == 6:
+            return f"T{instance_number:02X}"
+            
+
+    @staticmethod
     def build_power_event_device(frame):
         # see iec 62386-103 9.6.2
         if frame & (1 << 12):
@@ -210,19 +229,31 @@ class ForwardFrame24Bit:
             return
         if (address_byte >= 0x00) and (address_byte <= 0x7F):
             short_address = address_byte >> 1
-            self.address_string = f"A{short_address:02}".ljust(address_field_width)
+            self.address_string = f"A{short_address:02}"
+            if (opcode_byte >= 0x61) and (opcode_byte <= 0x94):
+                self.address_string +=  "," + self.build_address_from_instance_byte(frame)               
+            self.address_string = self.address_string.ljust(address_field_width)
             self.command_string = self.device_command(opcode_byte)
             return
         if (address_byte >= 0x80) and (address_byte <= 0xBF):
             group_address = (address_byte >> 1) & 0x0F
             self.address_string = f"G{group_address:02}".ljust(address_field_width)
+            if (opcode_byte >= 0x61) and (opcode_byte <= 0x94):
+                self.address_string +=  "," + self.build_address_from_instance_byte(frame)               
+            self.address_string = self.address_string.ljust(address_field_width)
             self.command_string = self.device_command(opcode_byte)
             return
         if address_byte == 0xFD:
             self.address_string = "BC unadr.".ljust(address_field_width)
+            if (opcode_byte >= 0x61) and (opcode_byte <= 0x94):
+                self.address_string +=  "," + self.build_address_from_instance_byte(frame)               
+            self.address_string = self.address_string.ljust(address_field_width)
             self.command_string = self.device_command(opcode_byte)
         elif address_byte == 0xFF:
             self.address_string = "BC".ljust(address_field_width)
+            if (opcode_byte >= 0x61) and (opcode_byte <= 0x94):
+                self.address_string +=  "," + self.build_address_from_instance_byte(frame)               
+            self.address_string =  self.address_string.ljust(address_field_width)
             self.command_string = self.device_command(opcode_byte)
         elif (address_byte >= 0xC1) and (address_byte <= 0xDF):
             self.command_string = self.device_special_command(
