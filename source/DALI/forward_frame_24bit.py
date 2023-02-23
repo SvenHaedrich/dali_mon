@@ -130,7 +130,8 @@ class ForwardFrame24Bit:
             return f"DTR2:DTR1 (0x{instance_byte:02X},0x{opcode_byte:02X})"
         return f"--- CODE 0x{address_byte:02X} = {address_byte} UNKNOWN CONTROL DEVICE SPECIAL COMMAND"
 
-    def get_event_source_type(self, frame):
+    @staticmethod
+    def get_event_source_type(frame):
         if frame & (1 << 23):
             if frame & (1 << 22):
                 return EventType.INSTANCE_GROUP
