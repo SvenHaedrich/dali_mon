@@ -8,7 +8,8 @@ class EventType:
 
 
 class ForwardFrame24Bit:
-    def device_command(self, opcode):
+    @staticmethod
+    def device_command(opcode):
         # see iec 62386-102 11.2
         code_dictionary = {
             0x00: "IDENTIFY DEVICE",
@@ -89,7 +90,8 @@ class ForwardFrame24Bit:
             f"--- CODE 0x{opcode:02X} = {opcode} UNDEFINED CONTROL DEVICE COMMAND",
         )
 
-    def device_special_command(self, address_byte, instance_byte, opcode_byte):
+    @staticmethod
+    def device_special_command(address_byte, instance_byte, opcode_byte):
         # see iec 62386-103 table 22
         if address_byte == 0xC1:
             if instance_byte == 0x00:
