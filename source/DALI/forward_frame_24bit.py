@@ -1,3 +1,6 @@
+from bitstring import BitArray
+
+
 class EventType:
     RESERVED = 0
     DEVICE = 1
@@ -5,6 +8,30 @@ class EventType:
     DEVICE_GROUP = 3
     INSTANCE = 4
     INSTANCE_GROUP = 5
+
+
+class InstanceAddressType:
+    RESERVED = 0
+    INSTANCE_NUMBER = 1
+    INSTANCE_GROUP = 2
+    INSTANCE_TYPE = 3
+    FEATURE_ON_INSTANCE_NUMBER = 4
+    FEATURE_ON_INSTANCE_GROUP = 5
+    FEATURE_ON_INSTANCE_TYPE = 6
+    FEATURE_BROADCAST = 7
+    FEATURE_ON_INSTANCE_BROADCAST = 8
+    INSTANCE_BROADCAST = 9
+    FEATURE_ON_DEVICE = 10
+    DEVICE = 11
+
+
+class DeviceAddressType:
+    RESERVED = 0
+    SHORT_ADDRESS = 1
+    GROUP_ADDRESS = 2
+    BROADCAST_UNADDR = 3
+    BROADCAST = 4
+    SPECIAL = 5
 
 
 class ForwardFrame24Bit:
@@ -136,65 +163,150 @@ class ForwardFrame24Bit:
             return f"DTR2:DTR1 (0x{instance_byte:02X},0x{opcode_byte:02X})"
         return f"--- CODE 0x{address_byte:02X} = {address_byte} UNKNOWN CONTROL DEVICE SPECIAL COMMAND"
 
+    # IEC 62386-103:2022 Table 2 - instance byte in a command frame
     @staticmethod
-    def get_event_source_type(frame):
-        if frame & (1 << 23):
-            if frame & (1 << 22):
-                if frame & (1 << 15):
-                    return EventType.RESERVED
-                return EventType.INSTANCE_GROUP
-            else:
-                if frame & (1 << 15):
-                    return EventType.INSTANCE
-                else:
-                    return EventType.DEVICE_GROUP
-        else:
-            if frame & (1 << 15):
+    def get_instance_address_type(instance_byte):
+        if instance_byte == 0xFE:
+            return InstanceAddressType.DEVICE
+        if instance_byte == 0xFC:
+            return InstanceAddressType.FEATURE_ON_DEVICE
+        if instance_byte == 0xFF:
+            return InstanceAddressType.INSTANCE_BROADCAST
+        if instance_byte == 0xFD:
+            return InstanceAddressType.FEATURE_ON_INSTANCE_BROADCAST
+        if instance_byte == 0xF9:
+            return InstanceAddressType.FEATURE_BROADCAST
+        instance_code = BitArray(uint=instance_byte, length=8)[:3]
+        if instance_code == 0:
+            return InstanceAddressType.INSTANCE_NUMBER
+        if instance_code == 1:
+            return InstanceAddressType.FEATURE_ON_INSTANCE_NUMBER
+        if instance_code == 3:
+            return InstanceAddressType.FEATURE_ON_INSTANCE_TYPE
+        if instance_code == 4:
+            return InstanceAddressType.INSTANCE_GROUP
+        if instance_code == 5:
+            return InstanceAddressType.FEATURE_ON_INSTANCE_GROUP
+        return InstanceAddressType.RESERVED
+
+    # IEC 62386-103:2022 Table 1 - command frame encoding
+    def get_device_address_type(self):
+        if self.frame_bits[:8].uint == 0xFF:
+            return DeviceAddressType.BROADCAST
+        if self.frame_bits[:8].uint == 0xFD:
+            return DeviceAddressType.BROADCAST_UNADDR
+        if not self.frame_bits[0]:
+            return DeviceAddressType.SHORT_ADDRESS
+        if self.frame_bits[:2].uint == 0b10:
+            return DeviceAddressType.GROUP_ADDRESS
+        if self.frame_bits[:3].uint == 0b1100:
+            return DeviceAddressType.SPECIAL
+        return DeviceAddressType.RESERVED
+
+    # IEC 62386-103:2022 Table 3 - event message frame encoding
+    def get_event_source_type(self):
+        if not self.frame_bits[0]:
+            if self.frame_bits[8]:
                 return EventType.DEVICE_INSTANCE
             else:
                 return EventType.DEVICE
+        if not self.frame_bits[1]:
+            if self.frame_bits[8]:
+                return EventType.INSTANCE
+            else:
+                return EventType.DEVICE_GROUP
+        else:
+            if not self.frame_bits[8]:
+                return EventType.INSTANCE_GROUP
         return EventType.RESERVED
 
-    @staticmethod
-    def build_event_source_string(event_type, frame):
-        if event_type == EventType.DEVICE:
-            short_address = (frame >> 17) & 0x3F
-            instance_type = (frame >> 10) & 0x1F
-            return f"A{short_address:02X},T{instance_type:02X}"
-        elif event_type == EventType.DEVICE_INSTANCE:
-            short_address = (frame >> 17) & 0x3F
-            instance_number = (frame >> 10) & 0x1F
-            return f"A{short_address:02X},I{instance_number:02X}"
-        elif event_type == EventType.DEVICE_GROUP:
-            device_group = (frame >> 17) & 0x1F
-            instance_type = (frame >> 10) & 0x1F
-            return f"G{device_group:02X},T{instance_type:02X}"
-        elif event_type == EventType.INSTANCE:
-            instance_type = (frame >> 17) & 0x1F
-            instance_number = (frame >> 10) & 0x1F
-            return f"T{instance_type:02X},I{instance_number:02X}"
-        elif event_type == EventType.INSTANCE_GROUP:
-            device_group = (frame >> 17) & 0x1F
-            instance_type = (frame >> 10) & 0x1F
-            return f"IG{device_group:02X},T{instance_type:02X}"
+    def build_command_address_string(
+        self, address_type, instance_type
+    ):  # todo make address_type instance_type a class_member
+        address_string = ""
+        if address_type == DeviceAddressType.SHORT_ADDRESS:
+            short_address = self.frame_bits[1:7].uint
+            address_string = f"A{short_address:02}"
+        elif address_type == DeviceAddressType().GROUP_ADDRESS:
+            group_address = self.frame_bits[2:7].uint
+            address_string = f"G{group_address:02}"
+        elif address_type == DeviceAddressType.BROADCAST_UNADDR:
+            address_string = "BC unadr."
+        elif address_type == DeviceAddressType.BROADCAST:
+            address_string = "BC"
+        if instance_type == InstanceAddressType.INSTANCE_NUMBER:
+            number = self.frame_bits[11:17].uint
+            address_string += f",I{number:02}"
+        elif instance_type == InstanceAddressType.INSTANCE_GROUP:
+            group = self.frame_bits[11:17].uint
+            address_string += f",IG{group:02}"
+        elif instance_type == InstanceAddressType.INSTANCE_TYPE:
+            type = self.frame_bits[11:17].uint
+            address_string += f",T{type:02}"
+        elif instance_type == InstanceAddressType.FEATURE_ON_INSTANCE_NUMBER:
+            number = self.frame_bits[11:17].uint
+            address_string += f",FI{number:02}"
+        elif instance_type == InstanceAddressType.FEATURE_ON_INSTANCE_GROUP:
+            group = self.frame_bits[11:17].uint
+            address_string += f",FG{group:02}"
+        elif instance_type == InstanceAddressType.FEATURE_ON_INSTANCE_TYPE:
+            type = self.frame_bits[11:17].uint
+            address_string += f",FT{type:02}"
+        elif instance_type == InstanceAddressType.FEATURE_BROADCAST:
+            address_string += "F BC"
+        elif instance_type == InstanceAddressType.FEATURE_ON_INSTANCE_BROADCAST:
+            address_string += "F INST BC"
+        elif instance_type == InstanceAddressType.INSTANCE_BROADCAST:
+            address_string += "INST BC"
+        elif instance_type == InstanceAddressType.FEATURE_ON_DEVICE:
+            address_string += "F DEV"
+        if (
+            instance_type == InstanceAddressType.RESERVED
+            or address_type == DeviceAddressType.RESERVED
+        ):
+            address_string = "RESERVED"
+        return address_string.ljust(self.address_field_width)
+
+    def build_event_source_string(self):
+        if self.event_source_type == EventType.DEVICE:
+            short_address = self.frame_bits[1:7].uint
+            instance_type = self.frame_bits[9:14].uint
+            return f"A{short_address:02},T{instance_type:02}"
+        elif self.event_source_type == EventType.DEVICE_INSTANCE:
+            short_address = self.frame_bits[1:7].uint
+            instance_number = self.frame_bits[9:14].uint
+            return f"A{short_address:02},I{instance_number:02}"
+        elif self.event_source_type == EventType.DEVICE_GROUP:
+            device_group = self.frame_bits[2:7].uint
+            instance_type = self.frame_bits[9:14].uint
+            return f"G{device_group:02},T{instance_type:02}"
+        elif self.event_source_type == EventType.INSTANCE:
+            instance_type = self.frame_bits[2:7].uint
+            instance_number = self.frame_bits[9:14].uint
+            return f"T{instance_type:02},I{instance_number:02}"
+        elif self.event_source_type == EventType.INSTANCE_GROUP:
+            device_group = self.frame_bits[2:7].uint
+            instance_type = self.frame_bits[9:14].uint
+            return f"IG{device_group:02},T{instance_type:02}"
         else:
             return ""
 
-    @staticmethod
-    def build_power_event_device(frame):
-        # see iec 62386-103 9.6.2
-        if frame & (1 << 12):
-            device_group = (frame >> 7) & 0x1F
-            group_result = f"G{device_group:02X} "
+    def build_power_event_device(self):
+        # see iec 62386-103:2022 9.7.2
+        if self.frame_bits[11]:
+            device_group = self.frame_bits[12:17].uint
+            group_result = f"G{device_group:02} "
         else:
             group_result = ""
-        if frame & (1 << 6):
-            short_address = frame & 0x3F
-            return f"{group_result}A{short_address:02X}"
+        if self.frame_bits[17]:
+            short_address = self.frame_bits[18:].uint
+            return f"{group_result}A{short_address:02}"
         else:
             return f"{group_result}".rstrip()
 
     def __init__(self, frame, address_field_width=10):
+        self.frame_bits = BitArray(uint=frame, length=24)
+        self.address_field_width = address_field_width
         self.address_string = " " * address_field_width
         self.command_string = ""
 
@@ -203,46 +315,39 @@ class ForwardFrame24Bit:
         opcode_byte = frame & 0xFF
 
         # see iec 62386-103 7.2.2.1
-        if (frame >> 13) == 0x7F7:
-            self.address_string = self.build_power_event_device(frame).ljust(
+        if self.frame_bits[:11].uint == 0x7F7:
+            self.address_string = self.build_power_event_device().ljust(
                 address_field_width
             )
-            self.command_string = f"POWER CYCLE EVENT"
+            self.command_string = "POWER CYCLE EVENT"
             return
-        if not (address_byte & 0x01):
-            self.addressing = self.get_event_source_type(frame)
-            if self.addressing == EventType.RESERVED:
+        if not self.frame_bits[7]:
+            self.event_source_type = self.get_event_source_type()
+            if self.event_source_type == EventType.RESERVED:
                 self.address_string = "".ljust(address_field_width)
                 self.command_string = "RESERVED EVENT"
             else:
-                self.address_string = self.build_event_source_string(
-                    self.addressing, frame
-                ).ljust(address_field_width)
+                self.address_string = self.build_event_source_string().ljust(
+                    address_field_width
+                )
                 self.command_string = f"EVENT DATA 0x{(frame & 0x3FF):03X} = {(frame & 0x3FF)} = {(frame & 0x3FF):012b}b"
             return
-        if (address_byte >= 0x00) and (address_byte <= 0x7F):
-            short_address = address_byte >> 1
-            self.address_string = f"A{short_address:02}".ljust(address_field_width)
+        instance_address_type = self.get_instance_address_type(instance_byte)
+        device_address_type = self.get_device_address_type()
+        if (
+            (device_address_type == DeviceAddressType.SHORT_ADDRESS)
+            or (device_address_type == DeviceAddressType.GROUP_ADDRESS)
+            or (device_address_type == DeviceAddressType.BROADCAST)
+            or (device_address_type == DeviceAddressType.BROADCAST_UNADDR)
+        ):
+            self.address_string = self.build_command_address_string(
+                device_address_type, instance_address_type
+            )
             self.command_string = self.device_command(opcode_byte)
-            return
-        if (address_byte >= 0x80) and (address_byte <= 0xBF):
-            group_address = (address_byte >> 1) & 0x0F
-            self.address_string = f"G{group_address:02}".ljust(address_field_width)
-            self.command_string = self.device_command(opcode_byte)
-            return
-        if address_byte == 0xFD:
-            self.address_string = "BC unadr.".ljust(address_field_width)
-            self.command_string = self.device_command(opcode_byte)
-        elif address_byte == 0xFF:
-            self.address_string = "BC".ljust(address_field_width)
-            self.command_string = self.device_command(opcode_byte)
-        elif (address_byte >= 0xC1) and (address_byte <= 0xDF):
+        if device_address_type == DeviceAddressType.SPECIAL:
+            self.address_string = self.build_command_address_string(
+                device_address_type, instance_address_type
+            )
             self.command_string = self.device_special_command(
                 address_byte, instance_byte, opcode_byte
             )
-        elif (address_byte >= 0xE1) and (address_byte <= 0xEF):
-            self.command_string = "RESERVED"
-        elif (address_byte >= 0xF1) and (address_byte <= 0xF7):
-            self.command_string = "RESERVED"
-        elif (address_byte >= 0xF8) and (address_byte <= 0xFB):
-            self.command_string = "RESERVED"
