@@ -25,15 +25,28 @@ dali_mon [options]
 ## Sample Output
 
 <pre> ./dali_mon < /dev/ttyUSB0
-<font color="#26A269">11618.586 |    0.000 |     FF00 | </font><font color="#D0CFCC">BC        OFF</font>
-<font color="#26A269">11619.459 |    0.873 |     FF06 | </font><font color="#D0CFCC">BC        RECALL MIN LEVEL</font>
-<font color="#26A269">11620.596 |    1.137 |     FF05 | </font><font color="#D0CFCC">BC        RECALL MAX LEVEL</font>
-<font color="#26A269">11626.347 |    5.751 |     FF02 | </font><font color="#D0CFCC">BC        DOWN</font>
-<font color="#26A269">11626.880 |    0.533 |     FF02 | </font><font color="#D0CFCC">BC        DOWN</font>
-<font color="#26A269">11627.332 |    0.452 |     FF02 | </font><font color="#D0CFCC">BC        DOWN</font>
-<font color="#26A269">11633.766 |    6.434 |     FF11 | </font><font color="#D0CFCC">BC        GO TO SCENE 1</font>
-<font color="#26A269">11635.703 |    1.937 |     FF00 | </font><font color="#D0CFCC">BC        OFF</font>
+11618.586 |    0.000 |     FF00 | BC        OFF
+11619.459 |    0.873 |     FF06 | BC        RECALL MIN LEVEL
+11620.596 |    1.137 |     FF05 | BC        RECALL MAX LEVEL
+11626.347 |    5.751 |     FF02 | BC        DOWN
+11626.880 |    0.533 |     FF02 | BC        DOWN
+11627.332 |    0.452 |     FF02 | BC        DOWN
+11633.766 |    6.434 |     FF11 | BC        GO TO SCENE 1
+11635.703 |    1.937 |     FF00 | BC        OFF
 </pre>
+
+## Representation of Command Adressing
+
+## Representation of Event Scheme
+
+See also IEC 62386-103:2022 9.7.3
+| eventScheme | Description                                                              | Representation |
+|-------------|--------------------------------------------------------------------------|----------------|
+| 0 (default) | Instance addressing, using instance type *t* and number *i*.                     | T*t*, I*i*     |
+| 1           | Device addressing, using short address *s* and instance type *t*.                | A*s*, T*t*     |
+| 2           | Device and instance addressing, using short address *s* and instance number *i*. | A*s*, I*i*     |
+| 3           | Device group addressing, using device group *g* and instance type *t*.           | G*g*, T*t*     |
+| 4           | Instance group addressing, using instance group *n* and type *t*.                | IG*n*, T*t*     |
 
 ## Read from Serial Port
 
@@ -119,3 +132,8 @@ In case of an error state:<br/>
 <bits> : codes the error code
 <data> : contains additional error information
 ```   
+// TODO: test for control device commands with instances, add more test overall
+// TODO: add 105 commands
+// TODO: include known EVENT types
+// TODO: proivde details when parsing fails
+// TODO: improve online help 
