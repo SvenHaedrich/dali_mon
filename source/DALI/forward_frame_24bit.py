@@ -62,6 +62,8 @@ class ForwardFrame24Bit:
             0x66: "SET INSTANCE GROUP 2 (DTR0)",
             0x67: "SET EVENT SCHEME (DTR0)",
             0x68: "SET EVENT FILTER (DTR2, DTR1, DTR0)",
+            0x69: "SET INSTANCE TYPE (DTR0)",
+            0x6A: "SET INSTANCE CONFIGURATION (DTR0, DTR2:DTR1)",
             0x80: "QUERY INSTANCE TYPE",
             0x81: "QUERY RESOLUTION",
             0x82: "QUERY INSTANCE ERROR",
@@ -132,7 +134,8 @@ class ForwardFrame24Bit:
             return f"DTR2:DTR1 (0x{instance_byte:02X},0x{opcode_byte:02X})"
         return f"--- CODE 0x{address_byte:02X} = {address_byte} UNKNOWN CONTROL DEVICE SPECIAL COMMAND"
 
-    def get_event_source_type(self, frame):
+    @staticmethod
+    def get_event_source_type(frame):
         if frame & (1 << 23):
             if frame & (1 << 22):
                 if frame & (1 << 15):
