@@ -201,3 +201,6 @@ def test_reserved_event_schemes():
             )
             decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
             assert decoded_command.cmd() == target_command
+
+
+# TODO add tests for instance addressing commands testing the different addressing mode
