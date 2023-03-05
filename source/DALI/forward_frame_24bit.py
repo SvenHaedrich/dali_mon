@@ -1,5 +1,14 @@
 from bitstring import BitArray
 
+# bit position translation
+#
+# doc 2222|1111||1111|11  ||    |
+#     3210|9876||5432|1098||7654|3210
+#    -----+----++----+----++----+-----
+# bit 0123|4567||8911|1111||1111|2222
+#         |    ||  01|2345||6789|0123
+#
+
 
 class EventType:
     RESERVED = 0
@@ -37,7 +46,7 @@ class DeviceAddressType:
 class ForwardFrame24Bit:
     @staticmethod
     def device_command(opcode):
-        # see iec 62386-102 11.2
+        # see iec 62386-103 11.2 table 23 - standard commands
         code_dictionary = {
             0x00: "IDENTIFY DEVICE",
             0x01: "RESET POWER CYCLE SEEN",
@@ -89,9 +98,9 @@ class ForwardFrame24Bit:
             0x65: "SET INSTANCE GROUP 1 (DTR0)",
             0x66: "SET INSTANCE GROUP 2 (DTR0)",
             0x67: "SET EVENT SCHEME (DTR0)",
-            0x68: "SET EVENT FILTER (DTR2, DTR1, DTR0)",
+            0x68: "SET EVENT FILTER (DTR2,DTR1,DTR0)",
             0x69: "SET INSTANCE TYPE (DTR0)",
-            0x6A: "SET INSTANCE CONFIGURATION (DTR0, DTR2:DTR1)",
+            0x6A: "SET INSTANCE CONFIGURATION (DTR0,DTR2:DTR1)",
             0x80: "QUERY INSTANCE TYPE",
             0x81: "QUERY RESOLUTION",
             0x82: "QUERY INSTANCE ERROR",
