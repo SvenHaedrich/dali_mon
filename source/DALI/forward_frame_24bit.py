@@ -1,5 +1,5 @@
 class EventType:
-    INVALID = 0
+    RESERVED = 0
     DEVICE = 1
     DEVICE_INSTANCE = 2
     DEVICE_GROUP = 3
@@ -28,7 +28,7 @@ class ForwardFrame24Bit:
             0x1E: "STOP QUIESCENT MODE",
             0x1F: "ENABLE POWER CYCLE NOTIFICATION",
             0x20: "DISABLE POWER CYCLE NOTIFICATION",
-            0x21: "SAVE PERSISTENT VARIABLES",
+            0x21: "SAVE PERSISTENT VARIABLES (DEPRECATED)",
             0x30: "QUERY DEVICE STATUS",
             0x31: "QUERY APPLICTAION CONTROLLER ERROR",
             0x32: "QUERY INPUT DEVICE ERROR",
@@ -79,6 +79,8 @@ class ForwardFrame24Bit:
             0x90: "QUERY EVENT FILTER 0-7",
             0x91: "QUERY EVENT FILTER 8-15",
             0x92: "QUERY EVENT FILTER 16-23",
+            0x93: "QUERY INSTANCE CONFIGURATION (DTR0)",
+            0x94: "QUERY AVAILABLE INSTANCE TYPES",
         }
         return code_dictionary.get(
             opcode,
@@ -133,6 +135,8 @@ class ForwardFrame24Bit:
     def get_event_source_type(self, frame):
         if frame & (1 << 23):
             if frame & (1 << 22):
+                if frame & (1 << 15):
+                    return EventType.RESERVED
                 return EventType.INSTANCE_GROUP
             else:
                 if frame & (1 << 15):
@@ -144,7 +148,7 @@ class ForwardFrame24Bit:
                 return EventType.DEVICE_INSTANCE
             else:
                 return EventType.DEVICE
-        return EventType.INVALID
+        return EventType.RESERVED
 
     @staticmethod
     def build_event_source_string(event_type, frame):
@@ -155,7 +159,7 @@ class ForwardFrame24Bit:
         elif event_type == EventType.DEVICE_INSTANCE:
             short_address = (frame >> 17) & 0x3F
             instance_number = (frame >> 10) & 0x1F
-            return f"A{short_address:02X},I{instance_type:02X}"
+            return f"A{short_address:02X},I{instance_number:02X}"
         elif event_type == EventType.DEVICE_GROUP:
             device_group = (frame >> 17) & 0x1F
             instance_type = (frame >> 10) & 0x1F
@@ -169,7 +173,7 @@ class ForwardFrame24Bit:
             instance_type = (frame >> 10) & 0x1F
             return f"IG{device_group:02X},T{instance_type:02X}"
         else:
-            return "INVALID "
+            return ""
 
     @staticmethod
     def build_power_event_device(frame):
@@ -202,10 +206,14 @@ class ForwardFrame24Bit:
             return
         if not (address_byte & 0x01):
             self.addressing = self.get_event_source_type(frame)
-            self.address_string = self.build_event_source_string(
-                self.addressing, frame
-            ).ljust(address_field_width)
-            self.command_string = f"EVENT DATA 0x{(frame & 0x3FF):03X} = {(frame & 0x3FF)} = {(frame & 0x3FF):012b}b"
+            if self.addressing == EventType.RESERVED:
+                self.address_string = "".ljust(address_field_width)
+                self.command_string = "RESERVED EVENT"
+            else:
+                self.address_string = self.build_event_source_string(
+                    self.addressing, frame
+                ).ljust(address_field_width)
+                self.command_string = f"EVENT DATA 0x{(frame & 0x3FF):03X} = {(frame & 0x3FF)} = {(frame & 0x3FF):012b}b"
             return
         if (address_byte >= 0x00) and (address_byte <= 0x7F):
             short_address = address_byte >> 1
