@@ -322,6 +322,7 @@ class ForwardFrame24Bit:
             self.command_string = "POWER CYCLE EVENT"
             self.address_string = self.address_string.ljust(address_field_width)
             return
+
         if not self.frame_bits[7]:
             event_source_type = self.get_event_source_type()
             if event_source_type == EventType.RESERVED:
