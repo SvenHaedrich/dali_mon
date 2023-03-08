@@ -2,11 +2,11 @@ from bitstring import BitArray
 
 # bit position translation
 #
-# doc 2222|1111||1111|11  ||    |
-#     3210|9876||5432|1098||7654|3210
-#    -----+----++----+----++----+-----
-# bit 0123|4567||8911|1111||1111|2222
-#         |    ||  01|2345||6789|0123
+#  2222|1111||1111|11  ||    |      IEC docs
+#  3210|9876||5432|1098||7654|3210
+# -----+----++----+----++----+-----
+#  0123|4567||8911|1111||1111|2222  BitArray index
+#      |    ||  01|2345||6789|0123
 #
 
 
@@ -44,8 +44,7 @@ class DeviceAddressType:
 
 
 class ForwardFrame24Bit:
-    @staticmethod
-    def device_command(opcode):
+    def device_command(self):
         # see iec 62386-103 11.2 table 23 - standard commands
         code_dictionary = {
             0x00: "IDENTIFY DEVICE",
@@ -67,7 +66,7 @@ class ForwardFrame24Bit:
             0x20: "DISABLE POWER CYCLE NOTIFICATION",
             0x21: "SAVE PERSISTENT VARIABLES (DEPRECATED)",
             0x30: "QUERY DEVICE STATUS",
-            0x31: "QUERY APPLICTAION CONTROLLER ERROR",
+            0x31: "QUERY APPLICATION CONTROLLER ERROR",
             0x32: "QUERY INPUT DEVICE ERROR",
             0x33: "QUERY MISSING SHORT ADDRESS",
             0x34: "QUERY VERSION NUMBER",
@@ -79,18 +78,19 @@ class ForwardFrame24Bit:
             0x3A: "QUERY RANDOM ADDRESS (M)",
             0x3B: "QUERY RANDOM ADDRESS (L)",
             0x3C: "READ MEMORY LOCATION (DTR1,DTR0)",
-            0x3D: "QUERY APPLICATION CONTROL ENABLED",
+            0x3D: "QUERY APPLICATION CONTROLLER ENABLED",
             0x3E: "QUERY OPERATING MODE",
             0x3F: "QUERY MANUFACTURER SPECIFIC MODE",
             0x40: "QUERY QUIESCENT MODE",
             0x41: "QUERY DEVICE GROUPS 0-7",
             0x42: "QUERY DEVICE GROUPS 8-15",
             0x43: "QUERY DEVICE GROUPS 16-23",
-            0x44: "QUERY DEVICE GROUPS 24-41",
+            0x44: "QUERY DEVICE GROUPS 24-31",
             0x45: "QUERY POWER CYCLE NOTIFICATION",
             0x46: "QUERY DEVICE CAPABILITIES",
             0x47: "QUERY EXTENDED VERSION NUMBER (DTR0)",
             0x48: "QUERY RESET STATE",
+            0x49: "QUERY APPLICATION CONTROLLER ALWAYS ACTIVE",
             0x61: "SET EVENT PRIORITY (DTR0)",
             0x62: "ENABLE INSTANCE",
             0x63: "DISABLE INSTANCE",
@@ -121,14 +121,16 @@ class ForwardFrame24Bit:
             0x93: "QUERY INSTANCE CONFIGURATION (DTR0)",
             0x94: "QUERY AVAILABLE INSTANCE TYPES",
         }
+        opcode_byte = self.frame_bits[16:].uint
         return code_dictionary.get(
-            opcode,
-            f"--- CODE 0x{opcode:02X} = {opcode} UNDEFINED CONTROL DEVICE COMMAND",
+            opcode_byte,
+            f"--- CODE 0x{opcode_byte:02X} = {opcode_byte} UNDEFINED CONTROL DEVICE COMMAND",
         )
 
-    @staticmethod
-    def device_special_command(address_byte, instance_byte, opcode_byte):
-        # see iec 62386-103 table 22
+    def device_special_command(self):
+        address_byte = self.frame_bits[:8].uint
+        instance_byte = self.frame_bits[8:16].uint
+        opcode_byte = self.frame_bits[16:].uint
         if address_byte == 0xC1:
             if instance_byte == 0x00:
                 return "TERMINATE"
@@ -173,8 +175,8 @@ class ForwardFrame24Bit:
         return f"--- CODE 0x{address_byte:02X} = {address_byte} UNKNOWN CONTROL DEVICE SPECIAL COMMAND"
 
     # IEC 62386-103:2022 Table 2 - instance byte in a command frame
-    @staticmethod
-    def get_instance_address_type(instance_byte):
+    def get_instance_address_type(self):
+        instance_byte = self.frame_bits[8:16].uint
         if instance_byte == 0xFE:
             return InstanceAddressType.DEVICE
         if instance_byte == 0xFC:
@@ -185,7 +187,7 @@ class ForwardFrame24Bit:
             return InstanceAddressType.FEATURE_ON_INSTANCE_BROADCAST
         if instance_byte == 0xF9:
             return InstanceAddressType.FEATURE_BROADCAST
-        instance_code = BitArray(uint=instance_byte, length=8)[:3]
+        instance_code = self.frame_bits[8:11].uint
         if instance_code == 0:
             return InstanceAddressType.INSTANCE_NUMBER
         if instance_code == 1:
@@ -196,6 +198,8 @@ class ForwardFrame24Bit:
             return InstanceAddressType.INSTANCE_GROUP
         if instance_code == 5:
             return InstanceAddressType.FEATURE_ON_INSTANCE_GROUP
+        if instance_code == 6:
+            return InstanceAddressType.INSTANCE_TYPE
         return InstanceAddressType.RESERVED
 
     # IEC 62386-103:2022 Table 1 - command frame encoding
@@ -208,7 +212,7 @@ class ForwardFrame24Bit:
             return DeviceAddressType.SHORT_ADDRESS
         if self.frame_bits[:2].uint == 0b10:
             return DeviceAddressType.GROUP_ADDRESS
-        if self.frame_bits[:3].uint == 0b1100:
+        if self.frame_bits[:3].uint == 0b110:
             return DeviceAddressType.SPECIAL
         return DeviceAddressType.RESERVED
 
@@ -229,10 +233,8 @@ class ForwardFrame24Bit:
                 return EventType.INSTANCE_GROUP
         return EventType.RESERVED
 
-    def build_command_address_string(
-        self, address_type, instance_type
-    ):  # todo make address_type instance_type a class_member
-        address_string = ""
+    def build_command_address_string(self, address_type, instance_type):
+        # todo make address_type instance_type a class_member
         if address_type == DeviceAddressType.SHORT_ADDRESS:
             short_address = self.frame_bits[1:7].uint
             address_string = f"A{short_address:02}"
@@ -244,22 +246,22 @@ class ForwardFrame24Bit:
         elif address_type == DeviceAddressType.BROADCAST:
             address_string = "BC"
         if instance_type == InstanceAddressType.INSTANCE_NUMBER:
-            number = self.frame_bits[11:17].uint
+            number = self.frame_bits[11:16].uint
             address_string += f",I{number:02}"
         elif instance_type == InstanceAddressType.INSTANCE_GROUP:
-            group = self.frame_bits[11:17].uint
+            group = self.frame_bits[11:16].uint
             address_string += f",IG{group:02}"
         elif instance_type == InstanceAddressType.INSTANCE_TYPE:
-            type = self.frame_bits[11:17].uint
+            type = self.frame_bits[11:16].uint
             address_string += f",T{type:02}"
         elif instance_type == InstanceAddressType.FEATURE_ON_INSTANCE_NUMBER:
-            number = self.frame_bits[11:17].uint
+            number = self.frame_bits[11:16].uint
             address_string += f",FI{number:02}"
         elif instance_type == InstanceAddressType.FEATURE_ON_INSTANCE_GROUP:
-            group = self.frame_bits[11:17].uint
+            group = self.frame_bits[11:16].uint
             address_string += f",FG{group:02}"
         elif instance_type == InstanceAddressType.FEATURE_ON_INSTANCE_TYPE:
-            type = self.frame_bits[11:17].uint
+            type = self.frame_bits[11:16].uint
             address_string += f",FT{type:02}"
         elif instance_type == InstanceAddressType.FEATURE_BROADCAST:
             address_string += "F BC"
@@ -269,31 +271,28 @@ class ForwardFrame24Bit:
             address_string += "INST BC"
         elif instance_type == InstanceAddressType.FEATURE_ON_DEVICE:
             address_string += "F DEV"
-        if (
-            instance_type == InstanceAddressType.RESERVED
-            or address_type == DeviceAddressType.RESERVED
-        ):
+        if instance_type == InstanceAddressType.RESERVED or address_type == DeviceAddressType.RESERVED:
             address_string = "RESERVED"
-        return address_string.ljust(self.address_field_width)
+        return address_string
 
-    def build_event_source_string(self):
-        if self.event_source_type == EventType.DEVICE:
+    def build_event_source_string(self, event_source_type):
+        if event_source_type == EventType.DEVICE:
             short_address = self.frame_bits[1:7].uint
             instance_type = self.frame_bits[9:14].uint
             return f"A{short_address:02},T{instance_type:02}"
-        elif self.event_source_type == EventType.DEVICE_INSTANCE:
+        elif event_source_type == EventType.DEVICE_INSTANCE:
             short_address = self.frame_bits[1:7].uint
             instance_number = self.frame_bits[9:14].uint
             return f"A{short_address:02},I{instance_number:02}"
-        elif self.event_source_type == EventType.DEVICE_GROUP:
+        elif event_source_type == EventType.DEVICE_GROUP:
             device_group = self.frame_bits[2:7].uint
             instance_type = self.frame_bits[9:14].uint
             return f"G{device_group:02},T{instance_type:02}"
-        elif self.event_source_type == EventType.INSTANCE:
+        elif event_source_type == EventType.INSTANCE:
             instance_type = self.frame_bits[2:7].uint
             instance_number = self.frame_bits[9:14].uint
             return f"T{instance_type:02},I{instance_number:02}"
-        elif self.event_source_type == EventType.INSTANCE_GROUP:
+        elif event_source_type == EventType.INSTANCE_GROUP:
             device_group = self.frame_bits[2:7].uint
             instance_type = self.frame_bits[9:14].uint
             return f"IG{device_group:02},T{instance_type:02}"
@@ -315,33 +314,26 @@ class ForwardFrame24Bit:
 
     def __init__(self, frame, address_field_width=10):
         self.frame_bits = BitArray(uint=frame, length=24)
-        self.address_field_width = address_field_width
-        self.address_string = " " * address_field_width
-        self.command_string = ""
-
-        address_byte = (frame >> 16) & 0xFF
-        instance_byte = (frame >> 8) & 0xFF
-        opcode_byte = frame & 0xFF
+        self.address_string = ""
 
         # see iec 62386-103 7.2.2.1
         if self.frame_bits[:11].uint == 0x7F7:
-            self.address_string = self.build_power_event_device().ljust(
-                address_field_width
-            )
+            self.address_string = self.build_power_event_device()
             self.command_string = "POWER CYCLE EVENT"
+            self.address_string = self.address_string.ljust(address_field_width)
             return
         if not self.frame_bits[7]:
-            self.event_source_type = self.get_event_source_type()
-            if self.event_source_type == EventType.RESERVED:
-                self.address_string = "".ljust(address_field_width)
+            event_source_type = self.get_event_source_type()
+            if event_source_type == EventType.RESERVED:
                 self.command_string = "RESERVED EVENT"
             else:
-                self.address_string = self.build_event_source_string().ljust(
-                    address_field_width
+                self.address_string = self.build_event_source_string(event_source_type).ljust(address_field_width)
+                self.command_string = (
+                    f"EVENT DATA 0x{(frame & 0x3FF):03X} = {(frame & 0x3FF)} = {(frame & 0x3FF):012b}b"
                 )
-                self.command_string = f"EVENT DATA 0x{(frame & 0x3FF):03X} = {(frame & 0x3FF)} = {(frame & 0x3FF):012b}b"
+            self.address_string = self.address_string.ljust(address_field_width)
             return
-        instance_address_type = self.get_instance_address_type(instance_byte)
+        instance_address_type = self.get_instance_address_type()
         device_address_type = self.get_device_address_type()
         if (
             (device_address_type == DeviceAddressType.SHORT_ADDRESS)
@@ -349,14 +341,8 @@ class ForwardFrame24Bit:
             or (device_address_type == DeviceAddressType.BROADCAST)
             or (device_address_type == DeviceAddressType.BROADCAST_UNADDR)
         ):
-            self.address_string = self.build_command_address_string(
-                device_address_type, instance_address_type
-            )
-            self.command_string = self.device_command(opcode_byte)
+            self.address_string = self.build_command_address_string(device_address_type, instance_address_type)
+            self.command_string = self.device_command()
         if device_address_type == DeviceAddressType.SPECIAL:
-            self.address_string = self.build_command_address_string(
-                device_address_type, instance_address_type
-            )
-            self.command_string = self.device_special_command(
-                address_byte, instance_byte, opcode_byte
-            )
+            self.command_string = self.device_special_command()
+        self.address_string = self.address_string.ljust(address_field_width)
