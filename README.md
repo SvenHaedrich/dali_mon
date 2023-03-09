@@ -35,8 +35,6 @@ dali_mon [options]
 11635.703 |    1.937 |     FF00 | BC        OFF
 </pre>
 
-## Representation of Command Adressing
-
 ## Representation of Event Scheme
 
 See also IEC 62386-103:2022 9.7.3
@@ -132,8 +130,3 @@ In case of an error state:<br/>
 <bits> : codes the error code
 <data> : contains additional error information
 ```   
-// TODO: test for control device commands with instances, add more test overall
-// TODO: add 105 commands
-// TODO: include known EVENT types
-// TODO: proivde details when parsing fails
-// TODO: improve online help 
