@@ -171,6 +171,13 @@ class DALI_Usb:
                             raw.length = DALI.DALIError.FRAME
                         else:
                             raw.length = DALI.DALIError.SYSTEM_FAILURE
+                    elif type == (DALI_USB_RECEIVE_MASK + DALI_USB_TYPE_HELVAR):
+                        # for now we treat 17bit frames as error
+                        raw.type = raw.ERROR
+                        raw.data = 0
+                        raw.length = DALI.DALIError.FRAME
+                    else:
+                        continue
                     self.queue.put(raw)
 
             except usb.USBError as e:
