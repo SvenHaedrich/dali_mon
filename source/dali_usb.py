@@ -40,7 +40,7 @@ class DALI_Usb:
         self.worker_running = False
         self.message_counter = 1
 
-        logger.debug("Try to discover DALI interfaces")
+        logger.debug("try to discover DALI interfaces")
         devices = [dev for dev in usb.core.find(find_all=True, idVendor=vendor, idProduct=product)]
 
         logger.info(f"DALI interfaces found: {devices}")
@@ -79,7 +79,7 @@ class DALI_Usb:
         )
 
         if not self.ep_read or not self.ep_write:
-            raise usb.core.USBError(f"Could not determine read or write endpoint on {self.device}")
+            raise usb.core.USBError(f"could not determine read or write endpoint on {self.device}")
 
         # read pending messages and disregard
         try:
@@ -136,7 +136,6 @@ class DALI_Usb:
         return self.ep_write.write(data)
 
     def close(self):
-        """Close connection to USB device."""
         self.worker_running = False
         usb.util.dispose_resources(self.device)
 
@@ -185,7 +184,7 @@ class DALI_Usb:
                     raise e
 
     def start_read(self):
-        logger.debug("Start read")
+        logger.debug("start read")
         self.worker_running = True
         thread = threading.Thread(target=self.read_worker_thread, args=())
         thread.daemon = True
