@@ -24,9 +24,7 @@ def print_local_time(enabled):
 
 def print_command_color(absolute_time, timestamp, delta, dali_command):
     print_local_time_color(absolute_time)
-    cprint(
-        f"{timestamp:.03f} | {delta:8.03f} | {dali_command} | ", color="green", end=""
-    )
+    cprint(f"{timestamp:.03f} | {delta:8.03f} | {dali_command} | ", color="green", end="")
     cprint(f"{dali_command.cmd()}", color="white")
 
 
@@ -43,9 +41,7 @@ def print_error_color(absolute_time, raw, delta):
 
 def print_error(absolute_time, raw, delta):
     print_local_time(absolute_time)
-    print(
-        f"{raw.timestamp:.03f} | {delta:8.03f} | {DALI.DALIError(raw.length, raw.data)}"
-    )
+    print(f"{raw.timestamp:.03f} | {delta:8.03f} | {DALI.DALIError(raw.length, raw.data)}")
 
 
 def process_line(raw, no_color, absolute_time):
@@ -54,7 +50,7 @@ def process_line(raw, no_color, absolute_time):
             delta = raw.timestamp - process_line.last_timestamp
         else:
             delta = 0
-        if raw.type == raw.COMMAND:
+        if raw.type == raw.VALID:
             dali_command = DALI.Decode(raw, process_line.active_device_type)
             if no_color:
                 print_command(absolute_time, raw.timestamp, delta, dali_command)
