@@ -4,7 +4,7 @@ logger = logging.getLogger(__name__)
 
 
 class Raw_Frame:
-    VALID = "-"  # TODO actually this should be named valid
+    VALID = "-"
     ERROR = "*"
     INVALID = " "
 
