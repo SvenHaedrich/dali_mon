@@ -149,7 +149,7 @@ class DALI_Usb:
                     logger.debug(
                         f"dr=0x{data[0]:02X} sn=0x{data[8]:02X} ty=0x{data[1]:02X} ec=0x{data[3]:02X} ad=0x{data[4]:02X} oc=0x{data[5]:02X}"
                     )
-                    raw.type = raw.COMMAND
+                    raw.type = raw.VALID
                     raw.timestamp = time.time()
                     type = data[1]
                     if type == (DALI_USB_RECEIVE_MASK + DALI_USB_TYPE_8BIT):
