@@ -97,11 +97,7 @@ You will have to log out and then back in for the group change to take effect.
 
 ## Tests
 
-To run the tests enter
-```
-cd tests
-./run_tests.sh
-```
+see [README.md](tests/README.md)
 
 ## DALI frame format for serial input
   
