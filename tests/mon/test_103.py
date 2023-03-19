@@ -59,27 +59,25 @@ import DALI
     ],
 )
 def test_device_standard_command(name, opcode):
-    frame = DALI.Raw_Frame()
-    frame.length = 24
     # broadcast
-    frame.data = 0xFFFE00 + opcode
+    frame = DALI.Raw_Frame(length=24, data=(0xFFFE00 + opcode))
     decoded_command = DALI.Decode(frame)
     target_command = "BC".ljust(10) + name
     assert decoded_command.cmd() == target_command
     # broadcast unadressed
-    frame.data = 0xFDFE00 + opcode
+    frame = DALI.Raw_Frame(length=24, data=(0xFDFE00 + opcode))
     decoded_command = DALI.Decode(frame)
     target_command = "BC unadr.".ljust(10) + name
     assert decoded_command.cmd() == target_command
     # short address
-    for short_address in range(0, 0x40):
-        frame.data = 0x01FE00 + (short_address << 17) + opcode
+    for short_address in range(0x40):
+        frame = DALI.Raw_Frame(length=24, data=(0x01FE00 + (short_address << 17) + opcode))
         decoded_command = DALI.Decode(frame, DALI.DeviceType.LED)
         target_command = f"A{short_address:02}".ljust(10) + name
         assert decoded_command.cmd() == target_command
     # group address
-    for group_address in range(0, 0x10):
-        frame.data = 0x81FE00 + (group_address << 17) + opcode
+    for group_address in range(0x10):
+        frame = DALI.Raw_Frame(length=24, data=(0x81FE00 + (group_address << 17) + opcode))
         decoded_command = DALI.Decode(frame, DALI.DeviceType.LED)
         target_command = f"G{group_address:02}".ljust(10) + name
         assert decoded_command.cmd() == target_command
@@ -90,9 +88,7 @@ def test_device_standard_command(name, opcode):
     [("TERMINATE", 0x00), ("RANDOMISE", 0x02), ("COMPARE", 0x03), ("WITHDRAW", 0x04), ("QUERY SHORT ADDRESS", 0x0A)],
 )
 def test_simple_special_commands(name, instance_byte):
-    frame = DALI.Raw_Frame()
-    frame.length = 24
-    frame.data = (0xC1 << 16) + (instance_byte << 8)
+    frame = DALI.Raw_Frame(length=24, data=((0xC1 << 16) + (instance_byte << 8)))
     decoded_command = DALI.Decode(frame)
     target_command = "".ljust(10) + name
     assert decoded_command.cmd() == target_command, f"failed for frame {frame.data:06X}"
@@ -100,55 +96,53 @@ def test_simple_special_commands(name, instance_byte):
 
 @pytest.mark.parametrize("opcode", [0x02, 0x03, 0x04])
 def test_device_undefined_codes(opcode):
-    frame = DALI.Raw_Frame()
-    frame.length = 24
     # broadcast
-    frame.data = 0xFFFE00 + opcode
+    frame = DALI.Raw_Frame(length=24, data=(0xFFFE00 + opcode))
     decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
     target_command = "BC".ljust(10) + "---"
     assert decoded_command.cmd()[: len(target_command)] == target_command
     # broadcast unadressed
-    frame.data = 0xFDFE00 + opcode
+    frame = DALI.Raw_Frame(length=24, data=(0xFDFE00 + opcode))
     decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
     target_command = "BC unadr.".ljust(10) + "---"
     assert decoded_command.cmd()[: len(target_command)] == target_command
     # short address
-    for short_address in range(0, 0x40):
-        frame.data = 0x01FE00 + (short_address << 17) + opcode
+    for short_address in range(0x40):
+        frame = DALI.Raw_Frame(length=24, data=(0x01FE00 + (short_address << 17) + opcode))
         decoded_command = DALI.Decode(frame, DALI.DeviceType.LED)
         target_command = f"A{short_address:02}".ljust(10) + "---"
         assert decoded_command.cmd()[: len(target_command)] == target_command
     # group address
-    for group_address in range(0, 0x10):
-        frame.data = 0x81FE00 + (group_address << 17) + opcode
+    for group_address in range(0x10):
+        frame = DALI.Raw_Frame(length=24, data=(0x81FE00 + (group_address << 17) + opcode))
         decoded_command = DALI.Decode(frame, DALI.DeviceType.LED)
         target_command = f"G{group_address:02}".ljust(10) + "---"
         assert decoded_command.cmd()[: len(target_command)] == target_command
 
 
 def test_power_cycle_event():
-    frame = DALI.Raw_Frame()
-    frame.length = 24
     # undefined device
-    frame.data = 0xFEE000
+    frame = DALI.Raw_Frame(length=24, data=0xFEE000)
     decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
     target_command = " ".ljust(10) + "POWER CYCLE EVENT"
     assert decoded_command.cmd() == target_command
     # device with short address
-    for short_address in range(0, 0x40):
-        frame.data = 0xFEE000 + (1 << 6) + short_address
+    for short_address in range(0x40):
+        frame = DALI.Raw_Frame(length=24, data=(0xFEE000 + (1 << 6) + short_address))
         decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
         target_command = f"A{short_address:02}".ljust(10) + "POWER CYCLE EVENT"
         assert decoded_command.cmd() == target_command
     # device is group member
-    for group_address in range(0, 0x10):
-        frame.data = 0xFEE000 + (1 << 12) + (group_address << 7)
+    for group_address in range(0x10):
+        frame = DALI.Raw_Frame(length=24, data=(0xFEE000 + (1 << 12) + (group_address << 7)))
         decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
         target_command = f"G{group_address:02}".ljust(10) + "POWER CYCLE EVENT"
         assert decoded_command.cmd() == target_command
     # device with group and short address
-    for group_address in range(0, 0x10):
-        frame.data = 0xFEE000 + (1 << 12) + (group_address << 7) + (1 << 6) + (group_address + 1)
+    for group_address in range(0x10):
+        frame = DALI.Raw_Frame(
+            length=24, data=(0xFEE000 + (1 << 12) + (group_address << 7) + (1 << 6) + (group_address + 1))
+        )
         decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
         target_command = f"G{group_address:02} A{(group_address+1):02}".ljust(10) + "POWER CYCLE EVENT"
         assert decoded_command.cmd() == target_command
@@ -156,11 +150,10 @@ def test_power_cycle_event():
 
 def test_event_scheme_decoding():
     # see IEC62386-103-2022 7.2.2.1 Table 3
-    frame = DALI.Raw_Frame()
-    frame.length = 24
+    frame = DALI.Raw_Frame(24)
     # eventScheme Device (0)
-    for short_address in range(0, 0x40):
-        for instance_type in range(0, 0x20):
+    for short_address in range(0x40):
+        for instance_type in range(0x20):
             frame.data = (short_address << 17) + (instance_type << 10)
             decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
             target_command = (
@@ -168,8 +161,8 @@ def test_event_scheme_decoding():
             )
             assert decoded_command.cmd() == target_command
     # eventScheme Device and Instance (2)
-    for short_address in range(0, 0x40):
-        for instance_number in range(0, 0x20):
+    for short_address in range(0x40):
+        for instance_number in range(0x20):
             frame.data = (short_address << 17) + (1 << 15) + (instance_number << 10)
             decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
             target_command = (
@@ -177,8 +170,8 @@ def test_event_scheme_decoding():
             )
             assert decoded_command.cmd() == target_command
     # eventScheme Device group (3)
-    for device_group in range(0, 0x20):
-        for instance_type in range(0, 0x20):
+    for device_group in range(0x20):
+        for instance_type in range(0x20):
             frame.data = (1 << 23) + (device_group << 17) + (instance_type << 10)
             decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
             target_command = (
@@ -186,8 +179,8 @@ def test_event_scheme_decoding():
             )
             assert decoded_command.cmd() == target_command
     # eventScheme Instance (0)
-    for instance_type in range(0, 0x20):
-        for instance_number in range(0, 0x20):
+    for instance_type in range(0x20):
+        for instance_number in range(0x20):
             frame.data = (1 << 23) + (instance_type << 17) + (1 << 15) + (instance_number << 10)
             decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
             target_command = (
@@ -195,8 +188,8 @@ def test_event_scheme_decoding():
             )
             assert decoded_command.cmd() == target_command
     # eventScheme Instance (0)
-    for instance_groups in range(0, 0x20):
-        for instance_types in range(0, 0x20):
+    for instance_groups in range(0x20):
+        for instance_types in range(0x20):
             frame.data = (3 << 22) + (instance_groups << 17) + (instance_types << 10)
             decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
             target_command = (
@@ -207,67 +200,65 @@ def test_event_scheme_decoding():
 
 def test_reserved_event_schemes():
     # see IEC62386-103-2022 7.2.2.1 Table 3
-    frame = DALI.Raw_Frame()
-    frame.length = 24
+    frame = DALI.Raw_Frame(24)
     target_command = "".ljust(10) + "RESERVED EVENT"
-    for upper_bits in range(0, 0x10):
-        for lower_bits in range(0, 0x20):
+    for upper_bits in range(0x10):
+        for lower_bits in range(0x20):
             frame.data = (3 << 22) + (upper_bits << 17) + (1 << 15) + (lower_bits << 10)
             decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
             assert decoded_command.cmd() == target_command
-    for upper_bits in range(0, 0x8):
-        for lower_bits in range(0, 0x20):
+    for upper_bits in range(0x8):
+        for lower_bits in range(0x20):
             frame.data = (7 << 21) + (upper_bits << 17) + (1 << 15) + (lower_bits << 10)
             decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
             assert decoded_command.cmd() == target_command
-    for upper_bits in range(0, 0x4):
-        for lower_bits in range(0, 0x20):
+    for upper_bits in range(0x4):
+        for lower_bits in range(0x20):
             frame.data = (0xF << 20) + (upper_bits << 17) + (1 << 15) + (lower_bits << 10)
             decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
             assert decoded_command.cmd() == target_command
-    for upper_bits in range(0, 0x2):
-        for lower_bits in range(0, 0x20):
+    for upper_bits in range(0x2):
+        for lower_bits in range(0x20):
             frame.data = (0x1F << 19) + (upper_bits << 17) + (1 << 15) + (lower_bits << 10)
             decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
             assert decoded_command.cmd() == target_command
 
 
 def run_thru_instance_addressing(basic_frame, basic_addressing, command_name):
-    frame = DALI.Raw_Frame()
-    frame.length = 24
-    for instance_number in range(0, 0x20):
+    frame = DALI.Raw_Frame(24)
+    for instance_number in range(0x20):
         frame.data = basic_frame.data + (instance_number << 8)
         target_command = (basic_addressing + f",I{instance_number:02}").ljust(10) + command_name
         decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
         assert decoded_command.cmd() == target_command, f"failed for frame {frame.data:06X}"
-    for instance_group in range(0, 0x20):
+    for instance_group in range(0x20):
         frame.data = basic_frame.data + (instance_group << 8) + (1 << 15)
         target_command = (basic_addressing + f",IG{instance_group:02}").ljust(10) + command_name
         decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
         assert decoded_command.cmd() == target_command, f"failed for frame {frame.data:06X}"
-    for instance_typ in range(0, 0x20):
+    for instance_typ in range(0x20):
         frame.data = basic_frame.data + (instance_typ << 8) + (3 << 14)
         target_command = (basic_addressing + f",T{instance_typ:02}").ljust(10) + command_name
         decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
         assert decoded_command.cmd() == target_command, f"failed for frame {frame.data:06X}"
-    for instance_number in range(0, 0x20):
+    for instance_number in range(0x20):
         frame.data = basic_frame.data + (instance_number << 8) + (1 << 13)
         target_command = (basic_addressing + f",FI{instance_number:02}").ljust(10) + command_name
         decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
         assert decoded_command.cmd() == target_command, f"failed for frame {frame.data:06X}"
-    for instance_group in range(0, 0x20):
+    for instance_group in range(0x20):
         frame.data = basic_frame.data + (instance_group << 8) + (5 << 13)
         target_command = (basic_addressing + f",FG{instance_group:02}").ljust(10) + command_name
         decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
         assert decoded_command.cmd() == target_command, f"failed for frame {frame.data:06X}"
-    for instance_typ in range(0, 0x20):
+    for instance_typ in range(0x20):
         frame.data = basic_frame.data + (instance_typ << 8) + (3 << 13)
         target_command = (basic_addressing + f",FT{instance_typ:02}").ljust(10) + command_name
         decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
         assert decoded_command.cmd() == target_command, f"failed for frame {frame.data:06X}"
 
 
-# add tests for broadcast
+# TODO add tests for broadcast
 
 
 @pytest.mark.parametrize(
@@ -291,8 +282,7 @@ def run_thru_instance_addressing(basic_frame, basic_addressing, command_name):
     ],
 )
 def test_instance_command(command_name, opcode_byte):
-    frame = DALI.Raw_Frame()
-    frame.length = 24
-    for short_address in range(0, 0x40):
+    frame = DALI.Raw_Frame(24)
+    for short_address in range(0x40):
         frame.data = (short_address << 17) + (1 << 16) + opcode_byte
         run_thru_instance_addressing(frame, f"A{short_address:02}", command_name)

@@ -5,7 +5,7 @@ from datetime import datetime
 from termcolor import cprint
 
 import DALI
-import dali_usb
+import usb_hid
 
 logger = logging.getLogger(__name__)
 
@@ -24,9 +24,7 @@ def print_local_time(enabled):
 
 def print_command_color(absolute_time, timestamp, delta, dali_command):
     print_local_time_color(absolute_time)
-    cprint(
-        f"{timestamp:.03f} | {delta:8.03f} | {dali_command} | ", color="green", end=""
-    )
+    cprint(f"{timestamp:.03f} | {delta:8.03f} | {dali_command} | ", color="green", end="")
     cprint(f"{dali_command.cmd()}", color="white")
 
 
@@ -43,9 +41,7 @@ def print_error_color(absolute_time, raw, delta):
 
 def print_error(absolute_time, raw, delta):
     print_local_time(absolute_time)
-    print(
-        f"{raw.timestamp:.03f} | {delta:8.03f} | {DALI.DALIError(raw.length, raw.data)}"
-    )
+    print(f"{raw.timestamp:.03f} | {delta:8.03f} | {DALI.DALIError(raw.length, raw.data)}")
 
 
 def process_line(raw, no_color, absolute_time):
@@ -54,7 +50,7 @@ def process_line(raw, no_color, absolute_time):
             delta = raw.timestamp - process_line.last_timestamp
         else:
             delta = 0
-        if raw.type == raw.COMMAND:
+        if raw.type == raw.VALID:
             dali_command = DALI.Decode(raw, process_line.active_device_type)
             if no_color:
                 print_command(absolute_time, raw.timestamp, delta, dali_command)
@@ -71,7 +67,7 @@ def process_line(raw, no_color, absolute_time):
 
 def main_usb(no_color, absolute_time):
     logger.debug("read from Lunatone usb device")
-    dali_connection = dali_usb.DALI_Usb()
+    dali_connection = usb_hid.DALI_Usb()
     dali_connection.start_read()
     try:
         while True:
@@ -107,15 +103,15 @@ def main_file(transparent, no_color, absolute_time):
 @click.version_option("1.1.2")
 @click.option(
     "-l",
-    "--lunatone",
-    help="Use Lunatone USB connector for DALI communication.",
+    "--hid",
+    help="Use USB HID class connector for DALI communication.",
     is_flag=True,
 )
 @click.option("--debug", help="Enable debug level logging.", is_flag=True)
 @click.option("--nocolor", help="Do not use color coding for output.", is_flag=True)
 @click.option("--echo", help="Echo unprocessed input line to output.", is_flag=True)
 @click.option("--absolute", help="Add absolute local time to output.", is_flag=True)
-def dali_mon(lunatone, debug, nocolor, echo, absolute):
+def dali_mon(hid, debug, nocolor, echo, absolute):
     """
     Monitor for DALI commands,
     SevenLabs 2023
@@ -126,7 +122,7 @@ def dali_mon(lunatone, debug, nocolor, echo, absolute):
     process_line.last_timestamp = 0
     process_line.active_device_type = DALI.DeviceType.NONE
     try:
-        if lunatone:
+        if hid:
             main_usb(nocolor, absolute)
         elif sys.stdin.isatty():
             main_tty(echo, nocolor, absolute)
