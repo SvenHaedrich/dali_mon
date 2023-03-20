@@ -1,3 +1,4 @@
 pyusb
 termcolor
 click
+bitstring
