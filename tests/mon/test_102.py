@@ -70,9 +70,11 @@ def test_reserved():
         ("ON AND STEP UP", 0x08),
         ("ENABLE DAPC SEQUENCE", 0x09),
         ("GO TO LAST ACTIVE LEVEL", 0x0A),
+        ("CONTINOUS UP", 0x0B),
+        ("CONTINOUS DOWN", 0x0C),
         ("RESET", 0x20),
         ("STORE ACTUAL LEVEL IN DTR0", 0x21),
-        ("SAVE PERSISTENT VARIABLES", 0x22),
+        ("SAVE PERSISTENT VARIABLES (DEPRECATED)", 0x22),
         ("SET OPERATING MODE (DTR0)", 0x23),
         ("RESET MEMORY BANK (DTR0)", 0x24),
         ("IDENTIFY DEVICE", 0x25),
@@ -131,8 +133,6 @@ def test_count_command(name, opcode):
 @pytest.mark.parametrize(
     "opcode",
     [
-        0x0B,
-        0x0C,
         0x0D,
         0x0E,
         0x0F,

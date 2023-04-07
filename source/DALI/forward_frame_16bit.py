@@ -7,7 +7,7 @@ class DeviceType:
 
 class ForwardFrame16Bit:
     def gear_command(self, opcode):
-        # see iec 62386-102 11.2
+        # see iec 62386-102:2022 11.2
         code_dictionary = {
             0x00: "OFF",
             0x01: "UP",
@@ -20,6 +20,8 @@ class ForwardFrame16Bit:
             0x08: "ON AND STEP UP",
             0x09: "ENABLE DAPC SEQUENCE",
             0x0A: "GO TO LAST ACTIVE LEVEL",
+            0x0B: "CONTINOUS UP",
+            0x0C: "CONTINOUS DOWN",
             0x10: "GO TO SCENE 0",
             0x11: "GO TO SCENE 1",
             0x12: "GO TO SCENE 2",
@@ -38,7 +40,7 @@ class ForwardFrame16Bit:
             0x1F: "GO TO SCENE 15",
             0x20: "RESET",
             0x21: "STORE ACTUAL LEVEL IN DTR0",
-            0x22: "SAVE PERSISTENT VARIABLES",
+            0x22: "SAVE PERSISTENT VARIABLES (DEPRECATED)",
             0x23: "SET OPERATING MODE (DTR0)",
             0x24: "RESET MEMORY BANK (DTR0)",
             0x25: "IDENTIFY DEVICE",
@@ -165,9 +167,7 @@ class ForwardFrame16Bit:
             0xC5: "READ MEMORY LOCATION (DTR1,DTR0)",
             0xFF: "QUERY EXTENDED VERSION NUMBER",
         }
-        return code_dictionary.get(
-            opcode, f"--- CODE 0x{opcode:02X} = {opcode} UNKNOWN CONTROL GEAR COMMAND"
-        )
+        return code_dictionary.get(opcode, f"--- CODE 0x{opcode:02X} = {opcode} UNKNOWN CONTROL GEAR COMMAND")
 
     def gear_colour_command(self, opcode):
         # DT 8 commands
@@ -202,9 +202,7 @@ class ForwardFrame16Bit:
             0xFC: "QUERY ASSIGNED COLOUR",
             0xFF: "QUERY EXTENDED VERSION NUMBER",
         }
-        return code_dictionary.get(
-            opcode, f"--- CODE 0x{opcode:02X} = {opcode} UNKNOWN COLOUR GEAR COMMAND"
-        )
+        return code_dictionary.get(opcode, f"--- CODE 0x{opcode:02X} = {opcode} UNKNOWN COLOUR GEAR COMMAND")
 
     def gear_switch_command(self, opcode):
         # DT 7 commands
@@ -228,9 +226,7 @@ class ForwardFrame16Bit:
             0xFA: "QUERY REFERENCE MEASUREMENT FAILED",
             0xFF: "QUERY EXTENDED VERSION NUMBER",
         }
-        return code_dictionary.get(
-            opcode, f"--- CODE 0x{opcode:02X} = {opcode} UNKNOWN SWITCH GEAR COMMAND"
-        )
+        return code_dictionary.get(opcode, f"--- CODE 0x{opcode:02X} = {opcode} UNKNOWN SWITCH GEAR COMMAND")
 
     def gear_led_command(self, opcode):
         # DT 6 commands
@@ -253,9 +249,7 @@ class ForwardFrame16Bit:
             0xFE: "QUERY MIN FAST FADE TIME",
             0xFF: "QUERY EXTENDED VERSION NUMBER",
         }
-        return code_dictionary.get(
-            opcode, f"--- CODE 0x{opcode:02X} = {opcode} UNKNOWN LED GEAR COMMAND"
-        )
+        return code_dictionary.get(opcode, f"--- CODE 0x{opcode:02X} = {opcode} UNKNOWN LED GEAR COMMAND")
 
     def special_command(self, address_byte, opcode_byte):
         # see iec 62386-102 11.2
@@ -264,11 +258,7 @@ class ForwardFrame16Bit:
         elif address_byte == 0xA3:
             return f"DTR0 0x{opcode_byte:02X} = {opcode_byte:3} = {opcode_byte:08b}b"
         elif address_byte == 0xA5:
-            if (
-                (opcode_byte >> 1) >= 0x00
-                and (opcode_byte >> 1) <= 0x3F
-                and (opcode_byte & 0x01)
-            ):
+            if (opcode_byte >> 1) >= 0x00 and (opcode_byte >> 1) <= 0x3F and (opcode_byte & 0x01):
                 return f"INITIALISE (0x{(opcode_byte >> 1):02X})"
             if opcode_byte == 0xFF:
                 return "INITIALISE (unaddressed)"
@@ -290,20 +280,16 @@ class ForwardFrame16Bit:
         elif address_byte == 0xB5:
             return f"SEARCHADDRL 0x{opcode_byte:02X} = {opcode_byte:3} = {opcode_byte:08b}b"
         elif address_byte == 0xB7:
-            if (
-                (opcode_byte >> 1) >= 0x00
-                and (opcode_byte >> 1) <= 0x3F
-                and (opcode_byte & 0x01)
-            ):
+            if (opcode_byte >> 1) >= 0x00 and (opcode_byte >> 1) <= 0x3F and (opcode_byte & 0x01):
                 opcode_byte >>= 1
                 return f"PROGRAM SHORT ADDRESS (0x{opcode_byte:02X}) = {opcode_byte}"
             return f"PROGRAM SHORT ADDRESS (none) - 0x{opcode_byte:02X}"
         elif address_byte == 0xB9:
             return f"VERIFY SHORT ADDRESS (0x{opcode_byte:02X}) = {opcode_byte}"
-        elif address_byte == 0xBD:
-            return "PHYSICAL SELECTION (obsolete)"
         elif address_byte == 0xBB and opcode_byte == 0x00:
             return "QUERY SHORT ADDRESS"
+        elif address_byte == 0xBD:
+            return "PHYSICAL SELECTION (obsolete)"
         elif address_byte == 0xC1:
             return f"ENABLE DEVICE TYPE {opcode_byte}"
         elif address_byte == 0xC3:
