@@ -9,8 +9,8 @@ The source for the DALI code aka frames can be one of
 * HID class DALI / USB converter (e.g. [Lunatone](https://www.lunatone.com/produkt/dali-usb/))
 
 This script is based on the following standards
-* IEC 62386-101 system components
-* IEC 62386-102 control gear
+* IEC 62386-101:2022 system components
+* IEC 62386-102:2022 control gear
 * IEC 62386-103:2022 control device
 * IEC 62386-207 LED module DT6
 * IEC 62386-208 switching function DT7
@@ -86,7 +86,7 @@ You will have to log out and then back in for the group change to take effect.
 
 ## Address- and Event-Schemes for Control Devices
 
-see [Addressing](Adressing_103.md)
+see [Addressing](Addressing_103.md)
 
 ## Tests
 
