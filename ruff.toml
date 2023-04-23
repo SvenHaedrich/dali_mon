@@ -1,0 +1,2 @@
+# never complain about line length violations
+ignore = ["E501"]
