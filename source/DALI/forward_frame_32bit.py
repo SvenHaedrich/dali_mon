@@ -54,7 +54,7 @@ class ForwardFrame32Bit:
             elif self.frame_bits[:7].uint == BROADCAST_UNADDRESSED:
                 self.address_string = "BC GEAR UN"
                 return True
-            else:s
+            else:
                 if not self.frame_bits[0]:
                     short_address = self.frame_bits[1:7].uint
                     self.address_string = f"G{short_address:02}"
@@ -63,7 +63,7 @@ class ForwardFrame32Bit:
         return False
 
     def data_bytes(self):
-        return f"(0x{self.frame_bits[8:16]}, 0x{self.frame_bits[16:24]}, 0x{self.frame_bits[24:32]})"
+        return f"({self.frame_bits[8:16]}, {self.frame_bits[16:24]}, {self.frame_bits[24:32]})"
 
     def data_transfer_commands(self, address_field_width):
         # see iec 62386-105 11.2 table 7 - data transfer commands
@@ -89,4 +89,4 @@ class ForwardFrame32Bit:
                 self.command_string = self.device_command()
                 return
         self.address_string = " " * address_field_width
-        self.command_string = f"---"
+        self.command_string = "---"
