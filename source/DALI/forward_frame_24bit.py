@@ -153,7 +153,7 @@ class ForwardFrame24Bit:
             elif instance_byte == 0x09:
                 return f"VERIFY SHORT ADDRESS (0x{opcode_byte:02X}) = {opcode_byte}"
             elif instance_byte == 0x0A:
-                return f"QUERY SHORT ADDRESS"
+                return "QUERY SHORT ADDRESS"
             elif instance_byte == 0x20:
                 return f"WRITE MEMORY LOCATION DTR1, DTR0, (0x{opcode_byte:02X}) = {opcode_byte}"
             elif instance_byte == 0x21:
@@ -237,14 +237,14 @@ class ForwardFrame24Bit:
         # todo make address_type instance_type a class_member
         if address_type == DeviceAddressType.SHORT_ADDRESS:
             short_address = self.frame_bits[1:7].uint
-            address_string = f"A{short_address:02}"
+            address_string = f"D{short_address:02}"
         elif address_type == DeviceAddressType().GROUP_ADDRESS:
             group_address = self.frame_bits[2:7].uint
-            address_string = f"G{group_address:02}"
+            address_string = f"DG{group_address:02}"
         elif address_type == DeviceAddressType.BROADCAST_UNADDR:
-            address_string = "BC unadr."
+            address_string = "BC DEV UN"
         elif address_type == DeviceAddressType.BROADCAST:
-            address_string = "BC"
+            address_string = "BC DEV"
         if instance_type == InstanceAddressType.INSTANCE_NUMBER:
             number = self.frame_bits[11:16].uint
             address_string += f",I{number:02}"
@@ -264,14 +264,17 @@ class ForwardFrame24Bit:
             type = self.frame_bits[11:16].uint
             address_string += f",FT{type:02}"
         elif instance_type == InstanceAddressType.FEATURE_BROADCAST:
-            address_string += "F BC"
+            address_string += "BC FEAT"
         elif instance_type == InstanceAddressType.FEATURE_ON_INSTANCE_BROADCAST:
-            address_string += "F INST BC"
+            address_string += "BC FEAT INST"
         elif instance_type == InstanceAddressType.INSTANCE_BROADCAST:
-            address_string += "INST BC"
+            address_string += "BC INST"
         elif instance_type == InstanceAddressType.FEATURE_ON_DEVICE:
-            address_string += "F DEV"
-        if instance_type == InstanceAddressType.RESERVED or address_type == DeviceAddressType.RESERVED:
+            address_string += "FEAT DEV"
+        if (
+            instance_type == InstanceAddressType.RESERVED
+            or address_type == DeviceAddressType.RESERVED
+        ):
             address_string = "RESERVED"
         return address_string
 
@@ -279,15 +282,15 @@ class ForwardFrame24Bit:
         if event_source_type == EventType.DEVICE:
             short_address = self.frame_bits[1:7].uint
             instance_type = self.frame_bits[9:14].uint
-            return f"A{short_address:02},T{instance_type:02}"
+            return f"D{short_address:02},T{instance_type:02}"
         elif event_source_type == EventType.DEVICE_INSTANCE:
             short_address = self.frame_bits[1:7].uint
             instance_number = self.frame_bits[9:14].uint
-            return f"A{short_address:02},I{instance_number:02}"
+            return f"D{short_address:02},I{instance_number:02}"
         elif event_source_type == EventType.DEVICE_GROUP:
             device_group = self.frame_bits[2:7].uint
             instance_type = self.frame_bits[9:14].uint
-            return f"G{device_group:02},T{instance_type:02}"
+            return f"DG{device_group:02},T{instance_type:02}"
         elif event_source_type == EventType.INSTANCE:
             instance_type = self.frame_bits[2:7].uint
             instance_number = self.frame_bits[9:14].uint
@@ -303,12 +306,12 @@ class ForwardFrame24Bit:
         # see iec 62386-103:2022 9.7.2
         if self.frame_bits[11]:
             device_group = self.frame_bits[12:17].uint
-            group_result = f"G{device_group:02} "
+            group_result = f"DG{device_group:02} "
         else:
             group_result = ""
         if self.frame_bits[17]:
             short_address = self.frame_bits[18:].uint
-            return f"{group_result}A{short_address:02}"
+            return f"{group_result}D{short_address:02}"
         else:
             return f"{group_result}".rstrip()
 
@@ -328,10 +331,10 @@ class ForwardFrame24Bit:
             if event_source_type == EventType.RESERVED:
                 self.command_string = "RESERVED EVENT"
             else:
-                self.address_string = self.build_event_source_string(event_source_type).ljust(address_field_width)
-                self.command_string = (
-                    f"EVENT DATA 0x{(frame & 0x3FF):03X} = {(frame & 0x3FF)} = {(frame & 0x3FF):012b}b"
-                )
+                self.address_string = self.build_event_source_string(
+                    event_source_type
+                ).ljust(address_field_width)
+                self.command_string = f"EVENT DATA 0x{(frame & 0x3FF):03X} = {(frame & 0x3FF)} = {(frame & 0x3FF):012b}b"
             self.address_string = self.address_string.ljust(address_field_width)
             return
         instance_address_type = self.get_instance_address_type()
@@ -342,7 +345,9 @@ class ForwardFrame24Bit:
             or (device_address_type == DeviceAddressType.BROADCAST)
             or (device_address_type == DeviceAddressType.BROADCAST_UNADDR)
         ):
-            self.address_string = self.build_command_address_string(device_address_type, instance_address_type)
+            self.address_string = self.build_command_address_string(
+                device_address_type, instance_address_type
+            )
             self.command_string = self.device_command()
         if device_address_type == DeviceAddressType.SPECIAL:
             self.command_string = self.device_special_command()
