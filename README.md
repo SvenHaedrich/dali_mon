@@ -19,8 +19,8 @@ This script is based on the following standards
 
 ## Further Documents
 
-[General usage](docs/usage.md)
-[Address representation](docs/addressing.md)
-[Installation and HID-USB support](docs/install.md)
-[Serial port and input format](docs/serial.md)
+[General usage](docs/usage.md) \
+[Address representation](docs/addressing.md) \
+[Installation and HID-USB support](docs/install.md) \
+[Serial port and input format](docs/serial.md) \
 [Tests](tests/README.md)
