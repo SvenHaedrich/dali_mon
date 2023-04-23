@@ -65,7 +65,7 @@ class ForwardFrame32Bit:
     def data_bytes(self):
         return f"(0x{self.frame_bits[8:16]}, 0x{self.frame_bits[16:24]}, 0x{self.frame_bits[24:32]})"
 
-    def data_transfer_commands(self):
+    def data_transfer_commands(self, address_field_length):
         # see iec 62386-105 11.2 table 7 - data transfer commands
         BEGIN_BLOCK = 0xCB
         TRANSFER_BLOCK = 0xBD
@@ -81,7 +81,7 @@ class ForwardFrame32Bit:
 
     def __init__(self, frame_data, address_field_width):
         self.frame_bits = BitArray(uint=frame_data, length=32)
-        if self.data_transfer_commands():
+        if self.data_transfer_commands(address_field_length):
             return
         if self.build_address_string():
             self.address_string = self.address_string.ljust(address_field_width)
