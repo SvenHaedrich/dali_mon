@@ -167,7 +167,9 @@ class ForwardFrame16Bit:
             0xC5: "READ MEMORY LOCATION (DTR1,DTR0)",
             0xFF: "QUERY EXTENDED VERSION NUMBER",
         }
-        return code_dictionary.get(opcode, f"--- CODE 0x{opcode:02X} = {opcode} UNKNOWN CONTROL GEAR COMMAND")
+        return code_dictionary.get(
+            opcode, f"--- CODE 0x{opcode:02X} = {opcode} UNKNOWN CONTROL GEAR COMMAND"
+        )
 
     def gear_colour_command(self, opcode):
         # DT 8 commands
@@ -202,7 +204,9 @@ class ForwardFrame16Bit:
             0xFC: "QUERY ASSIGNED COLOUR",
             0xFF: "QUERY EXTENDED VERSION NUMBER",
         }
-        return code_dictionary.get(opcode, f"--- CODE 0x{opcode:02X} = {opcode} UNKNOWN COLOUR GEAR COMMAND")
+        return code_dictionary.get(
+            opcode, f"--- CODE 0x{opcode:02X} = {opcode} UNKNOWN COLOUR GEAR COMMAND"
+        )
 
     def gear_switch_command(self, opcode):
         # DT 7 commands
@@ -226,7 +230,9 @@ class ForwardFrame16Bit:
             0xFA: "QUERY REFERENCE MEASUREMENT FAILED",
             0xFF: "QUERY EXTENDED VERSION NUMBER",
         }
-        return code_dictionary.get(opcode, f"--- CODE 0x{opcode:02X} = {opcode} UNKNOWN SWITCH GEAR COMMAND")
+        return code_dictionary.get(
+            opcode, f"--- CODE 0x{opcode:02X} = {opcode} UNKNOWN SWITCH GEAR COMMAND"
+        )
 
     def gear_led_command(self, opcode):
         # DT 6 commands
@@ -249,7 +255,9 @@ class ForwardFrame16Bit:
             0xFE: "QUERY MIN FAST FADE TIME",
             0xFF: "QUERY EXTENDED VERSION NUMBER",
         }
-        return code_dictionary.get(opcode, f"--- CODE 0x{opcode:02X} = {opcode} UNKNOWN LED GEAR COMMAND")
+        return code_dictionary.get(
+            opcode, f"--- CODE 0x{opcode:02X} = {opcode} UNKNOWN LED GEAR COMMAND"
+        )
 
     def special_command(self, address_byte, opcode_byte):
         # see iec 62386-102 11.2
@@ -258,7 +266,11 @@ class ForwardFrame16Bit:
         elif address_byte == 0xA3:
             return f"DTR0 0x{opcode_byte:02X} = {opcode_byte:3} = {opcode_byte:08b}b"
         elif address_byte == 0xA5:
-            if (opcode_byte >> 1) >= 0x00 and (opcode_byte >> 1) <= 0x3F and (opcode_byte & 0x01):
+            if (
+                (opcode_byte >> 1) >= 0x00
+                and (opcode_byte >> 1) <= 0x3F
+                and (opcode_byte & 0x01)
+            ):
                 return f"INITIALISE (0x{(opcode_byte >> 1):02X})"
             if opcode_byte == 0xFF:
                 return "INITIALISE (unaddressed)"
@@ -280,7 +292,11 @@ class ForwardFrame16Bit:
         elif address_byte == 0xB5:
             return f"SEARCHADDRL 0x{opcode_byte:02X} = {opcode_byte:3} = {opcode_byte:08b}b"
         elif address_byte == 0xB7:
-            if (opcode_byte >> 1) >= 0x00 and (opcode_byte >> 1) <= 0x3F and (opcode_byte & 0x01):
+            if (
+                (opcode_byte >> 1) >= 0x00
+                and (opcode_byte >> 1) <= 0x3F
+                and (opcode_byte & 0x01)
+            ):
                 opcode_byte >>= 1
                 return f"PROGRAM SHORT ADDRESS (0x{opcode_byte:02X}) = {opcode_byte}"
             return f"PROGRAM SHORT ADDRESS (none) - 0x{opcode_byte:02X}"
@@ -315,10 +331,10 @@ class ForwardFrame16Bit:
             self.command_string = f"DAPC {opcode_byte}"
         if address_byte in range(0x00, 0x80):
             short_address = address_byte >> 1
-            self.address_string = f"A{short_address:02}"
+            self.address_string = f"G{short_address:02}"
         elif address_byte in range(0x80, 0xA0):
             group_address = (address_byte >> 1) & 0x0F
-            self.address_string = f"G{group_address:02}"
+            self.address_string = f"GG{group_address:02}"
         elif address_byte in range(0xA0, 0xCC):
             standard_command = False
             self.command_string = self.special_command(address_byte, opcode_byte)
@@ -326,9 +342,9 @@ class ForwardFrame16Bit:
             standard_command = False
             self.command_string = "RESERVED"
         elif (address_byte == 0xFD) or (address_byte == 0xFC):
-            self.address_string = "BC unadr."
+            self.address_string = "BC GEAR UN"
         elif (address_byte == 0xFF) or (address_byte == 0xFE):
-            self.address_string = "BC"
+            self.address_string = "BC GEAR"
         if standard_command:
             self.command_string = self.gear_command(opcode_byte)
             if device_type == DeviceType.COLOUR:
