@@ -11,7 +11,11 @@ import DALI
 
 @pytest.mark.parametrize(
     "code,message",
-    [(DALI.DALIError.OK, "OK"), (DALI.DALIError.FRAME, "ERROR: INVALID FRAME"), (-1, "UNDEFINED ERROR CODE (-1)")],
+    [
+        (DALI.DALIError.OK, "OK"),
+        (DALI.DALIError.FRAME, "ERROR: INVALID FRAME"),
+        (-1, "UNDEFINED ERROR CODE (-1)"),
+    ],
 )
 def test_error_codes(code, message):
     error = DALI.DALIError(code)
@@ -45,3 +49,9 @@ def test_raw_from_string():
     assert frame.data == 0x123456
     assert frame.type == DALI.Raw_Frame.ERROR
     assert frame.timestamp == 0.003
+    input_string = "{00000004-20 87654321}".encode("utf-8")
+    frame.from_line(input_string)
+    assert frame.length == 0x20
+    assert frame.data == 0x87654321
+    assert frame.type == DALI.Raw_Frame.VALID
+    assert frame.timestamp == 0.004

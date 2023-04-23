@@ -8,12 +8,14 @@ sys.path.append(os.path.join(here, "../../source"))
 
 import DALI
 
+ADDRESS_WIDTH = 12
+
 
 def test_backframe():
     for data in range(0x100):
         frame = DALI.Raw_Frame(length=8, data=data)
         decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
-        target_command = " " * 10 + f"DATA 0x{data:02X}"
+        target_command = " " * ADDRESS_WIDTH + f"DATA 0x{data:02X}"
         assert decoded_command.cmd()[: len(target_command)] == target_command
 
 
@@ -22,7 +24,7 @@ def test_broadcast_dapc():
     for level in range(0x100):
         frame = DALI.Raw_Frame(length=16, data=(0xFE00 + level))
         decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
-        target_command = "BC".ljust(10) + f"DAPC {level}"
+        target_command = "BC GEAR".ljust(ADDRESS_WIDTH) + f"DAPC {level}"
         assert decoded_command.cmd() == target_command
 
 
@@ -32,7 +34,9 @@ def test_short_address_dapc():
         for level in range(0x100):
             frame = DALI.Raw_Frame(length=16, data=((short_address << 9) + level))
             decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
-            target_command = f"A{short_address:02}".ljust(10) + f"DAPC {level}"
+            target_command = (
+                f"G{short_address:02}".ljust(ADDRESS_WIDTH) + f"DAPC {level}"
+            )
             assert decoded_command.cmd() == target_command
 
 
@@ -40,15 +44,19 @@ def test_group_address_dapc():
     # refer to iec62386 102 7.2.1
     for group_address in range(0x10):
         for level in range(0x100):
-            frame = DALI.Raw_Frame(length=16, data=(0x8000 + (group_address << 9) + level))
+            frame = DALI.Raw_Frame(
+                length=16, data=(0x8000 + (group_address << 9) + level)
+            )
             decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
-            target_command = f"G{group_address:02}".ljust(10) + f"DAPC {level}"
+            target_command = (
+                f"GG{group_address:02}".ljust(ADDRESS_WIDTH) + f"DAPC {level}"
+            )
             assert decoded_command.cmd() == target_command
 
 
 def test_reserved():
     # refer to iec62386 102 7.2.1
-    target_command = " " * 10 + f"RESERVED"
+    target_command = " " * ADDRESS_WIDTH + "RESERVED"
     for code in range(0xCC00, 0xFC00):
         frame = DALI.Raw_Frame(length=16, data=code)
         decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
@@ -91,24 +99,24 @@ def test_command(name, opcode):
     # broadcast
     frame = DALI.Raw_Frame(length=16, data=(0xFF00 + opcode))
     decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
-    target_command = "BC".ljust(10) + name
+    target_command = "BC GEAR".ljust(ADDRESS_WIDTH) + name
     assert decoded_command.cmd() == target_command
     # broadcast unadressed
     frame = DALI.Raw_Frame(length=16, data=(0xFD00 + opcode))
     decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
-    target_command = "BC unadr.".ljust(10) + name
+    target_command = "BC GEAR UN".ljust(ADDRESS_WIDTH) + name
     assert decoded_command.cmd() == target_command
     # short address
     for short_address in range(0x40):
         frame = DALI.Raw_Frame(length=16, data=(0x0100 + (short_address << 9) + opcode))
         decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
-        target_command = f"A{short_address:02}".ljust(10) + name
+        target_command = f"G{short_address:02}".ljust(ADDRESS_WIDTH) + name
         assert decoded_command.cmd() == target_command
     # group address
     for group_address in range(0x10):
         frame = DALI.Raw_Frame(length=16, data=(0x8100 + (group_address << 9) + opcode))
         decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
-        target_command = f"G{group_address:02}".ljust(10) + name
+        target_command = f"GG{group_address:02}".ljust(ADDRESS_WIDTH) + name
         assert decoded_command.cmd() == target_command
 
 
@@ -186,24 +194,24 @@ def test_undefined_codes(opcode):
     # broadcast
     frame = DALI.Raw_Frame(length=16, data=(0xFF00 + opcode))
     decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
-    target_command = "BC".ljust(10) + "---"
+    target_command = "BC GEAR".ljust(ADDRESS_WIDTH) + "---"
     assert decoded_command.cmd()[: len(target_command)] == target_command
     # broadcast unadressed
     frame = DALI.Raw_Frame(length=16, data=(0xFD00 + opcode))
     decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
-    target_command = "BC unadr.".ljust(10) + "---"
+    target_command = "BC GEAR UN".ljust(ADDRESS_WIDTH) + "---"
     assert decoded_command.cmd()[: len(target_command)] == target_command
     # short address
     for short_address in range(0x40):
         frame = DALI.Raw_Frame(length=16, data=(0x0100 + (short_address << 9) + opcode))
         decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
-        target_command = f"A{short_address:02}".ljust(10) + "---"
+        target_command = f"G{short_address:02}".ljust(ADDRESS_WIDTH) + "---"
         assert decoded_command.cmd()[: len(target_command)] == target_command
     # group address
     for group_address in range(0x10):
         frame = DALI.Raw_Frame(length=16, data=(0x8100 + (group_address << 9) + opcode))
         decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
-        target_command = f"G{group_address:02}".ljust(10) + "---"
+        target_command = f"GG{group_address:02}".ljust(ADDRESS_WIDTH) + "---"
         assert decoded_command.cmd()[: len(target_command)] == target_command
 
 
@@ -222,11 +230,11 @@ def test_simple_special_command(name, address_byte):
     # valid opcode byte
     frame = DALI.Raw_Frame(length=16, data=(address_byte << 8))
     decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
-    target_command = " " * 10 + name
+    target_command = " " * ADDRESS_WIDTH + name
     assert decoded_command.cmd() == target_command
     # invalid opcode byte
     for opcode_byte in range(1, 0x100):
         frame = DALI.Raw_Frame(length=16, data=((address_byte << 8) + opcode_byte))
         decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
-        target_command = " " * 10 + "---"
+        target_command = " " * ADDRESS_WIDTH + "---"
         assert decoded_command.cmd()[: len(target_command)] == target_command
