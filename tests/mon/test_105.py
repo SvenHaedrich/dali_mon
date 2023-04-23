@@ -10,6 +10,25 @@ import DALI
 ADDRESS_WIDTH = 12
 
 
+def build_firmware_frame(
+    address_byte=0, opcode_byte_1=0, opcode_byte_2=0, opcode_byte_3=0
+):
+    data = address_byte & 0xFF
+    data = (data << 8) + (opcode_byte_1 & 0xFF)
+    data = (data << 8) + (opcode_byte_2 & 0xFF)
+    data = (data << 8) + (opcode_byte_3 & 0xFF)
+    return DALI.Raw_Frame(length=32, data=data)
+
+
+def test_block_commands():
+    decoded_command = DALI.Decode(build_firmware_frame(0xCB, 0x01, 0x02, 0x03))
+    target_command = " " * ADDRESS_WIDTH + "BEGIN BLOCK (0x01, 0x02, 0x03)"
+    assert decoded_command.cmd() == target_command
+    decoded_command = DALI.Decode(build_firmware_frame(0xBD, 0x01, 0x02, 0x03))
+    target_command = " " * ADDRESS_WIDTH + "TRANSFER BLOCK DATA (0x01, 0x02, 0x03)"
+    assert decoded_command.cmd() == target_command
+
+
 # refer to iec62386 105 2020 Table 1
 #          iec62386 105 2020 Table 6
 @pytest.mark.parametrize(
@@ -30,65 +49,33 @@ def test_firmware_update_standard_command(name, opcode_byte_2):
     opcode_byte_1 = 0xFB
     opcode_byte_3 = 0x00
     # broadcast
-    frame = DALI.Raw_Frame(
-        length=32,
-        data=(
-            0xFE000000 + (opcode_byte_1 << 16) + (opcode_byte_2 << 8) + opcode_byte_3
-        ),
-    )
+    frame = build_firmware_frame(0xFE, opcode_byte_1, opcode_byte_2, opcode_byte_3)
     decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
     target_command = "BC GEAR".ljust(ADDRESS_WIDTH) + name
     assert decoded_command.cmd() == target_command
-    frame = DALI.Raw_Frame(
-        length=32,
-        data=(
-            0xFF000000 + (opcode_byte_1 << 16) + (opcode_byte_2 << 8) + opcode_byte_3
-        ),
-    )
+    frame = build_firmware_frame(0xFF, opcode_byte_1, opcode_byte_2, opcode_byte_3)
     decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
     target_command = "BC DEV".ljust(ADDRESS_WIDTH) + name
     assert decoded_command.cmd() == target_command
     # broadcast unadressed
-    frame = DALI.Raw_Frame(
-        length=32,
-        data=(
-            0xFC000000 + (opcode_byte_1 << 16) + (opcode_byte_2 << 8) + opcode_byte_3
-        ),
-    )
+    frame = build_firmware_frame(0xFC, opcode_byte_1, opcode_byte_2, opcode_byte_3)
     decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
     target_command = "BC GEAR UN".ljust(ADDRESS_WIDTH) + name
     assert decoded_command.cmd() == target_command
-    frame = DALI.Raw_Frame(
-        length=32,
-        data=(
-            0xFD000000 + (opcode_byte_1 << 16) + (opcode_byte_2 << 8) + opcode_byte_3
-        ),
-    )
+    frame = build_firmware_frame(0xFD, opcode_byte_1, opcode_byte_2, opcode_byte_3)
     decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
     target_command = "BC DEV UN".ljust(ADDRESS_WIDTH) + name
     assert decoded_command.cmd() == target_command
     # short address
     for short_address in range(0x40):
-        frame = DALI.Raw_Frame(
-            length=32,
-            data=(
-                ((short_address << 1) << 24)
-                + (opcode_byte_1 << 16)
-                + (opcode_byte_2 << 8)
-                + opcode_byte_3
-            ),
+        frame = build_firmware_frame(
+            (short_address << 1), opcode_byte_1, opcode_byte_2, opcode_byte_3
         )
         decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
         target_command = f"G{short_address:02}".ljust(ADDRESS_WIDTH) + name
         assert decoded_command.cmd() == target_command
-        frame = DALI.Raw_Frame(
-            length=32,
-            data=(
-                (((short_address << 1) + 1) << 24)
-                + (opcode_byte_1 << 16)
-                + (opcode_byte_2 << 8)
-                + opcode_byte_3
-            ),
+        frame = build_firmware_frame(
+            (short_address << 1) + 1, opcode_byte_1, opcode_byte_2, opcode_byte_3
         )
         decoded_command = DALI.Decode(frame, DALI.DeviceType.NONE)
         target_command = f"D{short_address:02}".ljust(ADDRESS_WIDTH) + name

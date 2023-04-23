@@ -5,7 +5,6 @@ import sys
 # locate the DALI module
 here = os.path.dirname(__file__)
 sys.path.append(os.path.join(here, "../../source"))
-
 import DALI
 
 ADDRESS_WIDTH = 12
