@@ -6,6 +6,7 @@ import threading
 import time
 import usb
 from .status import DaliStatus
+from .frame import DaliFrame
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +66,7 @@ class DaliUsb:
         self.keep_running = False
         self.send_sequence_number = 1
         self.receive_sequence_number = None
+        self.frame = DaliFrame()
 
         logger.debug("try to discover DALI interfaces")
         devices = [
@@ -219,7 +221,12 @@ class DaliUsb:
                         else:
                             status = DaliStatus(status=DaliStatus.GENERAL)
                     self.queue.put(
-                        (time.time(), status, length, dali_data, read_sequence_number)
+                        DaliFrame(
+                            timestamp=time.time(),
+                            length=length,
+                            data=dali_data,
+                            status=status,
+                        )
                     )
 
             except usb.USBError as e:
@@ -238,9 +245,11 @@ class DaliUsb:
         logger.debug("get next")
         if not self.keep_running:
             logger.error("read thread is not running")
-        result = self.queue.get(block=True, timeout=timeout)
-        self.timestamp = result[0]
-        self.length = result[2]
-        self.data = result[3]
-        self.receive_sequence_number = result[4]
-        self.status = result[1]
+        try:
+            self.frame = self.queue.get(block=True, timeout=timeout)
+        except queue.Empty:
+            self.frame = DaliFrame(status=DaliStatus(status=DaliStatus.TIMEOUT))
+            return
+        if self.frame is None:
+            self.frame = DaliFrame(status=DaliStatus(status=DaliStatus.GENERAL))
+            return
