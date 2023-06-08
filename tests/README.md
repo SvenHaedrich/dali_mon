@@ -11,7 +11,7 @@ The tests cover the following aspects
 To run the code interpreter tests enter
 
     cd tests
-    ./run_mon.sh
+    ./run_mon.sh --log-level=debug
 
 These tests are completely self-contained.
 

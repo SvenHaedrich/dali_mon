@@ -7,8 +7,8 @@ import logging
 here = os.path.dirname(__file__)
 sys.path.append(os.path.join(here, "../../source"))
 
-import dali_serial
-import usb_hid
+from connection import serial as dali_serial
+from connection import hid as dali_hid
 import DALI
 
 
@@ -17,15 +17,14 @@ logger = logging.getLogger(__name__)
 
 
 def test_8bit_frames():
-    serial = dali_serial.DALI_Serial(serial_port)
-    usb = usb_hid.DALI_Usb()
-    usb.start_read()
-    frame = DALI.Raw_Frame(length=8)
+    serial = dali_serial.DaliSerial(serial_port)
+    usb = dali_hid.DaliUsb()
+    usb.start_receive()
     for data in range(0x100):
-        frame.data = data
-        serial.write(frame)
-        readback = usb.read_raw_frame()
-        assert frame == readback, f"unexpected result: {readback}"
+        serial.transmit(8,data)
+        result = usb.get_next()
+        assert usb.length == 8
+        assert usb.data == data
     serial.close()
     usb.close()
 
@@ -56,9 +55,9 @@ def test_8bit_frames():
     ],
 )
 def test_16bit_frame(data):
-    serial = dali_serial.DALI_Serial(serial_port)
-    usb = usb_hid.DALI_Usb()
-    usb.start_read()
+    serial = dali_serial.DaliSerial(serial_port)
+    usb = dali_hid.DaliUsb()
+    usb.start_receive()
     frame = DALI.Raw_Frame(length=16, data=data)
     serial.write(frame)
     readback = usb.read_raw_frame()
@@ -102,9 +101,9 @@ def test_16bit_frame(data):
 )
 def test_invalid_frame_length(length, data):
     logger.setLevel(logging.DEBUG)
-    serial = dali_serial.DALI_Serial(serial_port)
-    usb = usb_hid.DALI_Usb()
-    usb.start_read()
+    serial = dali_serial.DaliSerial(serial_port)
+    usb = dali_hid.DaliUsb()
+    usb.start_receive()
     frame = DALI.Raw_Frame(length=length, data=data)
     serial.write(frame)
     readback = usb.read_raw_frame()
