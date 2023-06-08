@@ -202,7 +202,9 @@ class DaliUsb:
                     elif read_type == self._USB_READ_TYPE_24BIT:
                         status = DaliStatus(status=DaliStatus.FRAME)
                         length = 24
-                        dali_data = usb_data[5] + (usb_data[4] << 8) + (usb_data[3] << 16)
+                        dali_data = (
+                            usb_data[5] + (usb_data[4] << 8) + (usb_data[3] << 16)
+                        )
                     elif read_type == self._USB_READ_TYPE_NO_FRAME:
                         status = DaliStatus(status=DaliStatus.TIMEOUT)
                         length = 0

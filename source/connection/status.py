@@ -1,6 +1,6 @@
 class DaliStatus:
-    OK = 0       
-    LOOPBACK = 1   
+    OK = 0
+    LOOPBACK = 1
     FRAME = 2
     TIMEOUT = 3
     TIMING = 4
@@ -9,15 +9,14 @@ class DaliStatus:
     GENERAL = 7
     UNDEFINED = 8
 
-    def built_message (self, message="ERROR", data=0):
+    def built_message(self, message="ERROR", data=0):
         bit = data & 0x0FF
         timer_us = (data >> 8) & 0x0FFFFF
         return f"ERROR: FRAME {message} - BIT: {bit} - TIME: {timer_us} USEC"
-    
 
     def __init__(self, loopback=False, length=0, data=0, status=None):
         if status is None:
-            if length in range(0,0x21):
+            if length in range(0, 0x21):
                 if loopback:
                     self.status = DaliStatus.LOOPBACK
                     self.message = "LOOPBACK FRAME"
@@ -36,13 +35,13 @@ class DaliStatus:
             elif length == 0x83:
                 self.status = DaliStatus.TIMING
                 self.message = self.built_message("DATA", data)
-            elif length in (0x84,0x85,0x86):
+            elif length in (0x84, 0x85, 0x86):
                 self.status = DaliStatus.TIMING
                 self.message = "ERROR: COLLISION DETECTED"
             elif length == 0x91:
                 self.status = DaliStatus.FAILURE
                 self.message = "ERROR: SYSTEM FAILURE"
-            elif length in (0xA0,0xA1,0xA2,0xA3):
+            elif length in (0xA0, 0xA1, 0xA2, 0xA3):
                 self.status = DaliStatus.INTERFACE
                 self.message = "ERROR: INTERFACE"
             else:

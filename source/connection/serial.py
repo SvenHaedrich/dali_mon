@@ -21,7 +21,6 @@ class DaliSerial:
         self.transparent = transparent
         self.frame = DaliFrame()
         self.keep_running = False
-    
 
     @staticmethod
     def parse(line):
@@ -38,8 +37,10 @@ class DaliSerial:
                 raise ValueError
             length = int(payload[9:11], 16)
             data = int(payload[12:20], 16)
-            
-            return DaliFrame(timestamp, length, data, status=DaliStatus(loopback,length, data))
+
+            return DaliFrame(
+                timestamp, length, data, status=DaliStatus(loopback, length, data)
+            )
         except (ValueError, IndexError):
             logger.debug(f"can not parse line: '{line}'")
             return None
@@ -78,9 +79,13 @@ class DaliSerial:
 
     def transmit(self, frame, block=False):
         if frame.send_twice:
-            command = f"S{frame.priority} {frame.length:X}+{frame.data:X}\r".encode("utf-8")
+            command = f"S{frame.priority} {frame.length:X}+{frame.data:X}\r".encode(
+                "utf-8"
+            )
         else:
-            command = f"S{frame.priority} {frame.length:X} {frame.data:X}\r".encode("utf-8")
+            command = f"S{frame.priority} {frame.length:X} {frame.data:X}\r".encode(
+                "utf-8"
+            )
         logger.debug(f"write <{command}>")
         self.port.write(command)
         if block:
