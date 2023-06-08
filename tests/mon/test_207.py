@@ -32,28 +32,34 @@ ADDRESS_WIDTH = 12
     ],
 )
 def test_dt6_command(name, opcode):
-    frame = DALI.Raw_Frame()
-    frame.length = 16
     # broadcast
-    frame.data = 0xFF00 + opcode
-    decoded_command = DALI.Decode(frame, DALI.DeviceType.LED)
+    decoded_command = DALI.Decode(
+        length=16, data=0xFF00 + opcode, device_type=DALI.DeviceType.LED
+    )
     target_command = "BC GEAR".ljust(ADDRESS_WIDTH) + name
     assert decoded_command.cmd() == target_command
     # broadcast unadressed
-    frame.data = 0xFD00 + opcode
-    decoded_command = DALI.Decode(frame, DALI.DeviceType.LED)
+    decoded_command = DALI.Decode(
+        length=16, data=0xFD00 + opcode, device_type=DALI.DeviceType.LED
+    )
     target_command = "BC GEAR UN".ljust(ADDRESS_WIDTH) + name
     assert decoded_command.cmd() == target_command
     # short address
     for short_address in range(0, 0x40):
-        frame.data = 0x0100 + (short_address << 9) + opcode
-        decoded_command = DALI.Decode(frame, DALI.DeviceType.LED)
+        decoded_command = DALI.Decode(
+            length=16,
+            data=0x0100 + (short_address << 9) + opcode,
+            device_type=DALI.DeviceType.LED,
+        )
         target_command = f"G{short_address:02}".ljust(ADDRESS_WIDTH) + name
         assert decoded_command.cmd() == target_command
     # group address
     for group_address in range(0, 0x10):
-        frame.data = 0x8100 + (group_address << 9) + opcode
-        decoded_command = DALI.Decode(frame, DALI.DeviceType.LED)
+        decoded_command = DALI.Decode(
+            length=16,
+            data=0x8100 + (group_address << 9) + opcode,
+            device_type=DALI.DeviceType.LED,
+        )
         target_command = f"GG{group_address:02}".ljust(ADDRESS_WIDTH) + name
         assert decoded_command.cmd() == target_command
 
@@ -80,27 +86,33 @@ def test_dt6_command(name, opcode):
     ],
 )
 def test_dt6_undefined_codes(opcode):
-    frame = DALI.Raw_Frame()
-    frame.length = 16
     # broadcast
-    frame.data = 0xFF00 + opcode
-    decoded_command = DALI.Decode(frame, DALI.DeviceType.LED)
+    decoded_command = DALI.Decode(
+        length=16, data=0xFF00 + opcode, device_type=DALI.DeviceType.LED
+    )
     target_command = "BC GEAR".ljust(ADDRESS_WIDTH) + "---"
     assert decoded_command.cmd()[: len(target_command)] == target_command
     # broadcast unadressed
-    frame.data = 0xFD00 + opcode
-    decoded_command = DALI.Decode(frame, DALI.DeviceType.LED)
+    decoded_command = DALI.Decode(
+        length=16, data=0xFD00 + opcode, device_type=DALI.DeviceType.LED
+    )
     target_command = "BC GEAR UN".ljust(ADDRESS_WIDTH) + "---"
     assert decoded_command.cmd()[: len(target_command)] == target_command
     # short address
     for short_address in range(0, 0x40):
-        frame.data = 0x0100 + (short_address << 9) + opcode
-        decoded_command = DALI.Decode(frame, DALI.DeviceType.LED)
+        decoded_command = DALI.Decode(
+            length=16,
+            data=0x0100 + (short_address << 9) + opcode,
+            device_type=DALI.DeviceType.LED,
+        )
         target_command = f"G{short_address:02}".ljust(ADDRESS_WIDTH) + "---"
         assert decoded_command.cmd()[: len(target_command)] == target_command
     # group address
     for group_address in range(0, 0x10):
-        frame.data = 0x8100 + (group_address << 9) + opcode
-        decoded_command = DALI.Decode(frame, DALI.DeviceType.LED)
+        decoded_command = DALI.Decode(
+            length=16,
+            data=0x8100 + (group_address << 9) + opcode,
+            device_type=DALI.DeviceType.LED,
+        )
         target_command = f"GG{group_address:02}".ljust(ADDRESS_WIDTH) + "---"
         assert decoded_command.cmd()[: len(target_command)] == target_command

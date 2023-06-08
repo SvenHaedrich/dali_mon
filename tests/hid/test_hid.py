@@ -21,7 +21,7 @@ def test_8bit_frames():
     usb = dali_hid.DaliUsb()
     usb.start_receive()
     for data in range(0x100):
-        serial.transmit(8,data)
+        serial.transmit(8, data)
         result = usb.get_next()
         assert usb.length == 8
         assert usb.data == data
