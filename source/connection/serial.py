@@ -19,30 +19,26 @@ class DaliSerial:
         self.queue = queue.Queue(maxsize=self.QUEUE_MAXSIZE)
         self.port = serial.Serial(port=portname, baudrate=baudrate, timeout=0.2)
         self.transparent = transparent
-        self.frame = DaliFrame()
         self.keep_running = False
+        self.rx_frame = None
 
     @staticmethod
-    def parse(line):
+    def parse(line: str):
         try:
-            start = line.find("{") + 1
-            end = line.find("}")
+            start = line.find(ord("{")) + 1
+            end = line.find(ord("}"))
             payload = line[start:end]
-            timestamp = int(payload[:8], 16) / 1000.0
-            if payload[8] == ">":
+            timestamp = int(payload[0:8], 16) / 1000.0
+            if payload[8] == ord(">"):
                 loopback = True
-            elif payload[8] == ":":
+            elif payload[8] == ord(":"):
                 loopback = False
             else:
                 raise ValueError
             length = int(payload[9:11], 16)
             data = int(payload[12:20], 16)
-
-            return DaliFrame(
-                timestamp, length, data, status=DaliStatus(loopback, length, data)
-            )
-        except (ValueError, IndexError):
-            logger.debug(f"can not parse line: '{line}'")
+            return (timestamp, loopback, length, data)
+        except ValueError:
             return None
 
     def read_worker_thread(self):
@@ -69,15 +65,22 @@ class DaliSerial:
         if not self.keep_running:
             logger.error("read thread is not running")
         try:
-            self.frame = self.queue.get(block=True, timeout=timeout)
+            result = self.queue.get(block=True, timeout=timeout)
         except queue.Empty:
-            self.frame = DaliFrame(status=DaliStatus(status=DaliStatus.TIMEOUT))
+            self.rx_frame = DaliFrame(status=DaliStatus(status=DaliStatus.TIMEOUT))
             return
         if result is None:
-            self.frame = DaliFrame(status=DaliStatus(status=DaliStatus.GENERAL))
+            self.rx_frame = DaliFrame(status=DaliStatus(status=DaliStatus.GENERAL))
             return
+        self.rx_frame = DaliFrame(
+            timestamp=result[0],
+            length=result[2],
+            data=result[3],
+            status=DaliStatus(result[1], result[2], result[3]),
+        )
+        return
 
-    def transmit(self, frame, block=False):
+    def transmit(self, frame: DaliFrame, block: bool = False):
         if frame.send_twice:
             command = f"S{frame.priority} {frame.length:X}+{frame.data:X}\r".encode(
                 "utf-8"
@@ -90,6 +93,33 @@ class DaliSerial:
         self.port.write(command)
         if block:
             self.get_next(5)
+
+    def query_reply(self, frame: DaliFrame):
+        if not self.keep_running:
+            logger.error("read thread is not running")
+        logger.debug("flush queue")
+        while not self.queue.empty():
+            self.queue.get()
+        if frame.send_twice:
+            command = f"Q{frame.priority} {frame.length:X}+{frame.data:X}\r".encode(
+                "utf-8"
+            )
+        else:
+            command = f"Q{frame.priority} {frame.length:X} {frame.data:X}\r".encode(
+                "utf-8"
+            )
+        logger.debug(f"write <{command}>")
+        self.port.write(command)
+        logger.debug("read loopback")
+        self.get_next(timeout=1)
+        if (
+            self.rx_frame.status.status != DaliStatus.LOOPBACK
+            or self.rx_frame.data != frame.data
+            or self.rx_frame.length != frame.length
+        ):
+            return
+        logger.debug("read backframe")
+        self.get_next(timeout=1)
 
     def close(self):
         logger.debug("close connection")

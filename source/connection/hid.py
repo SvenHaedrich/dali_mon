@@ -66,7 +66,7 @@ class DaliUsb:
         self.keep_running = False
         self.send_sequence_number = 1
         self.receive_sequence_number = None
-        self.frame = DaliFrame()
+        self.rx_frame = None
 
         logger.debug("try to discover DALI interfaces")
         devices = [
@@ -120,29 +120,29 @@ class DaliUsb:
     def read_raw(self, timeout=None):
         return self.ep_read.read(self.ep_read.wMaxPacketSize, timeout=timeout)
 
-    def transmit(self, length=0, data=0, priority=1, send_twice=False, block=False):
+    def transmit(self, frame: DaliFrame, block: bool = False):
         command = self._USB_CMD_SEND
         self.send_sequence_number = (self.send_sequence_number + 1) & 0xFF
         sequence = self.send_sequence_number
-        control = self._USB_CTRL_TWICE if send_twice else 0
-        if length == 24:
-            ext = (data >> 16) & 0xFF
-            address_byte = (data >> 8) & 0xFF
-            opcode_byte = data & 0xFF
+        control = self._USB_CTRL_TWICE if frame.send_twice else 0
+        if frame.length == 24:
+            ext = (frame.data >> 16) & 0xFF
+            address_byte = (frame.data >> 8) & 0xFF
+            opcode_byte = frame.data & 0xFF
             write_type = self._USB_WRITE_TYPE_24BIT
-        elif length == 16:
+        elif frame.length == 16:
             ext = 0x00
-            address_byte = (data >> 8) & 0xFF
-            opcode_byte = data & 0xFF
+            address_byte = (frame.data >> 8) & 0xFF
+            opcode_byte = frame.data & 0xFF
             write_type = self._USB_WRITE_TYPE_16BIT
-        elif length == 8:
+        elif frame.length == 8:
             ext = 0x00
             address_byte = 0x00
-            opcode_byte = data & 0xFF
+            opcode_byte = frame.data & 0xFF
             write_type = self._USB_WRITE_TYPE_8BIT
         else:
             raise Exception(
-                f"DALI commands must be 8,16 or 24 bit long. This is {length} bit long"
+                f"DALI commands must be 8,16 or 24 bit long. This is {frame.length} bit long"
             )
 
         logger.debug(
@@ -160,7 +160,7 @@ class DaliUsb:
             opcode_byte,
         )
         result = self.ep_write.write(buffer)
-        self.last_transmit = data
+        self.last_transmit = frame.data
 
         if block:
             if not self.keep_running:
@@ -186,9 +186,8 @@ class DaliUsb:
             try:
                 usb_data = self.read_raw(timeout=100)
                 if usb_data:
-                    mode = usb_data[0]
                     read_type = usb_data[1]
-                    read_sequence_number = usb_data[8]
+                    receive_sequence_number = usb_data[8]
                     logger.debug(
                         f"DALI[IN]: SN=0x{usb_data[8]:02X} TY=0x{usb_data[1]:02X} "
                         f"EC=0x{usb_data[3]:02X} AD=0x{usb_data[4]:02X} OC=0x{usb_data[5]:02X}"
@@ -235,7 +234,7 @@ class DaliUsb:
         logger.debug("read_worker_thread terminated")
 
     def start_receive(self):
-        logger.debug("start read")
+        logger.debug("start receive")
         self.keep_running = True
         self.thread = threading.Thread(target=self.read_worker_thread, args=())
         self.thread.daemon = True
@@ -246,10 +245,29 @@ class DaliUsb:
         if not self.keep_running:
             logger.error("read thread is not running")
         try:
-            self.frame = self.queue.get(block=True, timeout=timeout)
+            self.rx_frame = self.queue.get(block=True, timeout=timeout)
         except queue.Empty:
-            self.frame = DaliFrame(status=DaliStatus(status=DaliStatus.TIMEOUT))
+            self.rx_frame = DaliFrame(status=DaliStatus(status=DaliStatus.TIMEOUT))
             return
-        if self.frame is None:
-            self.frame = DaliFrame(status=DaliStatus(status=DaliStatus.GENERAL))
+        if self.rx_frame is None:
+            self.rx_frame = DaliFrame(status=DaliStatus(status=DaliStatus.GENERAL))
             return
+
+    def query_reply(self, frame: DaliFrame):
+        if not self.keep_running:
+            logger.error("read thread is not running")
+        logger.debug("flash queue")
+        while not self.queue.empty():
+            self.queue.get()
+        logger.debug("transmit command")
+        self.transmit(frame)
+        logger.debug("read loopback")
+        self.get_next(timeout=1)
+        if (
+            self.rx_frame.status.status != DaliStatus.FRAME
+            or self.rx_frame.data != frame.data
+            or self.rx_frame.length != frame.length
+        ):
+            return
+        logger.debug("read backframe")
+        self.get_next(timeout=1)
