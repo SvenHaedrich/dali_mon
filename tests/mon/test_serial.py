@@ -11,33 +11,33 @@ from connection.status import DaliStatus
 
 
 def test_raw_from_string():
-    input_string = "{00000000:08 000011}"
-    frame = DaliSerial.parse(input_string)
-    assert frame.timestamp == 0
-    assert frame.length == 0x8
-    assert frame.data == 0x11
-    assert frame.status.status == DaliStatus.FRAME
-    input_string = "{00000001:10 0000FF00}"
-    frame = DaliSerial.parse(input_string)
-    assert frame.timestamp == 0.001
-    assert frame.length == 0x10
-    assert frame.data == 0xFF00
-    assert frame.status.status == DaliStatus.FRAME
-    input_string = "{00000002:18 00123456}"
-    frame = DaliSerial.parse(input_string)
-    assert frame.timestamp == 0.002
-    assert frame.length == 0x18
-    assert frame.data == 0x123456
-    assert frame.status.status == DaliStatus.FRAME
-    input_string = "{00000003:83 00123456}"
-    frame = DaliSerial.parse(input_string)
-    assert frame.timestamp == 0.003
-    assert frame.length == 0x83
-    assert frame.data == 0x123456
-    assert frame.status.status == DaliStatus.TIMING
-    input_string = "{00000004:20 87654321}"
-    frame = DaliSerial.parse(input_string)
-    assert frame.timestamp == 0.004
-    assert frame.length == 0x20
-    assert frame.data == 0x87654321
-    assert frame.status.status == DaliStatus.FRAME
+    input_string = "{00000000:08 000011}".encode("utf-8")
+    result = DaliSerial.parse(input_string)
+    assert result[0] == 0
+    assert result[1] == False
+    assert result[2] == 0x8
+    assert result[3] == 0x11
+    input_string = "{00000001:10 0000FF00}".encode("utf-8")
+    result = DaliSerial.parse(input_string)
+    assert result[0] == 0.001
+    assert result[1] == False
+    assert result[2] == 0x10
+    assert result[3] == 0xFF00
+    input_string = "{00000002:18 00123456}".encode("utf-8")
+    result = DaliSerial.parse(input_string)
+    assert result[0] == 0.002
+    assert result[1] == False
+    assert result[2] == 0x18
+    assert result[3] == 0x123456
+    input_string = "{00000003:83 00123456}".encode("utf-8")
+    result = DaliSerial.parse(input_string)
+    assert result[0] == 0.003
+    assert result[1] == False
+    assert result[2] == 0x83
+    assert result[3] == 0x123456
+    input_string = "{00000004:20 87654321}".encode("utf-8")
+    result = DaliSerial.parse(input_string)
+    assert result[0] == 0.004
+    assert result[1] == False
+    assert result[2] == 0x20
+    assert result[3] == 0x87654321
