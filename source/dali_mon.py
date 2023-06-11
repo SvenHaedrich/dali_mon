@@ -72,12 +72,12 @@ def process_line(frame, no_color, absolute_time):
 
 def main_usb(no_color, absolute_time):
     logger.debug("read from Lunatone usb device")
-    dali_connection = dali_usb.DaliUsb()
+    dali_connection = DaliUsb()
     dali_connection.start_receive()
     try:
         while True:
-            frame = dali_connection.get_next()
-            process_line(frame, no_color, absolute_time)
+            dali_connection.get_next()
+            process_line(dali_connection.rx_frame, no_color, absolute_time)
     except KeyboardInterrupt:
         print("\rinterrupted")
         dali_connection.close()
@@ -88,7 +88,7 @@ def main_tty(transparent, no_color, absolute_time):
     line = ""
     while True:
         line = line + sys.stdin.readline()
-        if line[-1] == "\n":
+        if len(line) > 0 and line[-1] == "\n":
             line = line.strip(" \r\n")
             if len(line) > 0:
                 frame = DaliSerial.parse(line)
