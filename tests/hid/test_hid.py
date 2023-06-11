@@ -26,9 +26,9 @@ def test_8bit_frames():
         send_frame = DaliFrame(length=8, data=data)
         serial.transmit(send_frame)
         usb.get_next(timeout=2)
-        assert usb.frame.length == send_frame.length
-        assert usb.frame.data == send_frame.data
-        assert usb.frame.status.status == DaliStatus.FRAME
+        assert usb.rx_frame.length == send_frame.length
+        assert usb.rx_frame.data == send_frame.data
+        assert usb.rx_frame.status.status == DaliStatus.FRAME
     serial.close()
     usb.close()
 
@@ -65,9 +65,9 @@ def test_16bit_frame(data):
     send_frame = DaliFrame(length=16, data=data)
     serial.transmit(send_frame)
     usb.get_next(timeout=2)
-    assert usb.frame.length == send_frame.length
-    assert usb.frame.data == send_frame.data
-    assert usb.frame.status.status == DaliStatus.FRAME
+    assert usb.rx_frame.length == send_frame.length
+    assert usb.rx_frame.data == send_frame.data
+    assert usb.rx_frame.status.status == DaliStatus.FRAME
     serial.close()
     usb.close()
 
@@ -113,7 +113,7 @@ def test_invalid_frame_length(length, data):
     send_frame = DaliFrame(length=length, data=data)
     serial.transmit(send_frame)
     usb.get_next(2)
-    assert usb.frame.status.status == DaliStatus.TIMING
-    assert usb.frame.length == 0
+    assert usb.rx_frame.status.status == DaliStatus.TIMING
+    assert usb.rx_frame.length == 0
     serial.close()
     usb.close()
