@@ -5,7 +5,9 @@ from datetime import datetime
 from termcolor import cprint
 
 import DALI
-import usb_hid
+from connection.status import DaliStatus
+from connection.serial import DaliSerial
+from connection.hid import DaliUsb
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +26,9 @@ def print_local_time(enabled):
 
 def print_command_color(absolute_time, timestamp, delta, dali_command):
     print_local_time_color(absolute_time)
-    cprint(f"{timestamp:.03f} | {delta:8.03f} | {dali_command} | ", color="green", end="")
+    cprint(
+        f"{timestamp:.03f} | {delta:8.03f} | {dali_command} | ", color="green", end=""
+    )
     cprint(f"{dali_command.cmd()}", color="white")
 
 
@@ -33,46 +37,47 @@ def print_command(absolute_time, timestamp, delta, dali_command):
     print(f"{timestamp:.03f} | {delta:8.03f} | {dali_command} | {dali_command.cmd()}")
 
 
-def print_error_color(absolute_time, raw, delta):
+def print_error_color(absolute_time, timestamp, delta, status):
     print_local_time_color(absolute_time)
-    cprint(f"{raw.timestamp:.03f} | {delta:8.03f} | ", color="green", end="")
-    cprint(f"{DALI.DALIError(raw.length, raw.data)}", color="red")
+    cprint(f"{timestamp:.03f} | {delta:8.03f} | ", color="green", end="")
+    cprint(f"{status.message}", color="red")
 
 
-def print_error(absolute_time, raw, delta):
+def print_error(absolute_time, timestamp, delta, status):
     print_local_time(absolute_time)
-    print(f"{raw.timestamp:.03f} | {delta:8.03f} | {DALI.DALIError(raw.length, raw.data)}")
+    print(f"{timestamp:.03f} | {delta:8.03f} | {status.message}")
 
 
-def process_line(raw, no_color, absolute_time):
-    if not raw.type == raw.INVALID:
-        if process_line.last_timestamp != 0:
-            delta = raw.timestamp - process_line.last_timestamp
+def process_line(frame, no_color, absolute_time):
+    if process_line.last_timestamp != 0:
+        delta = frame.timestamp - process_line.last_timestamp
+    else:
+        delta = 0
+    if frame.status.status in (DaliStatus.OK, DaliStatus.FRAME, DaliStatus.LOOPBACK):
+        dali_command = DALI.Decode(
+            frame.length, frame.data, process_line.active_device_type
+        )
+        if no_color:
+            print_command(absolute_time, frame.timestamp, delta, dali_command)
         else:
-            delta = 0
-        if raw.type == raw.VALID:
-            dali_command = DALI.Decode(raw, process_line.active_device_type)
-            if no_color:
-                print_command(absolute_time, raw.timestamp, delta, dali_command)
-            else:
-                print_command_color(absolute_time, raw.timestamp, delta, dali_command)
+            print_command_color(absolute_time, frame.timestamp, delta, dali_command)
             process_line.active_device_type = dali_command.get_next_device_type()
+    else:
+        if no_color:
+            print_error(absolute_time, frame.timestamp, delta, frame.status)
         else:
-            if no_color:
-                print_error(absolute_time, raw, delta)
-            else:
-                print_error_color(absolute_time, raw, delta)
-        process_line.last_timestamp = raw.timestamp
+            print_error_color(absolute_time, frame.timestamp, delta, frame.status)
+    process_line.last_timestamp = frame.timestamp
 
 
 def main_usb(no_color, absolute_time):
     logger.debug("read from Lunatone usb device")
-    dali_connection = usb_hid.DALI_Usb()
-    dali_connection.start_read()
+    dali_connection = DaliUsb()
+    dali_connection.start_receive()
     try:
         while True:
-            raw_frame = dali_connection.read_raw_frame()
-            process_line(raw_frame, no_color, absolute_time)
+            dali_connection.get_next()
+            process_line(dali_connection.rx_frame, no_color, absolute_time)
     except KeyboardInterrupt:
         print("\rinterrupted")
         dali_connection.close()
@@ -80,27 +85,27 @@ def main_usb(no_color, absolute_time):
 
 def main_tty(transparent, no_color, absolute_time):
     logger.debug("read from tty device")
-    raw = DALI.Raw_Frame(transparent)
+    line = ""
     while True:
-        line = sys.stdin.readline()
-        if len(line) > 0:
-            line = line.encode("utf-8")
-            raw.from_line(line)
-            process_line(raw, no_color, absolute_time)
+        line = line + sys.stdin.readline()
+        if len(line) > 0 and line[-1] == "\n":
+            line = line.strip(" \r\n")
+            if len(line) > 0:
+                frame = DaliSerial.parse(line.encode("utf-8"))
+                process_line(frame, no_color, absolute_time)
+            line = ""
 
 
 def main_file(transparent, no_color, absolute_time):
     logger.debug("read from file")
-    raw = DALI.Raw_Frame(transparent)
     for line in sys.stdin:
         if len(line) > 0:
-            line = line.encode("utf-8")
-            raw.from_line(line)
-            process_line(raw, no_color, absolute_time)
+            frame = DaliSerial.parse(line.encode("utf-8"))
+            process_line(frame, no_color, absolute_time)
 
 
 @click.command()
-@click.version_option("1.1.2")
+@click.version_option("1.3.0")
 @click.option(
     "-l",
     "--hid",

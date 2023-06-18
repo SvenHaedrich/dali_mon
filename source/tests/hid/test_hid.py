@@ -1,31 +1,27 @@
 import pytest
-import os
-import sys
 import logging
 
-# locate some of the project modules
-here = os.path.dirname(__file__)
-sys.path.append(os.path.join(here, "../../source"))
-
-import dali_serial
-import usb_hid
-import DALI
-
+from connection.status import DaliStatus
+from connection.serial import DaliSerial
+from connection.hid import DaliUsb
+from connection.frame import DaliFrame
 
 serial_port = "/dev/ttyUSB0"
 logger = logging.getLogger(__name__)
+timeout_sec = 2
 
 
 def test_8bit_frames():
-    serial = dali_serial.DALI_Serial(serial_port)
-    usb = usb_hid.DALI_Usb()
-    usb.start_read()
-    frame = DALI.Raw_Frame(length=8)
+    serial = DaliSerial(serial_port)
+    usb = DaliUsb()
+    usb.start_receive()
     for data in range(0x100):
-        frame.data = data
-        serial.write(frame)
-        readback = usb.read_raw_frame()
-        assert frame == readback, f"unexpected result: {readback}"
+        send_frame = DaliFrame(length=8, data=data)
+        serial.transmit(send_frame)
+        usb.get_next(timeout_sec)
+        assert usb.rx_frame.length == send_frame.length
+        assert usb.rx_frame.data == send_frame.data
+        assert usb.rx_frame.status.status == DaliStatus.FRAME
     serial.close()
     usb.close()
 
@@ -56,13 +52,15 @@ def test_8bit_frames():
     ],
 )
 def test_16bit_frame(data):
-    serial = dali_serial.DALI_Serial(serial_port)
-    usb = usb_hid.DALI_Usb()
-    usb.start_read()
-    frame = DALI.Raw_Frame(length=16, data=data)
-    serial.write(frame)
-    readback = usb.read_raw_frame()
-    assert frame == readback, f"unexpected result: {readback}"
+    serial = DaliSerial(serial_port)
+    usb = DaliUsb()
+    usb.start_receive()
+    send_frame = DaliFrame(length=16, data=data)
+    serial.transmit(send_frame)
+    usb.get_next(timeout_sec)
+    assert usb.rx_frame.length == send_frame.length
+    assert usb.rx_frame.data == send_frame.data
+    assert usb.rx_frame.status.status == DaliStatus.FRAME
     serial.close()
     usb.close()
 
@@ -102,13 +100,13 @@ def test_16bit_frame(data):
 )
 def test_invalid_frame_length(length, data):
     logger.setLevel(logging.DEBUG)
-    serial = dali_serial.DALI_Serial(serial_port)
-    usb = usb_hid.DALI_Usb()
-    usb.start_read()
-    frame = DALI.Raw_Frame(length=length, data=data)
-    serial.write(frame)
-    readback = usb.read_raw_frame()
-    assert readback.type == DALI.Raw_Frame.ERROR
-    assert readback.length == DALI.DALIError.FRAME
+    serial = DaliSerial(serial_port)
+    usb = DaliUsb()
+    usb.start_receive()
+    send_frame = DaliFrame(length=length, data=data)
+    serial.transmit(send_frame)
+    usb.get_next(timeout_sec)
+    assert usb.rx_frame.status.status == DaliStatus.TIMING
+    assert usb.rx_frame.length == 0
     serial.close()
     usb.close()
