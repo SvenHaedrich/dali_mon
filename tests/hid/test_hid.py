@@ -16,6 +16,7 @@ import DALI
 
 serial_port = "/dev/ttyUSB0"
 logger = logging.getLogger(__name__)
+timeout_sec = 2
 
 
 def test_8bit_frames():
@@ -25,7 +26,7 @@ def test_8bit_frames():
     for data in range(0x100):
         send_frame = DaliFrame(length=8, data=data)
         serial.transmit(send_frame)
-        usb.get_next(timeout=2)
+        usb.get_next(timeout_sec)
         assert usb.rx_frame.length == send_frame.length
         assert usb.rx_frame.data == send_frame.data
         assert usb.rx_frame.status.status == DaliStatus.FRAME
@@ -64,7 +65,7 @@ def test_16bit_frame(data):
     usb.start_receive()
     send_frame = DaliFrame(length=16, data=data)
     serial.transmit(send_frame)
-    usb.get_next(timeout=2)
+    usb.get_next(timeout_sec)
     assert usb.rx_frame.length == send_frame.length
     assert usb.rx_frame.data == send_frame.data
     assert usb.rx_frame.status.status == DaliStatus.FRAME
@@ -112,7 +113,7 @@ def test_invalid_frame_length(length, data):
     usb.start_receive()
     send_frame = DaliFrame(length=length, data=data)
     serial.transmit(send_frame)
-    usb.get_next(2)
+    usb.get_next(timeout_sec)
     assert usb.rx_frame.status.status == DaliStatus.TIMING
     assert usb.rx_frame.length == 0
     serial.close()
