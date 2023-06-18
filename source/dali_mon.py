@@ -91,7 +91,7 @@ def main_tty(transparent, no_color, absolute_time):
         if len(line) > 0 and line[-1] == "\n":
             line = line.strip(" \r\n")
             if len(line) > 0:
-                frame = DaliSerial.parse(line)
+                frame = DaliSerial.parse(line.encode("utf-8"))
                 process_line(frame, no_color, absolute_time)
             line = ""
 
@@ -100,7 +100,7 @@ def main_file(transparent, no_color, absolute_time):
     logger.debug("read from file")
     for line in sys.stdin:
         if len(line) > 0:
-            frame = DaliSerial.parse(line)
+            frame = DaliSerial.parse(line.encode("utf-8"))
             process_line(frame, no_color, absolute_time)
 
 
