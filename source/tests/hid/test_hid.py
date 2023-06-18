@@ -1,18 +1,10 @@
 import pytest
-import os
-import sys
 import logging
-
-# locate some of the project modules
-here = os.path.dirname(__file__)
-sys.path.append(os.path.join(here, "../../source"))
 
 from connection.status import DaliStatus
 from connection.serial import DaliSerial
 from connection.hid import DaliUsb
 from connection.frame import DaliFrame
-import DALI
-
 
 serial_port = "/dev/ttyUSB0"
 logger = logging.getLogger(__name__)

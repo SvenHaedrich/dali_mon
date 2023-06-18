@@ -1,10 +1,4 @@
 import pytest
-import os
-import sys
-
-# locate the DALI module
-here = os.path.dirname(__file__)
-sys.path.append(os.path.join(here, "../../source"))
 import DALI
 
 ADDRESS_WIDTH = 12
@@ -101,7 +95,7 @@ def test_device_standard_command(name, opcode):
 def test_simple_special_commands(name, instance_byte):
     decoded_command = DALI.Decode(length=24, data=((0xC1 << 16) + (instance_byte << 8)))
     target_command = "".ljust(ADDRESS_WIDTH) + name
-    assert decoded_command.cmd() == target_command, f"failed for frame {frame.data:06X}"
+    assert decoded_command.cmd() == target_command, f"failed for {name}"
 
 
 @pytest.mark.parametrize("opcode", [0x02, 0x03, 0x04])
