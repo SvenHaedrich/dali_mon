@@ -96,7 +96,7 @@ def main_file(transparent, absolute_time):
 def dali_mon(hid, debug, nocolor, echo, absolute):
     """
     Monitor for DALI commands,
-    SevenLabs 2023
+    SevenLab 2023
     """
     if debug:
         logging.basicConfig(level=logging.DEBUG)
