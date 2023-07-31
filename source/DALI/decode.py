@@ -6,7 +6,7 @@ from .forward_frame_32bit import ForwardFrame32Bit
 
 
 class Decode:
-    ADDRESS_WIDTH = 12
+    ADDRESS_WIDTH = 14
     DATA_WIDTH = 8
 
     def __init__(self, length, data, device_type=DeviceType.NONE):
