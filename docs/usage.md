@@ -19,6 +19,10 @@ Use `Ctrl-C` to stop a running instance of `dali_mon`.
     0.006 |    0.001 | ERROR: SYSTEM FAILURE
     0.007 |    0.001 | ERROR: SYSTEM RECOVER
 
+You can remove the colour control codes from the output stream using `ansifilter`.
+
+    ./dali_mon < tests/sample.txt | ansifilter
+
 ## Read from Serial Port
 
 Remember to set the serial port communication parammeters before starting the monitor routine. This example reads from a serial port connected to `ttyUSB0` using a baudrate of 115200 Baud.
@@ -32,7 +36,6 @@ Remember to set the serial port communication parammeters before starting the mo
 |-----------|-------|-----------------------------------------------------|
 |--help     |       | Show help message and exit.                         |
 |--version  |       | Show the version information and exit.              |
-|--nocolor  |       | Do not use color coding for output.                 |
 |--absolute |       | Add absolute time from host machine to output.      |
 |--echo     |       | Echo unprocessed input line to output.              |
 |--hid      | -l    | Use HID class USB connector for DALI communication. |
