@@ -93,7 +93,7 @@ def main_file(transparent, absolute_time):
 @click.option("--debug", help="Enable debug level logging.", is_flag=True)
 @click.option("--echo", help="Echo unprocessed input line to output.", is_flag=True)
 @click.option("--absolute", help="Add absolute local time to output.", is_flag=True)
-def dali_mon(hid, debug, nocolor, echo, absolute):
+def dali_mon(hid, debug, echo, absolute):
     """
     Monitor for DALI commands,
     SevenLab 2023
