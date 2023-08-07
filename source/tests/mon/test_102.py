@@ -1,7 +1,7 @@
 import pytest
 import DALI
 
-ADDRESS_WIDTH = 12
+ADDRESS_WIDTH = 14
 
 
 def test_backframe():
