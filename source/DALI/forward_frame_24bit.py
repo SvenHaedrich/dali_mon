@@ -91,6 +91,47 @@ class ForwardFrame24Bit:
             0x47: "QUERY EXTENDED VERSION NUMBER (DTR0)",
             0x48: "QUERY RESET STATE",
             0x49: "QUERY APPLICATION CONTROLLER ALWAYS ACTIVE",
+        }
+        opcode_byte = self.frame_bits[16:].uint
+        return code_dictionary.get(
+            opcode_byte,
+            f"--- CODE 0x{opcode_byte:02X} = {opcode_byte} UNDEFINED CONTROL DEVICE COMMAND",
+        )
+
+    def instance_commands(self):
+        code_dictionary = {
+            0x00: "SET SHORT TIMER (DTR0) - TYPE 301",
+            0x01: "SET DOUBLE TIMER (DTR0) - TYPE 301",
+            0x02: "SET REPEAT TIMER (DTR0) - TYPE 301",
+            0x03: "SET STUCK TIMER (DTR0) - TYPE 301",
+            0x0A: "QUERY SHORT TIMER - TYPE 301",
+            0x0B: "QUERY SHORT TIMER MIN - TYPE 301",
+            0x0C: "QUERY DOUBLE TIMER - TYPE 301",
+            0x0D: "QUERY DOUBLE TIMER MIN - TYPE 301",
+            0x0E: "QUERY REPEAT TIMER - TYPE 301",
+            0x0F: "QUERY STUCK TIMER - TYPE 301",
+            0x10: "SET REPORT TIMER (DTR0) - TYPE 302",
+            0x11: "SET DEADTIME TIMER (DTR0) - TYPE 302",
+            0x1D: "QUERY DEADTIME TIMER - TYPE 302",
+            0x1E: "QUERY REPORT TIMER - TYPE 302",
+            0x1F: "QUERY SWITCH - TYPE 302",
+            0x20: "CATCH MOVEMENT - TYPE 303",
+            0x21: "SET HOLD TIMER (DTR0) - TYPE 303",
+            0x22: "SET REPORT TIMER (DTR0)- TYPE 303",
+            0x23: "SET DEADTIME TIMER (DTR0) - TYPE 303",
+            0x24: "CANCEL HOLD TIMER -TYPE 303",
+            0x2C: "QUERY DEADTIME TIMER - TYPE 303",
+            0x2D: "QUERY HOLD TIMER - TYPE 303",
+            0x2E: "QUERY REPORT TIMER - TYPE 303",
+            0x2F: "QUERY CACHING - TYPE 303",
+            0x30: "SET REPORT TIMER (DTR0) - TYPE 304",
+            0x31: "SET HYSTERESIS (DTR0) - TYPE 304",
+            0x32: "SET DEADTIME TIMER (DTR0) - TYPE 304",
+            0x33: "SET HYSTERESIS MIN (DTR0) - TYPE 304",
+            0x3C: "QUERY HYSTERESIS MIN - TYPE 304",
+            0x3D: "QUERY DEADTIME TIMER - TYPE 304",
+            0x3E: "QUERY REPORT TIMER - TYPE 304",
+            0x3F: "QUERY HYSTERESIS - TYPE 304",
             0x61: "SET EVENT PRIORITY (DTR0)",
             0x62: "ENABLE INSTANCE",
             0x63: "DISABLE INSTANCE",
@@ -124,7 +165,7 @@ class ForwardFrame24Bit:
         opcode_byte = self.frame_bits[16:].uint
         return code_dictionary.get(
             opcode_byte,
-            f"--- CODE 0x{opcode_byte:02X} = {opcode_byte} UNDEFINED CONTROL DEVICE COMMAND",
+            f"--- CODE 0x{opcode_byte:02X} = {opcode_byte} UNDEFINED INSTANCE COMMAND",
         )
 
     def device_special_command(self):
@@ -348,7 +389,10 @@ class ForwardFrame24Bit:
             self.address_string = self.build_command_address_string(
                 device_address_type, instance_address_type
             )
-            self.command_string = self.device_command()
+            if instance_address_type == InstanceAddressType.DEVICE:
+                self.command_string = self.device_command()
+            else:
+                self.command_string = self.instance_commands()
         if device_address_type == DeviceAddressType.SPECIAL:
             self.command_string = self.device_special_command()
         self.address_string = self.address_string.ljust(address_field_width)
