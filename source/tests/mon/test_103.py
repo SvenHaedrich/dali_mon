@@ -348,3 +348,24 @@ def test_instance_command(command_name, opcode_byte):
     for short_address in range(0x40):
         basic_data = (short_address << 17) + (1 << 16) + opcode_byte
         run_thru_instance_addressing(basic_data, f"D{short_address:02}", command_name)
+
+
+def test_initialise_short_address():
+    for short_address in range(0x40):
+        frame_data = 0xC10100 + short_address
+        decoded_command = DALI.Decode(24, frame_data, DALI.DeviceType.NONE)
+        target_command = " " * ADDRESS_WIDTH + f"INITIALISE (D{short_address:02})"
+        assert decoded_command.cmd() == target_command
+
+
+@pytest.mark.parametrize(
+    "data,target_command",
+    [
+        (0xC1017F, "INITIALISE (UNADDRESSED)"),
+        (0xC101FF, "INITIALISE (ALL)"),
+        (0xC10150, "INITIALISE (NONE) - 0x50"),
+    ],
+)
+def test_initialise_special_cases(data, target_command):
+    decoded_command = DALI.Decode(24, data, DALI.DeviceType.NONE)
+    assert decoded_command.cmd() == " " * ADDRESS_WIDTH + target_command

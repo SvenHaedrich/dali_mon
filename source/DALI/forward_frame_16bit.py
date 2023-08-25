@@ -260,23 +260,24 @@ class ForwardFrame16Bit:
         )
 
     def special_command(self, address_byte, opcode_byte):
-        # see iec 62386-102 11.2
+        # iec 62386-102 11.2
         if address_byte == 0xA1 and opcode_byte == 0x00:
             return "TERMINATE"
         elif address_byte == 0xA3:
             return f"DTR0 0x{opcode_byte:02X} = {opcode_byte:3} = {opcode_byte:08b}b"
         elif address_byte == 0xA5:
+            # iec 62386-102:2022 Table 20 Device addressing with INITIALISE
             if (
                 (opcode_byte >> 1) >= 0x00
                 and (opcode_byte >> 1) <= 0x3F
                 and (opcode_byte & 0x01)
             ):
-                return f"INITIALISE (0x{(opcode_byte >> 1):02X})"
+                return f"INITIALISE (G{(opcode_byte >> 1):02})"
             if opcode_byte == 0xFF:
-                return "INITIALISE (unaddressed)"
+                return "INITIALISE (UNADDRESSED)"
             if opcode_byte == 0x00:
-                return "INITIALISE (all)"
-            return f"INITIALISE (none) - 0x{opcode_byte:02x}"
+                return "INITIALISE (ALL)"
+            return f"INITIALISE (NONE) - 0x{opcode_byte:02x}"
         elif address_byte == 0xA7 and opcode_byte == 0x00:
             return "RANDOMISE"
         elif address_byte == 0xA9 and opcode_byte == 0x00:
