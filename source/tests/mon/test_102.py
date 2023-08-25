@@ -228,3 +228,24 @@ def test_simple_special_command(name, address_byte):
         )
         target_command = " " * ADDRESS_WIDTH + "---"
         assert decoded_command.cmd()[: len(target_command)] == target_command
+
+
+def test_initialise_short_address():
+    for short_address in range(0x40):
+        frame_data = 0xA500 + (short_address << 1) + 1
+        decoded_command = DALI.Decode(16, frame_data, DALI.DeviceType.NONE)
+        target_command = " " * ADDRESS_WIDTH + f"INITIALISE (G{short_address:02})"
+        assert decoded_command.cmd() == target_command
+
+
+@pytest.mark.parametrize(
+    "data,target_command",
+    [
+        (0xA5FF, "INITIALISE (UNADDRESSED)"),
+        (0xA500, "INITIALISE (ALL)"),
+        (0xA550, "INITIALISE (NONE) - 0x50"),
+    ],
+)
+def test_initialise_special_cases(data, target_command):
+    decoded_command = DALI.Decode(16, data, DALI.DeviceType.NONE)
+    assert decoded_command.cmd() == " " * ADDRESS_WIDTH + target_command
