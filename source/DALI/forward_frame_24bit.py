@@ -176,7 +176,14 @@ class ForwardFrame24Bit:
             if instance_byte == 0x00:
                 return "TERMINATE"
             elif instance_byte == 0x01:
-                return f"INITIALISE (0x{opcode_byte:02X})"
+                # IEC 62386-103:2022 Table 25 Device addressing with INITALISE
+                if opcode_byte in range(0x40):
+                    return f"INITIALISE (D{opcode_byte:02})"
+                if opcode_byte == 0x7F:
+                    return "INITIALISE (UNADDRESSED)"
+                if opcode_byte == 0xFF:
+                    return "INITIALISE (ALL)"
+                return f"INITIALISE (NONE) - 0x{opcode_byte:02X}"
             elif instance_byte == 0x02:
                 return "RANDOMISE"
             elif instance_byte == 0x03:
