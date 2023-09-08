@@ -3,7 +3,7 @@
 import sys
 import logging
 import click
-from datetime import datetime
+import datetime
 from termcolor import cprint
 
 import DALI
@@ -20,33 +20,40 @@ def print_local_time(enabled):
         cprint(f"{time_string} | ", color="yellow", end="")
 
 
-def print_command(absolute_time, timestamp, delta, dali_command):
+def print_command(absolute_time, timestamp, delta_s, dali_command, is_backframe):
     print_local_time(absolute_time)
     cprint(
-        f"{timestamp:.03f} | {delta:8.03f} | {dali_command} | ", color="green", end=""
+        f"{timestamp:.03f} | {delta_s:8.03f} | {dali_command} | ", color="green", end=""
     )
-    cprint(f"{dali_command.cmd()}", color="white")
+    cprint(f"{dali_command.cmd()}", color="white", end="")
+    if is_backframe and (delta_s < 0.019 or delta_s > 0.026):
+        delta_ms = (delta_s * 1000) - 14
+        cprint(f" --- SETTLING TIME VIOLATION ({delta_ms:.0f} ms)", color="yellow")
+    else:
+        cprint("")
 
 
-def print_error(absolute_time, timestamp, delta, status):
+def print_error(absolute_time, timestamp, delta_s, status):
     print_local_time(absolute_time)
-    cprint(f"{timestamp:.03f} | {delta:8.03f} | ", color="green", end="")
+    cprint(f"{timestamp:.03f} | {delta_s:8.03f} | ", color="green", end="")
     cprint(f"{status.message}", color="red")
 
 
 def process_line(frame, absolute_time):
     if process_line.last_timestamp != 0:
-        delta = frame.timestamp - process_line.last_timestamp
+        delta_s = frame.timestamp - process_line.last_timestamp
     else:
-        delta = 0
+        delta_s = 0
     if frame.status.status in (DaliStatus.OK, DaliStatus.FRAME, DaliStatus.LOOPBACK):
         dali_command = DALI.Decode(
             frame.length, frame.data, process_line.active_device_type
         )
-        print_command(absolute_time, frame.timestamp, delta, dali_command)
+        print_command(
+            absolute_time, frame.timestamp, delta_s, dali_command, (frame.length == 8)
+        )
         process_line.active_device_type = dali_command.get_next_device_type()
     else:
-        print_error(absolute_time, frame.timestamp, delta, frame.status)
+        print_error(absolute_time, frame.timestamp, delta_s, frame.status)
     process_line.last_timestamp = frame.timestamp
 
 
