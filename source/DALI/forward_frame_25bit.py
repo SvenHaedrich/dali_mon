@@ -1,3 +1,6 @@
+from typing import Tuple
+
+
 class DeviceClass:
     SENSOR = 4
     INPUT = 5
@@ -5,7 +8,9 @@ class DeviceClass:
 
 
 class ForwardFrame25Bit:
-    def e_DALI_sensor_command(self, opcode):
+    LENGTH = 25
+
+    def e_DALI_sensor_command(self, opcode: int) -> str:
         code_dictionary = {
             0x00: "QUERY SWITCH ADDRESS",
             0x01: "QUERY CALCULATED CHECKSUM",
@@ -88,7 +93,7 @@ class ForwardFrame25Bit:
         else:
             return f"--- CODE 0x{opcode:02X} = {opcode} UNKNOWN eDALI SENSOR COMMAND"
 
-    def e_DALI_input_command(self, opcode):
+    def e_DALI_input_command(self, opcode: int) -> str:
         code_dictionary = {
             0x00: "QUERY SWITCH ADDRESS",
             0x01: "QUERY CALCULATED CHECKSUM",
@@ -163,7 +168,7 @@ class ForwardFrame25Bit:
         else:
             return f"--- CODE 0x{opcode:02X} = {opcode} UNKNOWN eDALI INPUT COMMAND"
 
-    def e_DALI_command(self, device_class, opcode):
+    def e_DALI_command(self, device_class: DeviceClass, opcode: int) -> str:
         if device_class == DeviceClass.SENSOR:
             return self.e_DALI_sensor_command(opcode)
         elif device_class == DeviceClass.INPUT:
@@ -171,56 +176,50 @@ class ForwardFrame25Bit:
         else:
             return f"--- CLASS {device_class} NOT IMPLEMENTED"
 
-    def __init__(self, frame, address_field_width=10):
-        self.address_string = "         "
-        self.command_string = ""
+    def adr(self) -> str:
+        return self.address
 
-        class_byte = (frame >> 17) & 0xF
-        address_byte = (frame >> 9) & 0xFF
-        opcode_byte = frame & 0xFF
+    def cmd(self) -> str:
+        return self.command
+
+    def data(self) -> str:
+        return f"{self.frame_data:07X}"
+
+    def __init__(self, data: int) -> None:
+        self.frame_data = data
+        class_byte = (data >> 17) & 0xF
+        address_byte = (data >> 9) & 0xFF
+        opcode_byte = data & 0xFF
 
         # ---- special broadcast commands
         if address_byte == 0xA1:
-            self.address_string = f"C{class_byte:1d}".ljust(address_field_width)
-            self.command_string = (
-                f"QUERY CONTROL TYPE (0x{opcode_byte:02X}) = {opcode_byte}"
-            )
+            self.address = f"C{class_byte:1d}"
+            self.command = f"QUERY CONTROL TYPE (0x{opcode_byte:02X}) = {opcode_byte}"
             return
         if address_byte == 0xA3:
-            self.address_string = f"C{class_byte:1d}".ljust(address_field_width)
-            self.command_string = f"QUERY CONTROL CLASS (0x{(opcode_byte & 0xf):1X}) = {(opcode_byte & 0xf)}"
+            self.address = f"C{class_byte:1d}"
+            self.command = f"QUERY CONTROL CLASS (0x{(opcode_byte & 0xf):1X}) = {(opcode_byte & 0xf)}"
             return
         if address_byte == 0xA5:
             if opcode_byte == 0:
-                self.address_string = f"C{class_byte:1d}".ljust(address_field_width)
-                self.command_string = "ENHANCED INITIALISE (ALL)"
+                self.address = f"C{class_byte:1d}"
+                self.command = "ENHANCED INITIALISE (ALL)"
             elif opcode_byte == 0xFF:
-                self.address_string = f"C{class_byte:1d}".ljust(address_field_width)
-                self.command_string = "ENHANCED INITIALISE (UNADDRESSED)"
+                self.address = f"C{class_byte:1d}"
+                self.command = "ENHANCED INITIALISE (UNADDRESSED)"
             else:
-                self.address_string = (
-                    f"C{class_byte:1d} E{((opcode_byte >> 1) & 0x3F):02d}   "
-                )
-                self.command_string = "ENHANCED INITIALISE"
+                self.address = f"C{class_byte:1d} E{((opcode_byte >> 1) & 0x3F):02d}"
+                self.command = "ENHANCED INITIALISE"
             return
         # ---- other commands
         if address_byte & 0x80:
             if address_byte == 0xFF:
-                self.address_string = f"C{class_byte:1d} BC".ljust(address_field_width)
+                self.address = f"C{class_byte:1d} BC"
             elif address_byte == 0xFD:
-                self.address_string = f"C{class_byte:1d} BC una".ljust(
-                    address_field_width
-                )
+                self.address = f"C{class_byte:1d} BC una"
             else:
-                self.address_string = (
-                    f"C{class_byte:1d}  G{((address_byte >> 1) & 0x3F):02d}".ljust(
-                        address_field_width
-                    )
-                )
+                self.address = f"C{class_byte:1d}  G{((address_byte >> 1) & 0x3F):02d}"
         else:
-            self.address_string = (
-                f"C{class_byte:1d}  E{((address_byte >> 1) & 0x3F):02d}".ljust(
-                    address_field_width
-                )
-            )
-        self.command_string = self.e_DALI_command(class_byte, opcode_byte)
+            self.address = f"C{class_byte:1d}  E{((address_byte >> 1) & 0x3F):02d}"
+        self.command = self.e_DALI_command(class_byte, opcode_byte)
+        return

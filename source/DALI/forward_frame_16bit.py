@@ -1,3 +1,6 @@
+from typing import Tuple
+
+
 class DeviceType:
     NONE = 0
     LED = 6
@@ -6,7 +9,9 @@ class DeviceType:
 
 
 class ForwardFrame16Bit:
-    def gear_command(self, opcode):
+    LENGTH = 16
+
+    def gear_command(self, opcode: int) -> str:
         # see iec 62386-102:2022 11.2
         code_dictionary = {
             0x00: "OFF",
@@ -171,7 +176,7 @@ class ForwardFrame16Bit:
             opcode, f"--- CODE 0x{opcode:02X} = {opcode} UNKNOWN CONTROL GEAR COMMAND"
         )
 
-    def gear_colour_command(self, opcode):
+    def gear_colour_command(self, opcode: int) -> str:
         # DT 8 commands
         # iec 62386 - 209 11.3
         code_dictionary = {
@@ -208,7 +213,7 @@ class ForwardFrame16Bit:
             opcode, f"--- CODE 0x{opcode:02X} = {opcode} UNKNOWN COLOUR GEAR COMMAND"
         )
 
-    def gear_switch_command(self, opcode):
+    def gear_switch_command(self, opcode: int) -> str:
         # DT 7 commands
         # iec 62386 - 208 11.3.4.1
         code_dictionary = {
@@ -234,7 +239,7 @@ class ForwardFrame16Bit:
             opcode, f"--- CODE 0x{opcode:02X} = {opcode} UNKNOWN SWITCH GEAR COMMAND"
         )
 
-    def gear_led_command(self, opcode):
+    def gear_led_command(self, opcode: int) -> str:
         # DT 6 commands
         # iec 62386 - 207 11.3
         code_dictionary = {
@@ -259,7 +264,7 @@ class ForwardFrame16Bit:
             opcode, f"--- CODE 0x{opcode:02X} = {opcode} UNKNOWN LED GEAR COMMAND"
         )
 
-    def special_command(self, address_byte, opcode_byte):
+    def special_command(self, address_byte: int, opcode_byte: int) -> str:
         # iec 62386-102 11.2
         if address_byte == 0xA1 and opcode_byte == 0x00:
             return "TERMINATE"
@@ -320,38 +325,45 @@ class ForwardFrame16Bit:
         else:
             return f"--- CODE 0x{address_byte:02X} = {address_byte} UNKNOWN CONTROL GEAR SPECIAL COMMAND"
 
-    def __init__(self, frame, device_type=DeviceType.NONE, address_field_width=10):
-        self.address_string = ""
-        self.command_string = ""
+    def adr(self) -> str:
+        return self.address
+
+    def cmd(self) -> str:
+        return self.command
+
+    def data(self) -> str:
+        return f"{self.frame_data:04X}"
+
+    def __init__(self, data: int, device_type: DeviceType) -> None:
+        self.frame_data = data
         standard_command = True
 
-        address_byte = (frame >> 8) & 0xFF
-        opcode_byte = frame & 0xFF
+        address_byte = (data >> 8) & 0xFF
+        opcode_byte = data & 0xFF
         if (address_byte & 0x01) == 0x00:
             standard_command = False
-            self.command_string = f"DAPC {opcode_byte}"
+            self.command = f"DAPC {opcode_byte}"
         if address_byte in range(0x00, 0x80):
             short_address = address_byte >> 1
-            self.address_string = f"G{short_address:02}"
+            self.address = f"G{short_address:02}"
         elif address_byte in range(0x80, 0xA0):
             group_address = (address_byte >> 1) & 0x0F
-            self.address_string = f"GG{group_address:02}"
+            self.address = f"GG{group_address:02}"
         elif address_byte in range(0xA0, 0xCC):
             standard_command = False
-            self.command_string = self.special_command(address_byte, opcode_byte)
+            self.command = self.special_command(address_byte, opcode_byte)
         elif address_byte in range(0xCC, 0xFC):
             standard_command = False
-            self.command_string = "RESERVED"
+            self.command = "RESERVED"
         elif (address_byte == 0xFD) or (address_byte == 0xFC):
-            self.address_string = "BC GEAR UN"
+            self.address = "BC GEAR UN"
         elif (address_byte == 0xFF) or (address_byte == 0xFE):
-            self.address_string = "BC GEAR"
+            self.address = "BC GEAR"
         if standard_command:
-            self.command_string = self.gear_command(opcode_byte)
+            self.command = self.gear_command(opcode_byte)
             if device_type == DeviceType.COLOUR:
-                self.command_string = self.gear_colour_command(opcode_byte)
+                self.command = self.gear_colour_command(opcode_byte)
             elif device_type == DeviceType.SWITCH:
-                self.command_string = self.gear_switch_command(opcode_byte)
+                self.command = self.gear_switch_command(opcode_byte)
             elif device_type == DeviceType.LED:
-                self.command_string = self.gear_led_command(opcode_byte)
-        self.address_string = self.address_string.ljust(address_field_width)
+                self.command = self.gear_led_command(opcode_byte)

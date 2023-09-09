@@ -1,3 +1,4 @@
+from typing import Tuple
 from bitstring import BitArray
 
 # bit position translation
@@ -11,7 +12,9 @@ from bitstring import BitArray
 
 
 class ForwardFrame32Bit:
-    def device_command(self):
+    LENGTH = 32
+
+    def device_command(self) -> str:
         # see iec 62386-105 11.2 table 6 - standard commands
         code_dictionary = {
             0x00: "START FW TRANSFER",
@@ -30,7 +33,7 @@ class ForwardFrame32Bit:
             f"--- CODE 0x{opcode_byte:02X} = {opcode_byte} UNKNOWN FIRMWARE UPDATE COMMAND",
         )
 
-    def build_address_string(self):
+    def build_address_string(self) -> bool:
         BROADCAST = 0x7F
         BROADCAST_UNADDRESSED = 0x7E
         if self.frame_bits[7]:
@@ -62,31 +65,41 @@ class ForwardFrame32Bit:
             self.address_string = ""
         return False
 
-    def data_bytes(self):
+    def data_bytes(self) -> str:
         return f"({self.frame_bits[8:16]}, {self.frame_bits[16:24]}, {self.frame_bits[24:32]})"
 
-    def data_transfer_commands(self, address_field_width):
+    def data_transfer_commands(self):
         # see iec 62386-105 11.2 table 7 - data transfer commands
         BEGIN_BLOCK = 0xCB
         TRANSFER_BLOCK = 0xBD
         if self.frame_bits[:8].uint == BEGIN_BLOCK:
-            self.address_string = " " * address_field_width
+            self.address_string = ""
             self.command_string = "BEGIN BLOCK " + self.data_bytes()
             return True
         if self.frame_bits[:8].uint == TRANSFER_BLOCK:
-            self.address_string = " " * address_field_width
+            self.address_string = ""
             self.command_string = "TRANSFER BLOCK DATA " + self.data_bytes()
             return True
         return False
 
-    def __init__(self, frame_data, address_field_width):
-        self.frame_bits = BitArray(uint=frame_data, length=32)
-        if self.data_transfer_commands(address_field_width):
+    def adr(self) -> str:
+        return self.address
+
+    def cmd(self) -> str:
+        return self.command
+
+    def data(self) -> str:
+        return f"{self.frame_data:07X}"
+
+    def __init__(self, data: int) -> None:
+        self.frame_data = data
+        self.frame_bits = BitArray(uint=data, length=ForwardFrame32Bit.LENGTH)
+        if self.data_transfer_commands():
             return
         if self.build_address_string():
-            self.address_string = self.address_string.ljust(address_field_width)
             if self.frame_bits[8:16].uint == 0xFB:
                 self.command_string = self.device_command()
                 return
-        self.address_string = " " * address_field_width
+        self.address_string = ""
         self.command_string = "---"
+        return
