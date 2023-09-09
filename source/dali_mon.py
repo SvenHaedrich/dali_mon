@@ -6,58 +6,59 @@ import click
 import datetime
 from termcolor import cprint
 
-import DALI
-from connection.status import DaliStatus
-from connection.serial import DaliSerial
-from connection.hid import DaliUsb
+from DALI.connection.status import DaliStatus
+from DALI.connection.frame import DaliFrame
+from DALI.connection.serial import DaliSerial
+from DALI.forward_frame_16bit import DeviceType
+from DALI.decode import Decode
 
 logger = logging.getLogger(__name__)
 
 
-def print_local_time(enabled):
+def print_local_time(enabled: bool) -> None:
     if enabled:
         time_string = datetime.now().strftime("%H:%M:%S")
         cprint(f"{time_string} | ", color="yellow", end="")
 
 
-def print_command(absolute_time, timestamp, delta_s, dali_command, is_backframe):
+def print_command(
+    absolute_time: float,
+    timestamp: float,
+    delta_s: float,
+    data: str,
+    address: str,
+    command: str,
+) -> None:
     print_local_time(absolute_time)
-    cprint(
-        f"{timestamp:.03f} | {delta_s:8.03f} | {dali_command} | ", color="green", end=""
-    )
-    cprint(f"{dali_command.cmd()}", color="white", end="")
-    if is_backframe and (delta_s < 0.019 or delta_s > 0.026):
-        delta_ms = (delta_s * 1000) - 14
-        cprint(f" --- SETTLING TIME VIOLATION ({delta_ms:.0f} ms)", color="yellow")
-    else:
-        cprint("")
+    cprint(f"{timestamp:.03f} | {delta_s:8.03f} | {data:>8} | ", color="green", end="")
+    cprint(f"{address:<20} {command}", color="white", end="")
+    cprint("")
 
 
-def print_error(absolute_time, timestamp, delta_s, status):
+def print_error(
+    absolute_time: float, timestamp: float, delta_s: float, status: DaliStatus
+) -> None:
     print_local_time(absolute_time)
     cprint(f"{timestamp:.03f} | {delta_s:8.03f} | ", color="green", end="")
     cprint(f"{status.message}", color="red")
 
 
-def process_line(frame, absolute_time):
+def process_line(frame: DaliFrame, absolute_time: float) -> None:
     if process_line.last_timestamp != 0:
         delta_s = frame.timestamp - process_line.last_timestamp
     else:
         delta_s = 0
     if frame.status.status in (DaliStatus.OK, DaliStatus.FRAME, DaliStatus.LOOPBACK):
-        dali_command = DALI.Decode(
-            frame.length, frame.data, process_line.active_device_type
-        )
-        print_command(
-            absolute_time, frame.timestamp, delta_s, dali_command, (frame.length == 8)
-        )
-        process_line.active_device_type = dali_command.get_next_device_type()
+        decoding = Decode(frame, process_line.active_device_type)
+        data, address, command = decoding.get_strings()
+        print_command(absolute_time, frame.timestamp, delta_s, data, address, command)
+        process_line.active_device_type = decoding.get_next_device_type()
     else:
         print_error(absolute_time, frame.timestamp, delta_s, frame.status)
     process_line.last_timestamp = frame.timestamp
 
 
-def main_usb(absolute_time):
+def main_usb(absolute_time: bool) -> None:
     logger.debug("read from Lunatone usb device")
     dali_connection = DaliUsb()
     dali_connection.start_receive()
@@ -70,7 +71,7 @@ def main_usb(absolute_time):
         dali_connection.close()
 
 
-def main_tty(transparent, absolute_time):
+def main_tty(transparent: bool, absolute_time: bool) -> None:
     logger.debug("read from tty device")
     line = ""
     while True:
@@ -83,11 +84,11 @@ def main_tty(transparent, absolute_time):
             line = ""
 
 
-def main_file(transparent, absolute_time):
+def main_file(transparent: bool, absolute_time: bool) -> None:
     logger.debug("read from file")
     for line in sys.stdin:
         if len(line) > 0:
-            frame = DaliSerial.parse(line.encode("utf-8"))
+            frame = DaliSerial.parse(line)
             process_line(frame, absolute_time)
 
 
@@ -102,7 +103,7 @@ def main_file(transparent, absolute_time):
 @click.option("--debug", help="Enable debug level logging.", is_flag=True)
 @click.option("--echo", help="Echo unprocessed input line to output.", is_flag=True)
 @click.option("--absolute", help="Add absolute local time to output.", is_flag=True)
-def dali_mon(hid, debug, echo, absolute):
+def dali_mon(hid: bool, debug: bool, echo: bool, absolute: bool) -> None:
     """
     Monitor for DALI commands,
     SevenLab 2023
@@ -111,7 +112,7 @@ def dali_mon(hid, debug, echo, absolute):
         logging.basicConfig(level=logging.DEBUG)
 
     process_line.last_timestamp = 0
-    process_line.active_device_type = DALI.DeviceType.NONE
+    process_line.active_device_type = DeviceType.NONE
     try:
         if hid:
             main_usb(absolute)
