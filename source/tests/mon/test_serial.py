@@ -1,5 +1,5 @@
-from connection.status import DaliStatus
-from connection.serial import DaliSerial
+from DALI.connection.status import DaliStatus
+from DALI.connection.serial import DaliSerial
 
 
 def test_raw_from_string():
