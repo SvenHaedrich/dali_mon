@@ -351,9 +351,11 @@ class ForwardFrame16Bit:
             self.address = f"GG{group_address:02}"
         elif address_byte in range(0xA0, 0xCC):
             standard_command = False
+            self.address = ""
             self.command = self.special_command(address_byte, opcode_byte)
         elif address_byte in range(0xCC, 0xFC):
             standard_command = False
+            self.address = ""
             self.command = "RESERVED"
         elif (address_byte == 0xFD) or (address_byte == 0xFC):
             self.address = "BC GEAR UN"
