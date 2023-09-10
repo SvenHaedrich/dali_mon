@@ -1,7 +1,9 @@
 import pytest
-import DALI
 
-ADDRESS_WIDTH = 14
+from DALI.connection.frame import DaliFrame
+from DALI.backframe_8bit import Backframe8Bit
+from DALI.forward_frame_24bit import ForwardFrame24Bit
+from DALI.decode import Decode, DeviceType
 
 
 # TODO - make a complete test suite for all commands, for all instance addressing modes
@@ -10,10 +12,22 @@ ADDRESS_WIDTH = 14
 
 def test_type_specific_commands():
     # undefined device
-    decoded_command = DALI.Decode(length=24, data=0x010121)
-    target_command = "D00,I01".ljust(ADDRESS_WIDTH) + "SET HOLD TIMER (DTR0) - TYPE 303"
-    assert decoded_command.cmd() == target_command
+    test_frame = DaliFrame(length=ForwardFrame24Bit.LENGTH, data=0x010121)
+    decoder = Decode(test_frame)
+    data_str, adr, cmd = decoder.get_strings()
+    target_adr = "D00,I01"
+    target_cmd = "SET HOLD TIMER (DTR0) - TYPE 303"
+    target_data = f"{test_frame.data:06X}"
+    assert data_str == target_data
+    assert adr == target_adr
+    assert cmd == target_cmd
 
-    decoded_command = DALI.Decode(length=24, data=0x01020A)
-    target_command = "D00,I02".ljust(ADDRESS_WIDTH) + "QUERY SHORT TIMER - TYPE 301"
-    assert decoded_command.cmd() == target_command
+    test_frame = DaliFrame(length=ForwardFrame24Bit.LENGTH, data=0x01020A)
+    decoder = Decode(test_frame)
+    data_str, adr, cmd = decoder.get_strings()
+    target_adr = "D00,I02"
+    target_cmd = "QUERY SHORT TIMER - TYPE 301"
+    target_data = f"{test_frame.data:06X}"
+    assert data_str == target_data
+    assert adr == target_adr
+    assert cmd == target_cmd
