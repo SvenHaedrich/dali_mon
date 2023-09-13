@@ -4,3 +4,5 @@ __pycache__
 .vscode
 .coverage
 local.todo
+/venv/
+/.venv/

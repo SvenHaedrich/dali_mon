@@ -2,3 +2,4 @@ pyusb
 termcolor
 click
 bitstring
+pyserial
