@@ -394,7 +394,7 @@ class ForwardFrame24Bit:
                 self.command = "RESERVED EVENT"
             else:
                 self.address = self.build_event_source_string(event_source_type)
-                self.command_ = f"EVENT DATA 0x{(frame & 0x3FF):03X} = {(frame & 0x3FF)} = {(frame & 0x3FF):012b}b"
+                self.command = f"EVENT DATA 0x{(data & 0x3FF):03X} = {(data & 0x3FF)} = {(data & 0x3FF):012b}b"
             return
         instance_address_type = self.get_instance_address_type()
         device_address_type = self.get_device_address_type()
