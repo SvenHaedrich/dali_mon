@@ -6,6 +6,7 @@ from DALI.forward_frame_16bit import ForwardFrame16Bit
 from DALI.decode import Decode, DeviceType
 
 
+
 def build_16bit_frame_and_test(
     test_data: int, target_adr: str, target_cmd: str
 ) -> None:

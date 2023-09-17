@@ -2,7 +2,7 @@ import pytest
 
 from DALI.connection.frame import DaliFrame
 from DALI.forward_frame_24bit import ForwardFrame24Bit
-from DALI.decode import Decode, DeviceType
+from DALI.decode import Decode
 
 
 def build_24bit_frame_and_test(
