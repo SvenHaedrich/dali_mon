@@ -311,7 +311,7 @@ class ForwardFrame16Bit:
         elif address_byte == 0xBB and opcode_byte == 0x00:
             return "QUERY SHORT ADDRESS"
         elif address_byte == 0xBD:
-            return "PHYSICAL SELECTION (obsolete)"
+            return "PHYSICAL SELECTION  (DEPRECATED)"
         elif address_byte == 0xC1:
             return f"ENABLE DEVICE TYPE {opcode_byte}"
         elif address_byte == 0xC3:
