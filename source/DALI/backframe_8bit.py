@@ -1,4 +1,17 @@
+from typeguard import typechecked
+
+@typechecked
 class Backframe8Bit:
-    def __init__(self, frame, address_field_width):
-        self.address_string = " " * address_field_width
-        self.command_string = f"DATA 0x{frame:02X} = {frame:3} = {frame:08b}b"
+    LENGTH = 8
+
+    def adr(self) -> str:
+        return ""
+
+    def cmd(self) -> str:
+        return f"DATA 0x{self.frame_data:02X} = {self.frame_data:3} = {self.frame_data:08b}b"
+
+    def data(self) -> str:
+        return f"{self.frame_data:02X}"
+
+    def __init__(self, data: int) -> None:
+        self.frame_data = data

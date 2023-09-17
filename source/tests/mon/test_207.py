@@ -1,12 +1,22 @@
 import pytest
-import DALI
 
-ADDRESS_WIDTH = 14
+from DALI.connection.frame import DaliFrame
+from DALI.forward_frame_16bit import ForwardFrame16Bit
+from DALI.decode import Decode, DeviceType
+
+
+def build_dt6_frame_and_test(test_data: int, target_adr: str, target_cmd: str) -> None:
+    test_frame = DaliFrame(length=ForwardFrame16Bit.LENGTH, data=test_data)
+    target_data = f"{test_data:04X}"
+    data_str, adr, cmd = Decode(test_frame, DeviceType.LED).get_strings()
+    assert data_str == target_data
+    assert adr == target_adr
+    assert cmd[: len(target_cmd)] == target_cmd
 
 
 # refer to iec62386 207 Table 6
 @pytest.mark.parametrize(
-    "name,opcode",
+    "target_cmd,opcode",
     [
         ("REFERENCE SYSTEM POWER", 0xE0),
         ("SELECT DIMMING CURVE (DTR0)", 0xE3),
@@ -25,37 +35,23 @@ ADDRESS_WIDTH = 14
         ("QUERY EXTENDED VERSION NUMBER", 0xFF),
     ],
 )
-def test_dt6_command(name, opcode):
+def test_dt6_command(target_cmd, opcode):
     # broadcast
-    decoded_command = DALI.Decode(
-        length=16, data=0xFF00 + opcode, device_type=DALI.DeviceType.LED
-    )
-    target_command = "BC GEAR".ljust(ADDRESS_WIDTH) + name
-    assert decoded_command.cmd() == target_command
+    test_data = 0xFF00 + opcode
+    build_dt6_frame_and_test(test_data, "BC GEAR", target_cmd)
     # broadcast unadressed
-    decoded_command = DALI.Decode(
-        length=16, data=0xFD00 + opcode, device_type=DALI.DeviceType.LED
-    )
-    target_command = "BC GEAR UN".ljust(ADDRESS_WIDTH) + name
-    assert decoded_command.cmd() == target_command
+    test_data = 0xFD00 + opcode
+    build_dt6_frame_and_test(test_data, "BC GEAR UN", target_cmd)
     # short address
     for short_address in range(0, 0x40):
-        decoded_command = DALI.Decode(
-            length=16,
-            data=0x0100 + (short_address << 9) + opcode,
-            device_type=DALI.DeviceType.LED,
-        )
-        target_command = f"G{short_address:02}".ljust(ADDRESS_WIDTH) + name
-        assert decoded_command.cmd() == target_command
+        test_data = 0x0100 + (short_address << 9) + opcode
+        target_adr = f"G{short_address:02}"
+        build_dt6_frame_and_test(test_data, target_adr, target_cmd)
     # group address
     for group_address in range(0, 0x10):
-        decoded_command = DALI.Decode(
-            length=16,
-            data=0x8100 + (group_address << 9) + opcode,
-            device_type=DALI.DeviceType.LED,
-        )
-        target_command = f"GG{group_address:02}".ljust(ADDRESS_WIDTH) + name
-        assert decoded_command.cmd() == target_command
+        test_data = 0x8100 + (group_address << 9) + opcode
+        target_adr = f"GG{group_address:02}"
+        build_dt6_frame_and_test(test_data, target_adr, target_cmd)
 
 
 @pytest.mark.parametrize(
@@ -81,32 +77,18 @@ def test_dt6_command(name, opcode):
 )
 def test_dt6_undefined_codes(opcode):
     # broadcast
-    decoded_command = DALI.Decode(
-        length=16, data=0xFF00 + opcode, device_type=DALI.DeviceType.LED
-    )
-    target_command = "BC GEAR".ljust(ADDRESS_WIDTH) + "---"
-    assert decoded_command.cmd()[: len(target_command)] == target_command
+    test_data = 0xFF00 + opcode
+    build_dt6_frame_and_test(test_data, "BC GEAR", "---")
     # broadcast unadressed
-    decoded_command = DALI.Decode(
-        length=16, data=0xFD00 + opcode, device_type=DALI.DeviceType.LED
-    )
-    target_command = "BC GEAR UN".ljust(ADDRESS_WIDTH) + "---"
-    assert decoded_command.cmd()[: len(target_command)] == target_command
+    test_data = 0xFD00 + opcode
+    build_dt6_frame_and_test(test_data, "BC GEAR UN", "---")
     # short address
     for short_address in range(0, 0x40):
-        decoded_command = DALI.Decode(
-            length=16,
-            data=0x0100 + (short_address << 9) + opcode,
-            device_type=DALI.DeviceType.LED,
-        )
-        target_command = f"G{short_address:02}".ljust(ADDRESS_WIDTH) + "---"
-        assert decoded_command.cmd()[: len(target_command)] == target_command
+        test_data = 0x0100 + (short_address << 9) + opcode
+        target_adr = f"G{short_address:02}"
+        build_dt6_frame_and_test(test_data, target_adr, "---")
     # group address
     for group_address in range(0, 0x10):
-        decoded_command = DALI.Decode(
-            length=16,
-            data=0x8100 + (group_address << 9) + opcode,
-            device_type=DALI.DeviceType.LED,
-        )
-        target_command = f"GG{group_address:02}".ljust(ADDRESS_WIDTH) + "---"
-        assert decoded_command.cmd()[: len(target_command)] == target_command
+        test_data = 0x8100 + (group_address << 9) + opcode
+        target_adr = f"GG{group_address:02}"
+        build_dt6_frame_and_test(test_data, target_adr, "---")

@@ -1,10 +1,9 @@
 import pytest
 import logging
 
-from connection.status import DaliStatus
-from connection.serial import DaliSerial
-from connection.hid import DaliUsb
-from connection.frame import DaliFrame
+from DALI.connection.frame import DaliFrame, DaliStatus
+from DALI.connection.serial import DaliSerial
+from DALI.connection.hid import DaliUsb
 
 serial_port = "/dev/ttyUSB0"
 logger = logging.getLogger(__name__)

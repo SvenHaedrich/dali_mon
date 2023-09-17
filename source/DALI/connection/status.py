@@ -22,7 +22,7 @@ class DaliStatus:
                     self.message = "LOOPBACK FRAME"
                 else:
                     self.status = DaliStatus.FRAME
-                    self.message = "NOMRAL FRAME"
+                    self.message = "NORMAL FRAME"
             elif length in range(0x81) or length == 0x92:
                 self.status = DaliStatus.OK
                 self.message = "OK"

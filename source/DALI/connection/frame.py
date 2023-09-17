@@ -1,9 +1,10 @@
-from .status import DaliStatus
 from typing import NamedTuple
+
+from .status import DaliStatus
 
 
 class DaliFrame(NamedTuple):
-    timestamp: int = 0
+    timestamp: float = 0
     length: int = 0
     data: int = 0
     priority: int = 1

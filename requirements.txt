@@ -1,5 +1,7 @@
 pyusb
+pytest
 termcolor
 click
 bitstring
+typeguard
 pyserial
