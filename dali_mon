@@ -3,4 +3,4 @@
 source ./venv/bin/activate
 python3 -m pip install --upgrade pip > /dev/null
 python3 -m pip install -r requirements.txt > /dev/null
-python3 source/dali_mon.py $*
+python3 -OO source/dali_mon.py $*
