@@ -1,6 +1,8 @@
 from typing import Tuple
+from typeguard import typechecked
 
 
+@typechecked
 class DeviceType:
     NONE = 0
     LED = 6
@@ -8,6 +10,7 @@ class DeviceType:
     COLOUR = 8
 
 
+@typechecked
 class ForwardFrame16Bit:
     LENGTH = 16
 
@@ -334,7 +337,7 @@ class ForwardFrame16Bit:
     def data(self) -> str:
         return f"{self.frame_data:04X}"
 
-    def __init__(self, data: int, device_type: DeviceType) -> None:
+    def __init__(self, data: int, device_type: int = DeviceType.NONE) -> None:
         self.frame_data = data
         standard_command = True
 

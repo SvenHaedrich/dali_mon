@@ -1,5 +1,6 @@
 from typing import Tuple
 from bitstring import BitArray
+from typeguard import typechecked
 
 # bit position translation
 #
@@ -11,6 +12,7 @@ from bitstring import BitArray
 #
 
 
+@typechecked
 class EventType:
     RESERVED = 0
     DEVICE = 1
@@ -20,6 +22,7 @@ class EventType:
     INSTANCE_GROUP = 5
 
 
+@typechecked
 class InstanceAddressType:
     RESERVED = 0
     INSTANCE_NUMBER = 1
@@ -35,6 +38,7 @@ class InstanceAddressType:
     DEVICE = 11
 
 
+@typechecked
 class DeviceAddressType:
     RESERVED = 0
     SHORT_ADDRESS = 1
@@ -44,6 +48,7 @@ class DeviceAddressType:
     SPECIAL = 5
 
 
+@typechecked
 class ForwardFrame24Bit:
     LENGTH = 24
 
@@ -226,7 +231,7 @@ class ForwardFrame24Bit:
         return f"--- CODE 0x{address_byte:02X} = {address_byte} UNKNOWN CONTROL DEVICE SPECIAL COMMAND"
 
     # IEC 62386-103:2022 Table 2 - instance byte in a command frame
-    def get_instance_address_type(self) -> InstanceAddressType:
+    def get_instance_address_type(self) -> int:
         instance_byte = self.frame_bits[8:16].uint
         if instance_byte == 0xFE:
             return InstanceAddressType.DEVICE
@@ -254,7 +259,7 @@ class ForwardFrame24Bit:
         return InstanceAddressType.RESERVED
 
     # IEC 62386-103:2022 Table 1 - command frame encoding
-    def get_device_address_type(self) -> DeviceAddressType:
+    def get_device_address_type(self) -> int:
         if self.frame_bits[:8].uint == 0xFF:
             return DeviceAddressType.BROADCAST
         if self.frame_bits[:8].uint == 0xFD:
@@ -268,7 +273,7 @@ class ForwardFrame24Bit:
         return DeviceAddressType.RESERVED
 
     # IEC 62386-103:2022 Table 3 - event message frame encoding
-    def get_event_source_type(self) -> EventType:
+    def get_event_source_type(self) -> int:
         if not self.frame_bits[0]:
             if self.frame_bits[8]:
                 return EventType.DEVICE_INSTANCE
@@ -285,7 +290,7 @@ class ForwardFrame24Bit:
         return EventType.RESERVED
 
     def build_command_address_string(
-        self, address_type: DeviceAddressType, instance_type: InstanceAddressType
+        self, address_type: int, instance_type: int
     ) -> str:
         # todo make address_type instance_type a class_member
         if address_type == DeviceAddressType.SHORT_ADDRESS:
@@ -331,7 +336,7 @@ class ForwardFrame24Bit:
             address_string = "RESERVED"
         return address_string
 
-    def build_event_source_string(self, event_source_type: EventType) -> str:
+    def build_event_source_string(self, event_source_type: int) -> str:
         if event_source_type == EventType.DEVICE:
             short_address = self.frame_bits[1:7].uint
             instance_type = self.frame_bits[9:14].uint

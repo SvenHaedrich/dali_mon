@@ -27,9 +27,7 @@ class Decode:
     def get_strings(self) -> Tuple[str, str, str]:
         return self.dali_frame.data(), self.dali_frame.adr(), self.dali_frame.cmd()
 
-    def __init__(
-        self, frame: DaliFrame, device_type: DeviceType = DeviceType.NONE
-    ) -> None:
+    def __init__(self, frame: DaliFrame, device_type: int = DeviceType.NONE) -> None:
         self.next_device_type = DeviceType.NONE
         if frame.length == Backframe8Bit.LENGTH:
             self.dali_frame = Backframe8Bit(frame.data)
