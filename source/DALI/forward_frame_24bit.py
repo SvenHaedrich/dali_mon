@@ -1,4 +1,3 @@
-from typing import Tuple
 from bitstring import BitArray
 from typeguard import typechecked
 

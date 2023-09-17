@@ -1,6 +1,3 @@
-from typing import Tuple
-
-
 class DeviceClass:
     SENSOR = 4
     INPUT = 5
