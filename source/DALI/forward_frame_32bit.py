@@ -83,13 +83,13 @@ class ForwardFrame32Bit:
         return False
 
     def adr(self) -> str:
-        return self.address
+        return self.address_string
 
     def cmd(self) -> str:
-        return self.command
+        return self.command_string
 
     def data(self) -> str:
-        return f"{self.frame_data:07X}"
+        return f"{self.frame_data:08X}"
 
     def __init__(self, data: int) -> None:
         self.frame_data = data
