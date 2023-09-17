@@ -6,6 +6,17 @@ from DALI.forward_frame_16bit import ForwardFrame16Bit
 from DALI.decode import Decode, DeviceType
 
 
+def build_16bit_frame_and_test(
+    test_data: int, target_adr: str, target_cmd: str
+) -> None:
+    test_frame = DaliFrame(length=ForwardFrame16Bit.LENGTH, data=test_data)
+    target_data = f"{test_data:04X}"
+    data_str, adr, cmd = Decode(test_frame).get_strings()
+    assert data_str == target_data
+    assert adr == target_adr
+    assert cmd[: len(target_cmd)] == target_cmd
+
+
 def test_backframe():
     for data in range(0x100):
         test_frame = DaliFrame(length=Backframe8Bit.LENGTH, data=data)
@@ -21,14 +32,9 @@ def test_broadcast_dapc():
     # refer to iec62386 102 7.2.1
     target_adr = "BC GEAR"
     for level in range(0x100):
-        test_frame = DaliFrame(length=ForwardFrame16Bit.LENGTH, data=(0xFE00 + level))
-        decoder = Decode(test_frame)
-        data_str, adr, cmd = decoder.get_strings()
+        test_data = 0xFE00 + level
         target_cmd = f"DAPC {level}"
-        target_data = f"{test_frame.data:04X}"
-        assert data_str == target_data
-        assert adr == target_adr
-        assert cmd == target_cmd
+        build_16bit_frame_and_test(test_data, target_adr, target_cmd)
 
 
 def test_short_address_dapc():
@@ -36,16 +42,9 @@ def test_short_address_dapc():
     for short_address in range(0x40):
         target_adr = f"G{short_address:02}"
         for level in range(0x100):
-            test_frame = DaliFrame(
-                length=ForwardFrame16Bit.LENGTH, data=((short_address << 9) + level)
-            )
-            decoder = Decode(test_frame)
-            data_str, adr, cmd = decoder.get_strings()
+            test_data = (short_address << 9) + level
             target_cmd = f"DAPC {level}"
-            target_data = f"{test_frame.data:04X}"
-            assert data_str == target_data
-            assert adr == target_adr
-            assert cmd == target_cmd
+            build_16bit_frame_and_test(test_data, target_adr, target_cmd)
 
 
 def test_group_address_dapc():
@@ -53,17 +52,9 @@ def test_group_address_dapc():
     for group_address in range(0x10):
         target_adr = f"GG{group_address:02}"
         for level in range(0x100):
-            test_frame = DaliFrame(
-                length=ForwardFrame16Bit.LENGTH,
-                data=(0x8000 + (group_address << 9) + level),
-            )
-            decoder = Decode(test_frame)
-            data_str, adr, cmd = decoder.get_strings()
+            test_data = 0x8000 + (group_address << 9) + level
             target_cmd = f"DAPC {level}"
-            target_data = f"{test_frame.data:04X}"
-            assert data_str == target_data
-            assert adr == target_adr
-            assert cmd == target_cmd
+            build_16bit_frame_and_test(test_data, target_adr, target_cmd)
 
 
 def test_reserved():
@@ -71,13 +62,7 @@ def test_reserved():
     target_cmd = "RESERVED"
     target_adr = ""
     for code in range(0xCC00, 0xFC00):
-        test_frame = DaliFrame(length=ForwardFrame16Bit.LENGTH, data=code)
-        target_data = f"{code:04X}"
-        decoder = Decode(test_frame)
-        data_str, adr, cmd = decoder.get_strings()
-        assert data_str == target_data
-        assert adr == target_adr
-        assert cmd == target_cmd
+        build_16bit_frame_and_test(code, target_adr, target_cmd)
 
 
 # refer to iec62386 102 Table 15
@@ -115,48 +100,21 @@ def test_reserved():
 def test_command(target_cmd, opcode):
     # broadcast
     target_adr = "BC GEAR"
-    test_frame = DaliFrame(length=ForwardFrame16Bit.LENGTH, data=(0xFF00 + opcode))
-    target_data = f"{test_frame.data:04X}"
-    decoder = Decode(test_frame)
-    data_str, adr, cmd = decoder.get_strings()
-    assert data_str == target_data
-    assert adr == target_adr
-    assert cmd[: len(target_cmd)] == target_cmd
+    test_data = 0xFF00 + opcode
+    build_16bit_frame_and_test(test_data, target_adr, target_cmd)
     # broadcast unadressed
     target_adr = "BC GEAR UN"
-    test_frame = DaliFrame(length=ForwardFrame16Bit.LENGTH, data=(0xFD00 + opcode))
-    target_data = f"{test_frame.data:04X}"
-    decoder = Decode(test_frame)
-    data_str, adr, cmd = decoder.get_strings()
-    assert data_str == target_data
-    assert adr == target_adr
-    assert cmd[: len(target_cmd)] == target_cmd
+    test_data = 0xFD00 + opcode
+    build_16bit_frame_and_test(test_data, target_adr, target_cmd)
     # short address
     for short_address in range(0x40):
         target_adr = f"G{short_address:02}"
-        test_frame = DaliFrame(
-            length=ForwardFrame16Bit.LENGTH,
-            data=(0x0100 + (short_address << 9) + opcode),
-        )
-        target_data = f"{test_frame.data:04X}"
-        decoder = Decode(test_frame)
-        data_str, adr, cmd = decoder.get_strings()
-        assert data_str == target_data
-        assert adr == target_adr
-        assert cmd[: len(target_cmd)] == target_cmd
+        test_data = 0x0100 + (short_address << 9) + opcode
+        build_16bit_frame_and_test(test_data, target_adr, target_cmd)
     # group address
     for group_address in range(0x10):
         target_adr = f"GG{group_address:02}"
-        test_frame = DaliFrame(
-            length=ForwardFrame16Bit.LENGTH,
-            data=(0x8100 + (group_address << 9) + opcode),
-        )
-        target_data = f"{test_frame.data:04X}"
-        decoder = Decode(test_frame)
-        data_str, adr, cmd = decoder.get_strings()
-        assert data_str == target_data
-        assert adr == target_adr
-        assert cmd[: len(target_cmd)] == target_cmd
+        test_data = 0x8100 + (group_address << 9) + opcode
 
 
 @pytest.mark.parametrize(
@@ -247,55 +205,31 @@ def test_undefined_codes(opcode):
 def test_simple_special_command(target_cmd, address_byte):
     # valid opcode byte
     target_adr = ""
-    test_frame = DaliFrame(length=ForwardFrame16Bit.LENGTH, data=(address_byte << 8))
-    target_data = f"{test_frame.data:04X}"
-    decoder = Decode(test_frame)
-    data_str, adr, cmd = decoder.get_strings()
-    assert data_str == target_data
-    assert adr == target_adr
-    assert cmd == target_cmd
+    test_data = address_byte << 8
+    build_16bit_frame_and_test(test_data, target_adr, target_cmd)
     # invalid opcode byte
     target_cmd = "---"
     for opcode_byte in range(1, 0x100):
-        test_frame = DaliFrame(
-            length=ForwardFrame16Bit.LENGTH, data=((address_byte << 8) + opcode_byte)
-        )
-        target_data = f"{test_frame.data:04X}"
-        decoder = Decode(test_frame)
-        data_str, adr, cmd = decoder.get_strings()
-        assert data_str == target_data
-        assert adr == target_adr
-        assert cmd[: len(target_cmd)] == target_cmd
+        test_data = (address_byte << 8) + opcode_byte
+        build_16bit_frame_and_test(test_data, target_adr, target_cmd)
 
 
 def test_initialise_short_address():
     target_adr = ""
     for short_address in range(0x40):
-        frame_data = 0xA500 + (short_address << 1) + 1
-        test_frame = DaliFrame(length=ForwardFrame16Bit.LENGTH, data=frame_data)
-        target_data = f"{frame_data:04X}"
+        test_data = 0xA500 + (short_address << 1) + 1
         target_cmd = f"INITIALISE (G{short_address:02})"
-        decoder = Decode(test_frame)
-        data_str, adr, cmd = decoder.get_strings()
-        assert data_str == target_data
-        assert adr == target_adr
-        assert cmd == target_cmd
+        build_16bit_frame_and_test(test_data, target_adr, target_cmd)
 
 
 @pytest.mark.parametrize(
-    "frame_data,target_cmd",
+    "test_data,target_cmd",
     [
         (0xA5FF, "INITIALISE (UNADDRESSED)"),
         (0xA500, "INITIALISE (ALL)"),
         (0xA550, "INITIALISE (NONE) - 0x50"),
     ],
 )
-def test_initialise_special_cases(frame_data, target_cmd):
+def test_initialise_special_cases(test_data, target_cmd):
     target_adr = ""
-    test_frame = DaliFrame(length=ForwardFrame16Bit.LENGTH, data=frame_data)
-    target_data = f"{frame_data:04X}"
-    decoder = Decode(test_frame)
-    data_str, adr, cmd = decoder.get_strings()
-    assert data_str == target_data
-    assert adr == target_adr
-    assert cmd == target_cmd
+    build_16bit_frame_and_test(test_data, target_adr, target_cmd)
