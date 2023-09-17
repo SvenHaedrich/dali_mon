@@ -1,4 +1,3 @@
-from typing import Tuple
 from bitstring import BitArray
 
 # bit position translation

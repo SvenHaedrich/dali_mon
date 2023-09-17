@@ -9,6 +9,7 @@ from termcolor import cprint
 from DALI.connection.status import DaliStatus
 from DALI.connection.frame import DaliFrame
 from DALI.connection.serial import DaliSerial
+from DALI.connection.hid import DaliUsb
 from DALI.forward_frame_16bit import DeviceType
 from DALI.decode import Decode
 

@@ -3,8 +3,7 @@ import pytest
 from DALI.connection.frame import DaliFrame
 from DALI.backframe_8bit import Backframe8Bit
 from DALI.forward_frame_16bit import ForwardFrame16Bit
-from DALI.decode import Decode, DeviceType
-
+from DALI.decode import Decode
 
 
 def build_16bit_frame_and_test(

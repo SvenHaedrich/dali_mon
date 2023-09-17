@@ -99,7 +99,6 @@ def test_simple_special_commands(target_cmd, instance_byte):
 
 @pytest.mark.parametrize("opcode", [0x02, 0x03, 0x04])
 def test_device_undefined_codes(opcode):
-    target_cmd = "---"
     # broadcast
     test_data = 0xFFFE00 + opcode
     build_24bit_frame_and_test(test_data, "BC DEV", "---")
