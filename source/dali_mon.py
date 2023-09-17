@@ -93,7 +93,7 @@ def main_file(transparent: bool, absolute_time: bool) -> None:
 
 
 @click.command()
-@click.version_option("1.4.2")
+@click.version_option("1.5.0")
 @click.option(
     "-l",
     "--hid",
