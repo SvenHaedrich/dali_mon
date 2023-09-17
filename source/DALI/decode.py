@@ -45,7 +45,7 @@ class Decode:
         elif frame.length == ForwardFrame25Bit.LENGTH:
             self.dali_frame = ForwardFrame25Bit(frame.data)
         elif frame.length == ForwardFrame32Bit.LENGTH:
-            self.dali_frame = ForwardFrame32Bit(frma.data)
+            self.dali_frame = ForwardFrame32Bit(frame.data)
         else:
             self.dali_frame = UndefinedFrame(frame.data, frame.length)
 
