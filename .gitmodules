@@ -1,0 +1,3 @@
+[submodule "source/DALI/dali_interface"]
+	path = source/DALI/dali_interface
+	url = git@github.com:SvenHaedrich/dali_interface.git
