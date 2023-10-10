@@ -6,10 +6,11 @@ import click
 import datetime
 from termcolor import cprint
 
-from DALI.connection.status import DaliStatus
-from DALI.connection.frame import DaliFrame
-from DALI.connection.serial import DaliSerial
-from DALI.connection.hid import DaliUsb
+from DALI.dali_interface.source.dali_interface import DaliInterface
+from DALI.dali_interface.source.status import DaliStatus
+from DALI.dali_interface.source.frame import DaliFrame
+from DALI.dali_interface.source.serial import DaliSerial
+from DALI.dali_interface.source.hid import DaliUsb
 from DALI.forward_frame_16bit import DeviceType
 from DALI.decode import Decode
 
@@ -59,17 +60,16 @@ def process_line(frame: DaliFrame, absolute_time: float) -> None:
     process_line.last_timestamp = frame.timestamp
 
 
-def main_usb(absolute_time: bool) -> None:
-    logger.debug("read from Lunatone usb device")
-    dali_connection = DaliUsb()
-    dali_connection.start_receive()
+def main_connection(absolute_time: bool, connection: DaliInterface) -> None:
+    logger.debug("read from connection")
+    connection.start_receive()
     try:
         while True:
-            dali_connection.get_next()
-            process_line(dali_connection.rx_frame, absolute_time)
+            connection.get_next()
+            process_line(connection.rx_frame, absolute_time)
     except KeyboardInterrupt:
         print("\rinterrupted")
-        dali_connection.close()
+        connection.close()
 
 
 def main_tty(transparent: bool, absolute_time: bool) -> None:
@@ -80,7 +80,7 @@ def main_tty(transparent: bool, absolute_time: bool) -> None:
         if len(line) > 0 and line[-1] == "\n":
             line = line.strip(" \r\n")
             if len(line) > 0:
-                frame = DaliSerial.parse(line.encode("utf-8"))
+                frame = DaliSerial.parse(line)
                 process_line(frame, absolute_time)
             line = ""
 
@@ -104,7 +104,16 @@ def main_file(transparent: bool, absolute_time: bool) -> None:
 @click.option("--debug", help="Enable debug level logging.", is_flag=True)
 @click.option("--echo", help="Echo unprocessed input line to output.", is_flag=True)
 @click.option("--absolute", help="Add absolute local time to output.", is_flag=True)
-def dali_mon(hid: bool, debug: bool, echo: bool, absolute: bool) -> None:
+@click.option(
+    "--serial-port",
+    help="Serial port used for DALI communication.",
+    envvar="DALI_SERIAL_PORT",
+    show_envvar=True,
+    type=click.Path(),
+)
+def dali_mon(
+    hid: bool, debug: bool, echo: bool, absolute: bool, serial_port: click.Path
+) -> None:
     """
     Monitor for DALI commands,
     SevenLab 2023
@@ -116,7 +125,9 @@ def dali_mon(hid: bool, debug: bool, echo: bool, absolute: bool) -> None:
     process_line.active_device_type = DeviceType.NONE
     try:
         if hid:
-            main_usb(absolute)
+            main_connection(absolute, DaliUsb())
+        elif serial_port:
+            main_connection(absolute, DaliSerial(serial_port))
         elif sys.stdin.isatty():
             main_tty(echo, absolute)
         else:
