@@ -1,4 +1,4 @@
-from DALI.dali_interface.frame import DaliFrame
+from DALI.dali_interface.dali_interface import DaliFrame
 from DALI.forward_frame_24bit import ForwardFrame24Bit
 from DALI.decode import Decode
 

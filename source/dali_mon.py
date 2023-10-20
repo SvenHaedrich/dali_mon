@@ -6,9 +6,7 @@ import click
 import datetime
 from termcolor import cprint
 
-from DALI.dali_interface.dali_interface import DaliInterface
-from DALI.dali_interface.frame import DaliFrame
-from DALI.dali_interface.status import DaliStatus
+from DALI.dali_interface.dali_interface import DaliInterface, DaliFrame, DaliStatus
 from DALI.dali_interface.serial import DaliSerial
 from DALI.dali_interface.hid import DaliUsb
 from DALI.forward_frame_16bit import DeviceType

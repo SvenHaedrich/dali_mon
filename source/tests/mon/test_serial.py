@@ -1,4 +1,4 @@
-from DALI.dali_interface.status import DaliStatus
+from DALI.dali_interface.dali_interface import DaliStatus
 from DALI.dali_interface.serial import DaliSerial
 
 

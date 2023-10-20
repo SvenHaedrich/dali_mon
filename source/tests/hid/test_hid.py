@@ -1,7 +1,7 @@
 import pytest
 import logging
 
-from DALI.dali_interface.frame import DaliFrame, DaliStatus
+from DALI.dali_interface.dali_interface import DaliFrame, DaliStatus
 from DALI.dali_interface.serial import DaliSerial
 from DALI.dali_interface.hid import DaliUsb
 
