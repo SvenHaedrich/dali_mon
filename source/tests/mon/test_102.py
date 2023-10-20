@@ -1,6 +1,6 @@
 import pytest
 
-from DALI.dali_interface.source.frame import DaliFrame
+from DALI.dali_interface.frame import DaliFrame
 from DALI.backframe_8bit import Backframe8Bit
 from DALI.forward_frame_16bit import ForwardFrame16Bit
 from DALI.decode import Decode

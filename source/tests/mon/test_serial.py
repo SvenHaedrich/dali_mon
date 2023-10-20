@@ -1,5 +1,5 @@
-from DALI.dali_interface.source.status import DaliStatus
-from DALI.dali_interface.source.serial import DaliSerial
+from DALI.dali_interface.status import DaliStatus
+from DALI.dali_interface.serial import DaliSerial
 
 
 def test_raw_from_string():
@@ -8,28 +8,28 @@ def test_raw_from_string():
     assert result.timestamp == 0
     assert result.length == 0x8
     assert result.data == 0x11
-    assert result.status.status == DaliStatus.FRAME
+    assert result.status == DaliStatus.FRAME
     input_string = "{00000001:10 0000FF00}"
     result = DaliSerial.parse(input_string)
     assert result.timestamp == 0.001
     assert result.length == 0x10
     assert result.data == 0xFF00
-    assert result.status.status == DaliStatus.FRAME
+    assert result.status == DaliStatus.FRAME
     input_string = "{00000002:18 00123456}"
     result = DaliSerial.parse(input_string)
     assert result.timestamp == 0.002
     assert result.length == 0x18
     assert result.data == 0x123456
-    assert result.status.status == DaliStatus.FRAME
+    assert result.status == DaliStatus.FRAME
     input_string = "{00000003:83 00123456}"
     result = DaliSerial.parse(input_string)
     assert result.timestamp == 0.003
     assert result.length == 0x83
     assert result.data == 0x123456
-    assert result.status.status == DaliStatus.TIMING
+    assert result.status == DaliStatus.TIMING
     input_string = "{00000004:20 87654321}"
     result = DaliSerial.parse(input_string)
     assert result.timestamp == 0.004
     assert result.length == 0x20
     assert result.data == 0x87654321
-    assert result.status.status == DaliStatus.FRAME
+    assert result.status == DaliStatus.FRAME

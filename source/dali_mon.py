@@ -6,7 +6,7 @@ import click
 import datetime
 from termcolor import cprint
 
-from DALI.dali_interface.source import *
+from DALI.dali_interface import *
 from DALI.forward_frame_16bit import DeviceType
 from DALI.decode import Decode
 
