@@ -2,7 +2,7 @@
 
     git clone git@github.com:SvenHaedrich/dali_mon.git
     cd dali_mon
-    python -m venv env
+    git submodule update --init
 
 ## HID-USB Support
 

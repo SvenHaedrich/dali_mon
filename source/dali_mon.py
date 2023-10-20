@@ -6,10 +6,9 @@ import click
 import datetime
 from termcolor import cprint
 
-from DALI.connection.status import DaliStatus
-from DALI.connection.frame import DaliFrame
-from DALI.connection.serial import DaliSerial
-from DALI.connection.hid import DaliUsb
+from DALI.dali_interface.dali_interface import DaliInterface, DaliFrame, DaliStatus
+from DALI.dali_interface.serial import DaliSerial
+from DALI.dali_interface.hid import DaliUsb
 from DALI.forward_frame_16bit import DeviceType
 from DALI.decode import Decode
 
@@ -37,11 +36,11 @@ def print_command(
 
 
 def print_error(
-    absolute_time: float, timestamp: float, delta_s: float, status: DaliStatus
+    absolute_time: float, timestamp: float, delta_s: float, message: str
 ) -> None:
     print_local_time(absolute_time)
     cprint(f"{timestamp:.03f} | {delta_s:8.03f} | ", color="green", end="")
-    cprint(f"{status.message}", color="red")
+    cprint(f"{message}", color="red")
 
 
 def process_line(frame: DaliFrame, absolute_time: float) -> None:
@@ -49,27 +48,24 @@ def process_line(frame: DaliFrame, absolute_time: float) -> None:
         delta_s = frame.timestamp - process_line.last_timestamp
     else:
         delta_s = 0
-    if frame.status.status in (DaliStatus.OK, DaliStatus.FRAME, DaliStatus.LOOPBACK):
+    if frame.status in (DaliStatus.OK, DaliStatus.FRAME, DaliStatus.LOOPBACK):
         decoding = Decode(frame, process_line.active_device_type)
         data, address, command = decoding.get_strings()
         print_command(absolute_time, frame.timestamp, delta_s, data, address, command)
         process_line.active_device_type = decoding.get_next_device_type()
     else:
-        print_error(absolute_time, frame.timestamp, delta_s, frame.status)
+        print_error(absolute_time, frame.timestamp, delta_s, frame.message)
     process_line.last_timestamp = frame.timestamp
 
 
-def main_usb(absolute_time: bool) -> None:
-    logger.debug("read from Lunatone usb device")
-    dali_connection = DaliUsb()
-    dali_connection.start_receive()
+def main_connection(absolute_time: bool, connection: DaliInterface) -> None:
+    logger.debug("read from connection")
     try:
         while True:
-            dali_connection.get_next()
-            process_line(dali_connection.rx_frame, absolute_time)
+            process_line(connection.get(), absolute_time)
     except KeyboardInterrupt:
         print("\rinterrupted")
-        dali_connection.close()
+        connection.close()
 
 
 def main_tty(transparent: bool, absolute_time: bool) -> None:
@@ -80,7 +76,7 @@ def main_tty(transparent: bool, absolute_time: bool) -> None:
         if len(line) > 0 and line[-1] == "\n":
             line = line.strip(" \r\n")
             if len(line) > 0:
-                frame = DaliSerial.parse(line.encode("utf-8"))
+                frame = DaliSerial.parse(line)
                 process_line(frame, absolute_time)
             line = ""
 
@@ -104,7 +100,16 @@ def main_file(transparent: bool, absolute_time: bool) -> None:
 @click.option("--debug", help="Enable debug level logging.", is_flag=True)
 @click.option("--echo", help="Echo unprocessed input line to output.", is_flag=True)
 @click.option("--absolute", help="Add absolute local time to output.", is_flag=True)
-def dali_mon(hid: bool, debug: bool, echo: bool, absolute: bool) -> None:
+@click.option(
+    "--serial-port",
+    help="Serial port used for DALI communication.",
+    envvar="DALI_SERIAL_PORT",
+    show_envvar=True,
+    type=click.Path(),
+)
+def dali_mon(
+    hid: bool, debug: bool, echo: bool, absolute: bool, serial_port: click.Path
+) -> None:
     """
     Monitor for DALI commands,
     SevenLab 2023
@@ -116,7 +121,9 @@ def dali_mon(hid: bool, debug: bool, echo: bool, absolute: bool) -> None:
     process_line.active_device_type = DeviceType.NONE
     try:
         if hid:
-            main_usb(absolute)
+            main_connection(absolute, DaliUsb())
+        elif serial_port:
+            main_connection(absolute, DaliSerial(serial_port))
         elif sys.stdin.isatty():
             main_tty(echo, absolute)
         else:

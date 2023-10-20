@@ -1,6 +1,6 @@
 from typing import Tuple
 
-from .connection.frame import DaliFrame
+from .dali_interface.dali_interface import DaliFrame
 from .backframe_8bit import Backframe8Bit
 from .forward_frame_16bit import ForwardFrame16Bit, DeviceType
 from .forward_frame_24bit import ForwardFrame24Bit

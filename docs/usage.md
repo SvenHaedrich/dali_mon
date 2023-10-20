@@ -25,21 +25,30 @@ You can remove the colour control codes from the output stream using `ansifilter
 
 ## Read from Serial Port
 
-Remember to set the serial port communication parammeters before starting the monitor routine. This example reads from a serial port connected to `ttyUSB0` using a baudrate of 115200 Baud.
+There are two options to read DALI frames from a serial device.
+The first option is to open a pipe from the serial port. Remember that you have to
+initialize the serial port to use the correct baudrate, 
+This example reads from a serial port connected to `ttyUSB0` using a baudrate of 115200 Baud.
 
     stty -F /dev/ttyUSB0 115200
     ./dali_mon < /dev/ttyUSB0
 
+The other option is to use the `serial-port` command line parameter.
+Note that the default baudrate of 500,000 baud will be used:
+
+    ./dali_mon --serial-port /dev/ttyUSB0
+
 ## Commandline Parameters
 
-| Option    | Short | Usage                                               |
-|-----------|-------|-----------------------------------------------------|
-|--help     |       | Show help message and exit.                         |
-|--version  |       | Show the version information and exit.              |
-|--absolute |       | Add absolute time from host machine to output.      |
-|--echo     |       | Echo unprocessed input line to output.              |
-|--hid      | -l    | Use HID class USB connector for DALI communication. |
-|--debug    |       | Enable debug level logging.                         |
+| Option              | Short | Usage                                               |
+|---------------------|-------|-----------------------------------------------------|
+|--help               |       | Show help message and exit.                         |
+|--version            |       | Show the version information and exit.              |
+|--absolute           |       | Add absolute time from host machine to output.      |
+|--serial-port <port> |       | Use the serial port for DALI communication          |
+|--echo               |       | Echo unprocessed input line to output.              |
+|--hid                | -l    | Use HID class USB connector for DALI communication. |
+|--debug              |       | Enable debug level logging.                         |
 
 ### Output Columns
   

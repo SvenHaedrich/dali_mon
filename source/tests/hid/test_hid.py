@@ -1,9 +1,9 @@
 import pytest
 import logging
 
-from DALI.connection.frame import DaliFrame, DaliStatus
-from DALI.connection.serial import DaliSerial
-from DALI.connection.hid import DaliUsb
+from DALI.dali_interface.dali_interface import DaliFrame, DaliStatus
+from DALI.dali_interface.serial import DaliSerial
+from DALI.dali_interface.hid import DaliUsb
 
 serial_port = "/dev/ttyUSB0"
 logger = logging.getLogger(__name__)
@@ -11,16 +11,15 @@ timeout_sec = 2
 
 
 def test_8bit_frames():
-    serial = DaliSerial(serial_port)
+    serial = DaliSerial(serial_port, start_receive=False)
     usb = DaliUsb()
-    usb.start_receive()
     for data in range(0x100):
         send_frame = DaliFrame(length=8, data=data)
         serial.transmit(send_frame)
-        usb.get_next(timeout_sec)
-        assert usb.rx_frame.length == send_frame.length
-        assert usb.rx_frame.data == send_frame.data
-        assert usb.rx_frame.status.status == DaliStatus.FRAME
+        result = usb.get(timeout_sec)
+        assert result.length == send_frame.length
+        assert result.data == send_frame.data
+        assert result.status == DaliStatus.FRAME
     serial.close()
     usb.close()
 
@@ -51,15 +50,14 @@ def test_8bit_frames():
     ],
 )
 def test_16bit_frame(data):
-    serial = DaliSerial(serial_port)
+    serial = DaliSerial(serial_port, start_receive=False)
     usb = DaliUsb()
-    usb.start_receive()
     send_frame = DaliFrame(length=16, data=data)
     serial.transmit(send_frame)
-    usb.get_next(timeout_sec)
-    assert usb.rx_frame.length == send_frame.length
-    assert usb.rx_frame.data == send_frame.data
-    assert usb.rx_frame.status.status == DaliStatus.FRAME
+    result = usb.get(timeout_sec)
+    assert result.length == send_frame.length
+    assert result.data == send_frame.data
+    assert result.status == DaliStatus.FRAME
     serial.close()
     usb.close()
 
@@ -99,13 +97,12 @@ def test_16bit_frame(data):
 )
 def test_invalid_frame_length(length, data):
     logger.setLevel(logging.DEBUG)
-    serial = DaliSerial(serial_port)
+    serial = DaliSerial(serial_port, start_receive=False)
     usb = DaliUsb()
-    usb.start_receive()
     send_frame = DaliFrame(length=length, data=data)
     serial.transmit(send_frame)
-    usb.get_next(timeout_sec)
-    assert usb.rx_frame.status.status == DaliStatus.TIMING
-    assert usb.rx_frame.length == 0
+    result = usb.get(timeout_sec)
+    assert result.status == DaliStatus.TIMING
+    assert result.length == 0
     serial.close()
     usb.close()
