@@ -1,4 +1,4 @@
-# DALI MON
+# DALI MONITOR
 
 ## Description
 
