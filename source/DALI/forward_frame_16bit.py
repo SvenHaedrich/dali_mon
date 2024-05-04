@@ -220,10 +220,10 @@ class ForwardFrame16Bit:
         # iec 62386 - 208 11.3.4.1
         code_dictionary = {
             0xE0: "REFERENCE SYSTEM POWER",
-            0xE1: "STORE DTR AS UP SITCH-ON THRESHOLD",
-            0xE2: "STORE DTR AS UP SITCH-OFF THRESHOLD",
-            0xE3: "STORE DTR AS DOWN SITCH-ON THRESHOLD",
-            0xE4: "STORE DTR AS DOWN SITCH-OFF THRESHOLD",
+            0xE1: "STORE DTR AS UP SWITCH-ON THRESHOLD",
+            0xE2: "STORE DTR AS UP SWITCH-OFF THRESHOLD",
+            0xE3: "STORE DTR AS DOWN SWITCH-ON THRESHOLD",
+            0xE4: "STORE DTR AS DOWN SWITCH-OFF THRESHOLD",
             0xE5: "STORE DTR AS ERROR HOLD-OFF TIME",
             0xF0: "QUERY FEATURES",
             0xF1: "QUERY SWITCH STATUS",
