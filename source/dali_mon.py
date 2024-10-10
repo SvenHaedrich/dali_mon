@@ -90,7 +90,7 @@ def main_file(transparent: bool, absolute_time: bool) -> None:
 
 
 @click.command()
-@click.version_option("1.5.0")
+@click.version_option("1.5.1")
 @click.option(
     "-l",
     "--hid",
@@ -101,6 +101,7 @@ def main_file(transparent: bool, absolute_time: bool) -> None:
 @click.option("--echo", help="Echo unprocessed input line to output.", is_flag=True)
 @click.option("--absolute", help="Add absolute local time to output.", is_flag=True)
 @click.option(
+    "-s",
     "--serial-port",
     help="Serial port used for DALI communication.",
     envvar="DALI_SERIAL_PORT",
