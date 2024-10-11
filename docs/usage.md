@@ -26,8 +26,7 @@ You can remove the colour control codes from the output stream using `ansifilter
 ## Read from Serial Port
 
 There are two options to read DALI frames from a serial device.
-The first option is to open a pipe from the serial port. Remember that you have to
-initialize the serial port to use the correct baudrate, 
+The first option is to open a pipe from the serial port. Remember that you have to initialize the serial port to use the correct baudrate, 
 This example reads from a serial port connected to `ttyUSB0` using a baudrate of 115200 Baud.
 
     stty -F /dev/ttyUSB0 115200
@@ -38,6 +37,15 @@ Note that the default baudrate of 500,000 baud will be used:
 
     ./dali_mon --serial-port /dev/ttyUSB0
 
+Alternatively, you can use the short form of the same parameter.
+
+    ./dali_mon -s /dev/ttyUSB0
+
+Or, you can store the serial port into an environment variable and use the ususal approach to make this a permanent setting.
+
+    export DALI_SERIAL_PORT=/dev/ttyUSB0
+    ./dali_mon
+    
 ## Commandline Parameters
 
 | Option              | Short | Usage                                               |
@@ -45,7 +53,7 @@ Note that the default baudrate of 500,000 baud will be used:
 |--help               |       | Show help message and exit.                         |
 |--version            |       | Show the version information and exit.              |
 |--absolute           |       | Add absolute time from host machine to output.      |
-|--serial-port <port> |       | Use the serial port for DALI communication          |
+|--serial-port <port> | -s    | Use the serial port for DALI communication          |
 |--echo               |       | Echo unprocessed input line to output.              |
 |--hid                | -l    | Use HID class USB connector for DALI communication. |
 |--debug              |       | Enable debug level logging.                         |
