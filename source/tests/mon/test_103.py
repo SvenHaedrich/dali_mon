@@ -280,3 +280,29 @@ def test_initialise_short_address():
 )
 def test_initialise_special_cases(test_data, target_cmd):
     build_24bit_frame_and_test(test_data, "", target_cmd)
+
+""" see iec 62386-103:2022 Table 1: 24-bit command frame encoding """
+@pytest.mark.parametrize(
+        "address_byte",
+        [
+            (0b11100001),
+            (0b11100011),
+            (0b11100101),
+            (0b11100111),
+            (0b11101001),
+            (0b11101011),
+            (0b11101101),
+            (0b11101111),
+            (0b11110001),
+            (0b11110011),
+            (0b11110101),
+            (0b11110111),
+            (0b11111001),
+            (0b11111011),
+        ]
+)
+def test_reserved_command_spaces(address_byte):
+    test_data = (address_byte << 16) 
+    build_24bit_frame_and_test(test_data, "", "RESERVED")
+
+    

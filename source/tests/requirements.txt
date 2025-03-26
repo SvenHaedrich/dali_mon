@@ -1,4 +1,6 @@
 pyusb
+pytest
+pytest-cov
 termcolor
 click
 bitstring
