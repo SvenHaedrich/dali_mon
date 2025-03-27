@@ -58,8 +58,19 @@ def process_line(frame: DaliFrame, absolute_time: float) -> None:
     process_line.last_timestamp = frame.timestamp
 
 
-def main_connection(absolute_time: bool, connection: DaliInterface) -> None:
+def main_connection(
+    absolute_time: bool, connection: DaliInterface, on: bool, off: bool
+) -> None:
     logger.debug("read from connection")
+    try:
+        if on:
+            connection.power(True)
+        if off:
+            connection.power(False)
+    except RuntimeError:
+        print("\rpower control not supported")
+        connection.close()
+        return
     try:
         while True:
             process_line(connection.get(), absolute_time)
@@ -90,16 +101,20 @@ def main_file(transparent: bool, absolute_time: bool) -> None:
 
 
 @click.command()
-@click.version_option("1.5.1")
+@click.version_option("1.6.0")
 @click.option(
     "-l",
     "--hid",
     help="Use USB HID class connector for DALI communication.",
+    envvar="DALI_HID_USB",
+    show_envvar=True,
     is_flag=True,
 )
-@click.option("--debug", help="Enable debug level logging.", is_flag=True)
+@click.option("--debug", help="Enable debug level logging.", hidden=True, is_flag=True)
 @click.option("--echo", help="Echo unprocessed input line to output.", is_flag=True)
 @click.option("--absolute", help="Add absolute local time to output.", is_flag=True)
+@click.option("--on", help="Enable power supply (if available).", is_flag=True)
+@click.option("--off", help="Disable power supply (if available).", is_flag=True)
 @click.option(
     "-s",
     "--serial-port",
@@ -109,11 +124,11 @@ def main_file(transparent: bool, absolute_time: bool) -> None:
     type=click.Path(),
 )
 def dali_mon(
-    hid: bool, debug: bool, echo: bool, absolute: bool, serial_port: click.Path
-) -> None:
+    hid, debug, echo, absolute, serial_port, on, off
+):
     """
-    Monitor for DALI commands,
-    SevenLab 2023
+    Monitor for DALI commands.
+    sevenlab engineering 2025
     """
     if debug:
         logging.basicConfig(level=logging.DEBUG)
@@ -122,9 +137,9 @@ def dali_mon(
     process_line.active_device_type = DeviceType.NONE
     try:
         if hid:
-            main_connection(absolute, DaliUsb())
+            main_connection(absolute, DaliUsb(), on, off)
         elif serial_port:
-            main_connection(absolute, DaliSerial(serial_port))
+            main_connection(absolute, DaliSerial(serial_port), on, off)
         elif sys.stdin.isatty():
             main_tty(echo, absolute)
         else:
