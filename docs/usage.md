@@ -46,6 +46,28 @@ Or, you can store the serial port into an environment variable and use the ususa
     export DALI_SERIAL_PORT=/dev/ttyUSB0
     ./dali_mon
     
+## Using Lunatone and compatible devices
+
+Supported are:
+* Lunatone 241 389 23DO
+* Lunatone 241 389 23-30
+* BEGA 71024
+
+You can use `dali_mon` with HID class USB connectors, like the devices from Lunatone.
+
+    ./dali_mon --hid
+
+These devices provide no independent clock, so timestamps are generated using the clock
+information of the host computer.
+Some of these devices can act as DALI power supply. To enable this integrated power supply use:
+
+    ./dali_mon --hid --on
+
+To disable the power supply use:
+
+    ./dali_mon --hid --off
+
+
 ## Commandline Parameters
 
 | Option              | Short | Usage                                               |
@@ -57,6 +79,8 @@ Or, you can store the serial port into an environment variable and use the ususa
 |--echo               |       | Echo unprocessed input line to output.              |
 |--hid                | -l    | Use HID class USB connector for DALI communication. |
 |--debug              |       | Enable debug level logging.                         |
+|--on                 |       | Enable power supply (if available)                  |
+|--off                |       | Disable power supply (if available)                 |
 
 ### Output Columns
   
