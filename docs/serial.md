@@ -12,7 +12,7 @@ Only information framed by curly braces is interpreted. <br/>
                 fixed length of 8 digits
     <error>     : either a 
                 "-" (minus) indicating normal state, or 
-                "*" (asteriks) inidcating an error
+                "*" (asterisk) indicating an error
     <bits>      : data bits received, 
                 number is given in hex presentation, 
                 fixed length of 2 digits
