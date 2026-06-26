@@ -6,9 +6,13 @@ import click
 import datetime
 from termcolor import cprint
 
-from DALI.dali_interface.dali_interface import DaliInterface, DaliFrame, DaliStatus
-from DALI.dali_interface.serial import DaliSerial
-from DALI.dali_interface.hid import DaliUsb
+from DALI.dali_interface.dali_interface import (
+    DaliInterface,
+    DaliFrame,
+    DaliSerial,
+    DaliStatus,
+    DaliUsb,
+)
 from DALI.forward_frame_16bit import DeviceType
 from DALI.decode import Decode
 
@@ -43,7 +47,9 @@ def print_error(
     cprint(f"{message}", color="red")
 
 
-def process_line(frame: DaliFrame, absolute_time: float) -> None:
+def process_line(frame: DaliFrame | None, absolute_time: float) -> None:
+    if frame is None:
+        return
     if process_line.last_timestamp != 0:
         delta_s = frame.timestamp - process_line.last_timestamp
     else:
@@ -82,11 +88,14 @@ def main_connection(
 def main_tty(transparent: bool, absolute_time: bool) -> None:
     logger.debug("read from tty device")
     line = ""
+    sys.stdin.reconfigure(encoding="ascii", errors="ignore")
     while True:
         line = line + sys.stdin.readline()
         if len(line) > 0 and line[-1] == "\n":
             line = line.strip(" \r\n")
             if len(line) > 0:
+                if transparent:
+                    print(line)
                 frame = DaliSerial.parse(line)
                 process_line(frame, absolute_time)
             line = ""
@@ -96,12 +105,14 @@ def main_file(transparent: bool, absolute_time: bool) -> None:
     logger.debug("read from file")
     for line in sys.stdin:
         if len(line) > 0:
+            if transparent:
+                print(line, end="")
             frame = DaliSerial.parse(line)
             process_line(frame, absolute_time)
 
 
 @click.command()
-@click.version_option("1.6.0")
+@click.version_option("1.7.0")
 @click.option(
     "-l",
     "--hid",
@@ -123,12 +134,10 @@ def main_file(transparent: bool, absolute_time: bool) -> None:
     show_envvar=True,
     type=click.Path(),
 )
-def dali_mon(
-    hid, debug, echo, absolute, serial_port, on, off
-):
+def dali_mon(hid, debug, echo, absolute, serial_port, on, off):
     """
     Monitor for DALI commands.
-    sevenlab engineering 2025
+    sevenlab engineering 2026
     """
     if debug:
         logging.basicConfig(level=logging.DEBUG)

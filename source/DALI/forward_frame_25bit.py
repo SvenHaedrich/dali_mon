@@ -195,7 +195,7 @@ class ForwardFrame25Bit:
             return
         if address_byte == 0xA3:
             self.address = f"C{class_byte:1d}"
-            self.command = f"QUERY CONTROL CLASS (0x{(opcode_byte & 0xf):1X}) = {(opcode_byte & 0xf)}"
+            self.command = f"QUERY CONTROL CLASS (0x{(opcode_byte & 0xF):1X}) = {(opcode_byte & 0xF)}"
             return
         if address_byte == 0xA5:
             if opcode_byte == 0:

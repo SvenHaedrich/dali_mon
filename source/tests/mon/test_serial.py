@@ -1,5 +1,4 @@
-from DALI.dali_interface.dali_interface import DaliStatus
-from DALI.dali_interface.serial import DaliSerial
+from DALI.dali_interface.dali_interface import DaliStatus, DaliSerial
 
 
 def test_raw_from_string():
@@ -33,3 +32,21 @@ def test_raw_from_string():
     assert result.length == 0x20
     assert result.data == 0x87654321
     assert result.status == DaliStatus.FRAME
+    input_string = "*** Booting Zephyr OS build v4.4.0-5197-g6f49860fc7a2 ***"
+    result = DaliSerial.parse(input_string)
+    assert result is None
+    input_string = "aa{bb"
+    result = DaliSerial.parse(input_string)
+    assert result is None
+    input_string = "aa}bb"
+    result = DaliSerial.parse(input_string)
+    assert result is None
+    input_string = "aa}{bb"
+    result = DaliSerial.parse(input_string)
+    assert result is None
+    input_string = "{aa}"
+    result = DaliSerial.parse(input_string)
+    assert result is None
+    input_string = "{00000004:op 87654321}"
+    result = DaliSerial.parse(input_string)
+    assert result is None

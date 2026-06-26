@@ -1,6 +1,6 @@
 # Install
 
-    git clone git@github.com:SvenHaedrich/dali_mon.git
+    git clone https://github.com/SvenHaedrich/dali_mon.git
     cd dali_mon
     git submodule update --init
 

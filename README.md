@@ -5,10 +5,12 @@
 This script converts DALI codes into human readable messages. DALI is the digital addressable lighting interface as described [here](https://www.dali-alliance.org).
 
 The source for the DALI code aka frames can be one of
+
 * stdin
 * HID class DALI / USB converter (e.g. [Lunatone](https://www.lunatone.com/produkt/dali-usb/))
 
 This script is based on the following standards
+
 * IEC 62386-101:2022 system components
 * IEC 62386-102:2022 control gear
 * IEC 62386-103:2022 control device
