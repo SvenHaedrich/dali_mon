@@ -99,6 +99,8 @@ def main_file(transparent: bool, absolute_time: bool) -> None:
     logger.debug("read from file")
     for line in sys.stdin:
         if len(line) > 0:
+            if transparent:
+                print(line, end="")
             frame = DaliSerial.parse(line)
             process_line(frame, absolute_time)
 
