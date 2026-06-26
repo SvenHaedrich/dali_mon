@@ -6,7 +6,13 @@ import click
 import datetime
 from termcolor import cprint
 
-from DALI.dali_interface.dali_interface import DaliInterface, DaliFrame, DaliSerial, DaliStatus, DaliUsb
+from DALI.dali_interface.dali_interface import (
+    DaliInterface,
+    DaliFrame,
+    DaliSerial,
+    DaliStatus,
+    DaliUsb,
+)
 from DALI.forward_frame_16bit import DeviceType
 from DALI.decode import Decode
 
@@ -41,7 +47,7 @@ def print_error(
     cprint(f"{message}", color="red")
 
 
-def process_line(frame: DaliFrame|None, absolute_time: float) -> None:
+def process_line(frame: DaliFrame | None, absolute_time: float) -> None:
     if frame is None:
         return
     if process_line.last_timestamp != 0:
@@ -128,9 +134,7 @@ def main_file(transparent: bool, absolute_time: bool) -> None:
     show_envvar=True,
     type=click.Path(),
 )
-def dali_mon(
-    hid, debug, echo, absolute, serial_port, on, off
-):
+def dali_mon(hid, debug, echo, absolute, serial_port, on, off):
     """
     Monitor for DALI commands.
     sevenlab engineering 2026
