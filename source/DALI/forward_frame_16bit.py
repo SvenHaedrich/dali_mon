@@ -267,66 +267,68 @@ class ForwardFrame16Bit:
             opcode, f"--- CODE 0x{opcode:02X} = {opcode} UNKNOWN LED GEAR COMMAND"
         )
 
-    def special_command(self, address_byte: int, opcode_byte: int) -> str:
+    def special_command(self) -> str:
         # iec 62386-102 11.2
-        if address_byte == 0xA1 and opcode_byte == 0x00:
+        if self.frame.address_byte == 0xA1 and self.frame.opcode_byte == 0x00:
             return "TERMINATE"
-        elif address_byte == 0xA3:
-            return f"DTR0 0x{opcode_byte:02X} = {opcode_byte:3} = {opcode_byte:08b}b"
-        elif address_byte == 0xA5:
+        elif self.frame.address_byte == 0xA3:
+            return f"DTR0 0x{self.frame.opcode_byte:02X} = {self.frame.opcode_byte:3} = {self.frame.opcode_byte:08b}b"
+        elif self.frame.address_byte == 0xA5:
             # iec 62386-102:2022 Table 20 Device addressing with INITIALISE
             if (
-                (opcode_byte >> 1) >= 0x00
-                and (opcode_byte >> 1) <= 0x3F
-                and (opcode_byte & 0x01)
+                (self.frame.opcode_byte >> 1) >= 0x00
+                and (self.frame.opcode_byte >> 1) <= 0x3F
+                and (self.frame.opcode_byte & 0x01)
             ):
-                return f"INITIALISE (G{(opcode_byte >> 1):02})"
-            if opcode_byte == 0xFF:
+                return f"INITIALISE (G{(self.frame.opcode_byte >> 1):02})"
+            if self.frame.opcode_byte == 0xFF:
                 return "INITIALISE (UNADDRESSED)"
-            if opcode_byte == 0x00:
+            if self.frame.opcode_byte == 0x00:
                 return "INITIALISE (ALL)"
-            return f"INITIALISE (NONE) - 0x{opcode_byte:02x}"
-        elif address_byte == 0xA7 and opcode_byte == 0x00:
+            return f"INITIALISE (NONE) - 0x{self.frame.opcode_byte:02x}"
+        elif self.frame.address_byte == 0xA7 and self.frame.opcode_byte == 0x00:
             return "RANDOMISE"
-        elif address_byte == 0xA9 and opcode_byte == 0x00:
+        elif self.frame.address_byte == 0xA9 and self.frame.opcode_byte == 0x00:
             return "COMPARE"
-        elif address_byte == 0xAB and opcode_byte == 0x00:
+        elif self.frame.address_byte == 0xAB and self.frame.opcode_byte == 0x00:
             return "WITHDRAW"
-        elif address_byte == 0xAD and opcode_byte == 0x00:
+        elif self.frame.address_byte == 0xAD and self.frame.opcode_byte == 0x00:
             return "PING"
-        elif address_byte == 0xB1:
-            return f"SEARCHADDRH 0x{opcode_byte:02X} = {opcode_byte:3} = {opcode_byte:08b}b"
-        elif address_byte == 0xB3:
-            return f"SEARCHADDRM 0x{opcode_byte:02X} = {opcode_byte:3} = {opcode_byte:08b}b"
-        elif address_byte == 0xB5:
-            return f"SEARCHADDRL 0x{opcode_byte:02X} = {opcode_byte:3} = {opcode_byte:08b}b"
-        elif address_byte == 0xB7:
+        elif self.frame.address_byte == 0xB1:
+            return f"SEARCHADDRH 0x{self.frame.opcode_byte:02X} = {self.frame.opcode_byte:3} = {self.frame.opcode_byte:08b}b"
+        elif self.frame.address_byte == 0xB3:
+            return f"SEARCHADDRM 0x{self.frame.opcode_byte:02X} = {self.frame.opcode_byte:3} = {self.frame.opcode_byte:08b}b"
+        elif self.frame.address_byte == 0xB5:
+            return f"SEARCHADDRL 0x{self.frame.opcode_byte:02X} = {self.frame.opcode_byte:3} = {self.frame.opcode_byte:08b}b"
+        elif self.frame.address_byte == 0xB7:
             if (
-                (opcode_byte >> 1) >= 0x00
-                and (opcode_byte >> 1) <= 0x3F
-                and (opcode_byte & 0x01)
+                (self.frame.opcode_byte >> 1) >= 0x00
+                and (self.frame.opcode_byte >> 1) <= 0x3F
+                and (self.frame.opcode_byte & 0x01)
             ):
-                opcode_byte >>= 1
-                return f"PROGRAM SHORT ADDRESS (0x{opcode_byte:02X}) = {opcode_byte}"
-            return f"PROGRAM SHORT ADDRESS (none) - 0x{opcode_byte:02X}"
-        elif address_byte == 0xB9:
-            return f"VERIFY SHORT ADDRESS (0x{opcode_byte:02X}) = {opcode_byte}"
-        elif address_byte == 0xBB and opcode_byte == 0x00:
+                short_address = self.frame.opcode_byte >> 1
+                return (
+                    f"PROGRAM SHORT ADDRESS (0x{short_address:02X}) = {short_address}"
+                )
+            return f"PROGRAM SHORT ADDRESS (none) - 0x{self.frame.opcode_byte:02X}"
+        elif self.frame.address_byte == 0xB9:
+            return f"VERIFY SHORT ADDRESS (0x{self.frame.opcode_byte:02X}) = {self.frame.opcode_byte}"
+        elif self.frame.address_byte == 0xBB and self.frame.opcode_byte == 0x00:
             return "QUERY SHORT ADDRESS"
-        elif address_byte == 0xBD:
+        elif self.frame.address_byte == 0xBD:
             return "PHYSICAL SELECTION  (DEPRECATED)"
-        elif address_byte == 0xC1:
-            return f"ENABLE DEVICE TYPE {opcode_byte}"
-        elif address_byte == 0xC3:
-            return f"DTR1 0x{opcode_byte:02X} = {opcode_byte:3} = {opcode_byte:08b}b"
-        elif address_byte == 0xC5:
-            return f"DTR2 0x{opcode_byte:02X} = {opcode_byte:3} = {opcode_byte:08b}b"
-        elif address_byte == 0xC7:
-            return f"WRITE MEMORY LOCATION DTR1, DTR0, (0x{opcode_byte:02X}) = {opcode_byte}"
-        elif address_byte == 0xC9:
-            return f"WRITE MEMORY LOCATION - NO REPLY - DTR1, DTR0, (0x{opcode_byte:02X}) = {opcode_byte}"
+        elif self.frame.address_byte == 0xC1:
+            return f"ENABLE DEVICE TYPE {self.frame.opcode_byte}"
+        elif self.frame.address_byte == 0xC3:
+            return f"DTR1 0x{self.frame.opcode_byte:02X} = {self.frame.opcode_byte:3} = {self.frame.opcode_byte:08b}b"
+        elif self.frame.address_byte == 0xC5:
+            return f"DTR2 0x{self.frame.opcode_byte:02X} = {self.frame.opcode_byte:3} = {self.frame.opcode_byte:08b}b"
+        elif self.frame.address_byte == 0xC7:
+            return f"WRITE MEMORY LOCATION DTR1, DTR0, (0x{self.frame.opcode_byte:02X}) = {self.frame.opcode_byte}"
+        elif self.frame.address_byte == 0xC9:
+            return f"WRITE MEMORY LOCATION - NO REPLY - DTR1, DTR0, (0x{self.frame.opcode_byte:02X}) = {self.frame.opcode_byte}"
         else:
-            return f"--- CODE 0x{address_byte:02X} = {address_byte} UNKNOWN CONTROL GEAR SPECIAL COMMAND"
+            return f"--- CODE 0x{self.frame.address_byte:02X} = {self.frame.address_byte} UNKNOWN CONTROL GEAR SPECIAL COMMAND"
 
     def adr(self) -> str:
         return self.address
@@ -335,41 +337,39 @@ class ForwardFrame16Bit:
         return self.command
 
     def data(self) -> str:
-        return f"{self.frame_data:04X}"
+        return f"{self.frame.data:04X}"
 
     def __init__(self, frame: DaliFrame, device_type: int = DeviceType.NONE) -> None:
-        self.frame_data = frame.data
+        self.frame = frame
         standard_command = True
 
-        address_byte = frame.address_byte
-        opcode_byte = frame.opcode_byte
-        if (address_byte & 0x01) == 0x00:
+        if (frame.address_byte & 0x01) == 0x00:
             standard_command = False
-            self.command = f"DAPC {opcode_byte}"
-        if address_byte in range(0x80):
-            short_address = address_byte >> 1
+            self.command = f"DAPC {frame.opcode_byte}"
+        if frame.address_byte in range(0x80):
+            short_address = frame.address_byte >> 1
             self.address = f"G{short_address:02}"
-        elif address_byte in range(0x80, 0xA0):
-            group_address = (address_byte >> 1) & 0x0F
+        elif frame.address_byte in range(0x80, 0xA0):
+            group_address = (frame.address_byte >> 1) & 0x0F
             self.address = f"GG{group_address:02}"
-        elif address_byte in range(0xA0, 0xCC):
+        elif frame.address_byte in range(0xA0, 0xCC):
             standard_command = False
             self.address = ""
-            self.command = self.special_command(address_byte, opcode_byte)
-        elif address_byte in range(0xCC, 0xFC):
+            self.command = self.special_command()
+        elif frame.address_byte in range(0xCC, 0xFC):
             standard_command = False
             self.address = ""
             self.command = "RESERVED"
-        elif (address_byte == 0xFD) or (address_byte == 0xFC):
+        elif (frame.address_byte == 0xFD) or (frame.address_byte == 0xFC):
             self.address = "BC GEAR UN"
-        elif (address_byte == 0xFF) or (address_byte == 0xFE):
+        elif (frame.address_byte == 0xFF) or (frame.address_byte == 0xFE):
             self.address = "BC GEAR"
         if standard_command:
-            self.command = self.gear_command(opcode_byte)
-            if opcode_byte >= 0xE0:
+            self.command = self.gear_command(frame.opcode_byte)
+            if frame.opcode_byte >= 0xE0:
                 if device_type == DeviceType.COLOUR:
-                    self.command = self.gear_colour_command(opcode_byte)
+                    self.command = self.gear_colour_command(frame.opcode_byte)
                 elif device_type == DeviceType.SWITCH:
-                    self.command = self.gear_switch_command(opcode_byte)
+                    self.command = self.gear_switch_command(frame.opcode_byte)
                 elif device_type == DeviceType.LED:
-                    self.command = self.gear_led_command(opcode_byte)
+                    self.command = self.gear_led_command(frame.opcode_byte)

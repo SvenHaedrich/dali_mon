@@ -9,17 +9,16 @@ from .forward_frame_32bit import ForwardFrame32Bit
 
 class UndefinedFrame:
     def __init__(self, frame: DaliFrame) -> None:
-        self.data_frame = frame.data
-        self.length = frame.length
+        self.frame = frame
 
     def adr(self) -> str:
         return ""
 
     def cmd(self) -> str:
-        return f"--- UNDEFINED FRAMELENGTH {self.length} BITS"
+        return f"--- UNDEFINED FRAMELENGTH {self.frame.length} BITS"
 
     def data(self) -> str:
-        return f"{self.data_frame:08X}"
+        return f"{self.frame.data:08X}"
 
 
 class Decode:

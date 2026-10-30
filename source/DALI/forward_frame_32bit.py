@@ -82,10 +82,10 @@ class ForwardFrame32Bit:
         return self.command_string
 
     def data(self) -> str:
-        return f"{self.frame_data:08X}"
+        return f"{self.frame.data:08X}"
 
     def __init__(self, frame: DaliFrame) -> None:
-        self.frame_data = frame.data
+        self.frame = frame
         self.frame_bytes = frame.data.to_bytes(4, byteorder="big")
         if self.data_transfer_commands():
             return

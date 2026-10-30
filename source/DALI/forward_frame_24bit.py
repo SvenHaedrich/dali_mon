@@ -93,10 +93,9 @@ class ForwardFrame24Bit:
             0x48: "QUERY RESET STATE",
             0x49: "QUERY APPLICATION CONTROLLER ALWAYS ACTIVE",
         }
-        opcode_byte = self.frame.opcode_byte
         return code_dictionary.get(
-            opcode_byte,
-            f"--- CODE 0x{opcode_byte:02X} = {opcode_byte} UNDEFINED CONTROL DEVICE COMMAND",
+            self.frame.opcode_byte,
+            f"--- CODE 0x{self.frame.opcode_byte:02X} = {self.frame.opcode_byte} UNDEFINED CONTROL DEVICE COMMAND",
         )
 
     def instance_commands(self) -> str:
@@ -163,78 +162,73 @@ class ForwardFrame24Bit:
             0x93: "QUERY INSTANCE CONFIGURATION (DTR0)",
             0x94: "QUERY AVAILABLE INSTANCE TYPES",
         }
-        opcode_byte = self.frame.opcode_byte
         return code_dictionary.get(
-            opcode_byte,
-            f"--- CODE 0x{opcode_byte:02X} = {opcode_byte} UNDEFINED INSTANCE COMMAND",
+            self.frame.opcode_byte,
+            f"--- CODE 0x{self.frame.opcode_byte:02X} = {self.frame.opcode_byte} UNDEFINED INSTANCE COMMAND",
         )
 
     def device_special_command(self) -> str:
-        address_byte = self.frame.address_byte
-        instance_byte = self.frame.instance_byte
-        opcode_byte = self.frame.opcode_byte
-        if address_byte == 0xC1:
-            if instance_byte == 0x00:
+        if self.frame.address_byte == 0xC1:
+            if self.frame.instance_byte == 0x00:
                 return "TERMINATE"
-            elif instance_byte == 0x01:
+            elif self.frame.instance_byte == 0x01:
                 # IEC 62386-103:2022 Table 25 Device addressing with INITIALISE
-                if opcode_byte in range(0x40):
-                    return f"INITIALISE (D{opcode_byte:02})"
-                if opcode_byte == 0x7F:
+                if self.frame.opcode_byte in range(0x40):
+                    return f"INITIALISE (D{self.frame.opcode_byte:02})"
+                if self.frame.opcode_byte == 0x7F:
                     return "INITIALISE (UNADDRESSED)"
-                if opcode_byte == 0xFF:
+                if self.frame.opcode_byte == 0xFF:
                     return "INITIALISE (ALL)"
-                return f"INITIALISE (NONE) - 0x{opcode_byte:02X}"
-            elif instance_byte == 0x02:
+                return f"INITIALISE (NONE) - 0x{self.frame.opcode_byte:02X}"
+            elif self.frame.instance_byte == 0x02:
                 return "RANDOMISE"
-            elif instance_byte == 0x03:
+            elif self.frame.instance_byte == 0x03:
                 return "COMPARE"
-            elif instance_byte == 0x04:
+            elif self.frame.instance_byte == 0x04:
                 return "WITHDRAW"
-            elif instance_byte == 0x05:
-                return f"SEARCHADDRH (0x{opcode_byte:02X}) = {opcode_byte}"
-            elif instance_byte == 0x06:
-                return f"SEARCHADDRM (0x{opcode_byte:02X}) = {opcode_byte}"
-            elif instance_byte == 0x07:
-                return f"SEARCHADDRL (0x{opcode_byte:02X}) = {opcode_byte}"
-            elif instance_byte == 0x08:
-                return f"PROGRAM SHORT ADDRESS (0x{opcode_byte:02X}) = {opcode_byte}"
-            elif instance_byte == 0x09:
-                return f"VERIFY SHORT ADDRESS (0x{opcode_byte:02X}) = {opcode_byte}"
-            elif instance_byte == 0x0A:
+            elif self.frame.instance_byte == 0x05:
+                return f"SEARCHADDRH (0x{self.frame.opcode_byte:02X}) = {self.frame.opcode_byte}"
+            elif self.frame.instance_byte == 0x06:
+                return f"SEARCHADDRM (0x{self.frame.opcode_byte:02X}) = {self.frame.opcode_byte}"
+            elif self.frame.instance_byte == 0x07:
+                return f"SEARCHADDRL (0x{self.frame.opcode_byte:02X}) = {self.frame.opcode_byte}"
+            elif self.frame.instance_byte == 0x08:
+                return f"PROGRAM SHORT ADDRESS (0x{self.frame.opcode_byte:02X}) = {self.frame.opcode_byte}"
+            elif self.frame.instance_byte == 0x09:
+                return f"VERIFY SHORT ADDRESS (0x{self.frame.opcode_byte:02X}) = {self.frame.opcode_byte}"
+            elif self.frame.instance_byte == 0x0A:
                 return "QUERY SHORT ADDRESS"
-            elif instance_byte == 0x20:
-                return f"WRITE MEMORY LOCATION DTR1, DTR0, (0x{opcode_byte:02X}) = {opcode_byte}"
-            elif instance_byte == 0x21:
-                return f"WRITE MEMORY LOCATION - NO REPLY - DTR1, DTR0, (0x{opcode_byte:02X}) = {opcode_byte}"
-            elif instance_byte == 0x30:
-                return f"DTR0 0x{opcode_byte:02X} = {opcode_byte:3} = {opcode_byte:08b}"
-            elif instance_byte == 0x31:
-                return f"DTR1 0x{opcode_byte:02X} = {opcode_byte:3} = {opcode_byte:08b}"
-            elif instance_byte == 0x32:
-                return f"DTR2 0x{opcode_byte:02X} = {opcode_byte:3} = {opcode_byte:08b}"
-            elif instance_byte == 0x33:
-                return f"SEND TESTFRAME (0x{opcode_byte:02X}) = {opcode_byte}"
-        if address_byte == 0xC5:
-            return f"DIRECT WRITE MEMORY (DTR0,0x{instance_byte:02X}) : 0x{opcode_byte:02X}"
-        if address_byte == 0xC7:
-            return f"DTR1:DTR0 (0x{instance_byte:02X},0x{opcode_byte:02X})"
-        if address_byte == 0xC9:
-            return f"DTR2:DTR1 (0x{instance_byte:02X},0x{opcode_byte:02X})"
-        return f"--- CODE 0x{address_byte:02X} = {address_byte} UNKNOWN CONTROL DEVICE SPECIAL COMMAND"
+            elif self.frame.instance_byte == 0x20:
+                return f"WRITE MEMORY LOCATION DTR1, DTR0, (0x{self.frame.opcode_byte:02X}) = {self.frame.opcode_byte}"
+            elif self.frame.instance_byte == 0x21:
+                return f"WRITE MEMORY LOCATION - NO REPLY - DTR1, DTR0, (0x{self.frame.opcode_byte:02X}) = {self.frame.opcode_byte}"
+            elif self.frame.instance_byte == 0x30:
+                return f"DTR0 0x{self.frame.opcode_byte:02X} = {self.frame.opcode_byte:3} = {self.frame.opcode_byte:08b}"
+            elif self.frame.instance_byte == 0x31:
+                return f"DTR1 0x{self.frame.opcode_byte:02X} = {self.frame.opcode_byte:3} = {self.frame.opcode_byte:08b}"
+            elif self.frame.instance_byte == 0x32:
+                return f"DTR2 0x{self.frame.opcode_byte:02X} = {self.frame.opcode_byte:3} = {self.frame.opcode_byte:08b}"
+            elif self.frame.instance_byte == 0x33:
+                return f"SEND TESTFRAME (0x{self.frame.opcode_byte:02X}) = {self.frame.opcode_byte}"
+        if self.frame.address_byte == 0xC5:
+            return f"DIRECT WRITE MEMORY (DTR0,0x{self.frame.instance_byte:02X}) : 0x{self.frame.opcode_byte:02X}"
+        if self.frame.address_byte == 0xC7:
+            return f"DTR1:DTR0 (0x{self.frame.instance_byte:02X},0x{self.frame.opcode_byte:02X})"
+        if self.frame.address_byte == 0xC9:
+            return f"DTR2:DTR1 (0x{self.frame.instance_byte:02X},0x{self.frame.opcode_byte:02X})"
+        return f"--- CODE 0x{self.frame.address_byte:02X} = {self.frame.address_byte} UNKNOWN CONTROL DEVICE SPECIAL COMMAND"
 
     # IEC 62386-103:2022 Table 2 - instance byte in a command frame
     def get_instance_address_type(self) -> InstanceAddressType:
-        instance_byte = self.frame.instance_byte
-        if instance_byte == 0xFE:
+        if self.frame.instance_byte == 0xFE:
             return InstanceAddressType.DEVICE
-        if instance_byte == 0xFC:
+        if self.frame.instance_byte == 0xFC:
             return InstanceAddressType.FEATURE_ON_DEVICE
-        if instance_byte == 0xFF:
+        if self.frame.instance_byte == 0xFF:
             return InstanceAddressType.INSTANCE_BROADCAST
-        if instance_byte == 0xFD:
+        if self.frame.instance_byte == 0xFD:
             return InstanceAddressType.FEATURE_ON_INSTANCE_BROADCAST
-        if instance_byte == 0xF9:
+        if self.frame.instance_byte == 0xF9:
             return InstanceAddressType.FEATURE_BROADCAST
         instance_code = self.frame.instance_byte >> 5
         if instance_code == 0:
@@ -374,11 +368,10 @@ class ForwardFrame24Bit:
         return self.command
 
     def data(self) -> str:
-        return f"{self.frame_data:06X}"
+        return f"{self.frame.data:06X}"
 
     def __init__(self, frame: DaliFrame) -> None:
         self.frame = frame
-        self.frame_data = frame.data
 
         # see iec 62386-103 7.2.2.1
         if self.frame.data >> 13 == 0x7F7:

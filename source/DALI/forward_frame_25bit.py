@@ -186,10 +186,10 @@ class ForwardFrame25Bit:
         return self.command
 
     def data(self) -> str:
-        return f"{self.frame_data:07X}"
+        return f"{self.frame.data:07X}"
 
     def __init__(self, frame: DaliFrame) -> None:
-        self.frame_data = frame.data
+        self.frame = frame
         # the getters of DaliFrame are for 16 and 24 bit frames only
         class_byte = (frame.data >> 17) & 0xF
         address_byte = (frame.data >> 9) & 0xFF
