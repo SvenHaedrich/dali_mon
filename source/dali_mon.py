@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 
-import sys
+import errno
 import logging
+import os
+import select
+import sys
 import tomllib
 import click
 from click.core import ParameterSource
@@ -71,45 +74,76 @@ def process_line(frame: DaliFrame | None, absolute_time: float) -> None:
     process_line.last_timestamp = frame.timestamp
 
 
+def exit_with_error(message: str) -> None:
+    cprint(f"\r{message}", color="red", file=sys.stderr)
+    sys.exit(1)
+
+
+# time to wait for a frame before checking that the connection is still alive
+GET_TIMEOUT_S = 0.5
+
+
 def main_connection(
     absolute_time: bool, connection: DaliInterface, on: bool, off: bool
 ) -> None:
     logger.debug("read from connection")
     try:
-        if on:
-            connection.power(True)
-        if off:
-            connection.power(False)
-    except RuntimeError:
-        print("\rpower control not supported")
+        try:
+            if on:
+                connection.power(True)
+            if off:
+                connection.power(False)
+        except RuntimeError:
+            exit_with_error("power control not supported")
+        try:
+            while True:
+                frame = connection.get(timeout=GET_TIMEOUT_S)
+                # no frame within the timeout
+                if frame.status == DaliStatus.TIMEOUT:
+                    continue
+                process_line(frame, absolute_time)
+        except RuntimeError as error:
+            # the receive thread of the interface stopped
+            exit_with_error(f"connection lost: {error.__cause__ or error}")
+    finally:
         connection.close()
-        sys.exit(1)
-    try:
-        while True:
-            process_line(connection.get(), absolute_time)
-    except KeyboardInterrupt:
-        print("\rinterrupted")
-        connection.close()
-    except RuntimeError as error:
-        cprint(f"\rconnection lost: {error.__cause__ or error}", color="red")
-        connection.close()
-        sys.exit(1)
+
+
+def process_tty_line(line: str, transparent: bool, absolute_time: bool) -> None:
+    line = line.strip(" \r\n")
+    if len(line) > 0:
+        if transparent:
+            print(line)
+        process_line(DaliSerial.parse(line), absolute_time)
 
 
 def main_tty(transparent: bool, absolute_time: bool) -> None:
+    # A serial device sends new lines as long as it is connected. An empty read
+    # (e.g. Ctrl-D in a terminal) is no end of the input, only a hang-up is.
     logger.debug("read from tty device")
-    line = ""
-    sys.stdin.reconfigure(encoding="ascii", errors="ignore")
+    stdin = sys.stdin.fileno()
+    poller = select.poll()
+    poller.register(stdin, select.POLLIN)
+    pending = ""
     while True:
-        line = line + sys.stdin.readline()
-        if len(line) > 0 and line[-1] == "\n":
-            line = line.strip(" \r\n")
-            if len(line) > 0:
-                if transparent:
-                    print(line)
-                frame = DaliSerial.parse(line)
-                process_line(frame, absolute_time)
-            line = ""
+        events = 0
+        for _, event in poller.poll():
+            events |= event
+        try:
+            data = os.read(stdin, 4096)
+        except OSError as error:
+            if error.errno != errno.EIO:
+                raise
+            data = b""
+            events |= select.POLLHUP
+        if len(data) == 0:
+            if events & (select.POLLHUP | select.POLLERR):
+                exit_with_error("connection lost: device hung up")
+            continue
+        pending = pending + data.decode(encoding="ascii", errors="ignore")
+        *lines, pending = pending.split("\n")
+        for line in lines:
+            process_tty_line(line, transparent, absolute_time)
 
 
 def main_file(transparent: bool, absolute_time: bool) -> None:
@@ -184,7 +218,9 @@ def dali_mon(hid, debug, echo, absolute, serial_port, on, off):
         else:
             main_file(echo, absolute)
     except KeyboardInterrupt:
-        print("\rinterrupted")
+        # Ctrl-C is the expected end of a connection
+        print("\rinterrupted", file=sys.stderr)
+        sys.exit(130)
 
 
 if __name__ == "__main__":

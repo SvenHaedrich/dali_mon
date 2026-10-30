@@ -1,5 +1,9 @@
+import os
 import re
+import signal
 import subprocess
+import sys
+import time
 import tomllib
 from pathlib import Path
 
@@ -25,6 +29,11 @@ def output_lines(result) -> list[str]:
     return result.output.split("\n")[:-1]
 
 
+def stdout_lines(result) -> list[str]:
+    # the decoded frames only, messages go to stderr
+    return result.stdout.split("\n")[:-1]
+
+
 def project_version() -> str:
     with (REPOSITORY / "pyproject.toml").open("rb") as pyproject:
         return tomllib.load(pyproject)["project"]["version"]
@@ -39,9 +48,11 @@ class FakeConnection:
         self.power_supported = power_supported
         self.error = error
         self.power_calls = []
+        self.timeouts = []
         self.closed = False
 
     def get(self, timeout=None):
+        self.timeouts.append(timeout)
         if self.frames:
             return self.frames.pop(0)
         if self.error:
@@ -177,7 +188,9 @@ def test_wrapper_version():
 
 def test_sample_file():
     result = run_cli([], input=SAMPLE.read_text())
+    # a file ends without error
     assert result.exit_code == 0
+    assert result.stderr == ""
     assert output_lines(result) == [
         "0.001 |    0.000 |     FF06 | BC GEAR              RECALL MIN LEVEL",
         "0.002 |    0.001 |     FF05 | BC GEAR              RECALL MAX LEVEL",
@@ -230,11 +243,13 @@ def test_absolute_time():
 def test_hid(usb):
     usb.frames = [frame(1.0, 16, 0xFF06), frame(1.25, 8, 0x12)]
     result = run_cli(["--hid"])
-    assert output_lines(result) == [
+    # Ctrl-C is the expected end of a connection
+    assert result.exit_code == 130
+    assert stdout_lines(result) == [
         "1.000 |    0.000 |     FF06 | BC GEAR              RECALL MIN LEVEL",
         "1.250 |    0.250 |       12 |                      DATA 0x12 =  18 = 00010010b",
-        "\rinterrupted",
     ]
+    assert result.stderr == "\rinterrupted\n"
     assert usb.closed
 
 
@@ -269,10 +284,11 @@ def test_serial_port(serial, port, option):
     serial.frames = [frame(0.001, 16, 0xFF06)]
     result = run_cli([option, port])
     assert serial.port == port
-    assert output_lines(result) == [
+    assert result.exit_code == 130
+    assert stdout_lines(result) == [
         "0.001 |    0.000 |     FF06 | BC GEAR              RECALL MIN LEVEL",
-        "\rinterrupted",
     ]
+    assert result.stderr == "\rinterrupted\n"
     assert serial.closed
 
 
@@ -294,18 +310,131 @@ def test_power_not_supported(usb):
     usb.frames = [frame(1.0, 16, 0xFF06)]
     result = run_cli(["--hid", "--on"])
     assert result.exit_code == 1
-    assert output_lines(result) == ["\rpower control not supported"]
+    assert result.stdout == ""
+    assert result.stderr == "\rpower control not supported\n"
     assert usb.closed
 
 
-def test_connection_lost(usb):
-    usb.frames = [frame(1.0, 16, 0xFF06)]
+def lost_connection_error() -> RuntimeError:
+    # what dali-interface raises after its receive thread stopped
     error = RuntimeError("read thread is not running")
     error.__cause__ = OSError("Input/Output Error")
-    usb.error = error
+    return error
+
+
+# the end of a connection is never expected
+def test_connection_lost(usb):
+    usb.frames = [frame(1.0, 16, 0xFF06)]
+    usb.error = lost_connection_error()
     result = run_cli(["--hid"])
-    assert output_lines(result)[-1] == "\rconnection lost: Input/Output Error"
+    assert result.exit_code == 1
+    assert stdout_lines(result) == [
+        "1.000 |    0.000 |     FF06 | BC GEAR              RECALL MIN LEVEL",
+    ]
+    assert result.stderr == "\rconnection lost: Input/Output Error\n"
     assert usb.closed
+
+
+def test_serial_connection_lost(serial, port):
+    serial.error = lost_connection_error()
+    result = run_cli(["--serial-port", port])
+    assert result.exit_code == 1
+    assert result.stderr == "\rconnection lost: Input/Output Error\n"
+    assert serial.closed
+
+
+# dali_mon waits for frames with a timeout, so it notices a lost connection
+# also on a quiet bus; the timeouts are not shown
+def test_connection_waits_with_timeout(usb):
+    no_frame = DaliFrame(
+        status=DaliStatus.TIMEOUT, message="queue is empty, timeout from get"
+    )
+    usb.frames = [frame(1.0, 16, 0xFF06), no_frame, no_frame, frame(1.25, 8, 0x12)]
+    result = run_cli(["--hid"])
+    assert stdout_lines(result) == [
+        "1.000 |    0.000 |     FF06 | BC GEAR              RECALL MIN LEVEL",
+        "1.250 |    0.250 |       12 |                      DATA 0x12 =  18 = 00010010b",
+    ]
+    assert None not in usb.timeouts
+
+
+def test_connection_lost_on_quiet_bus(usb):
+    no_frame = DaliFrame(
+        status=DaliStatus.TIMEOUT, message="queue is empty, timeout from get"
+    )
+    usb.frames = [no_frame, no_frame]
+    usb.error = lost_connection_error()
+    result = run_cli(["--hid"])
+    assert result.exit_code == 1
+    assert result.stdout == ""
+    assert result.stderr == "\rconnection lost: Input/Output Error\n"
+
+
+# ---- serial device as stdin
+# stdin is a terminal device: it behaves like a connection, not like a file
+
+
+def start_on_terminal() -> tuple[subprocess.Popen, int]:
+    pty = pytest.importorskip("pty")
+    controller, terminal = pty.openpty()
+    process = subprocess.Popen(
+        [sys.executable, "dali_mon.py"],
+        cwd=REPOSITORY / "source",
+        stdin=terminal,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        env={**os.environ, "NO_COLOR": "1", "PYTHONUNBUFFERED": "1"},
+        # Ctrl-C must work, also if the test runs with SIGINT ignored;
+        # the test starts no threads, so preexec_fn is safe here
+        preexec_fn=lambda: signal.signal(signal.SIGINT, signal.SIG_DFL),  # noqa: PLW1509
+    )
+    os.close(terminal)
+    # wait until dali_mon reads from the terminal
+    time.sleep(1)
+    return process, controller
+
+
+def finish(process: subprocess.Popen) -> tuple[str, str]:
+    # bytes, text mode would turn the "\r" of the messages into "\n"
+    try:
+        stdout, stderr = process.communicate(timeout=10)
+        return stdout.decode(), stderr.decode()
+    except subprocess.TimeoutExpired:
+        process.kill()
+        process.communicate()
+        pytest.fail("dali_mon did not end")
+
+
+def test_terminal_hang_up():
+    process, controller = start_on_terminal()
+    os.write(controller, b"{00000001:10 FF06}\n")
+    time.sleep(0.5)
+    # closing the controlling side hangs up the terminal, like unplugging the adapter
+    os.close(controller)
+    stdout, stderr = finish(process)
+    assert process.returncode == 1
+    assert stdout.split("\n")[:-1] == [
+        "0.001 |    0.000 |     FF06 | BC GEAR              RECALL MIN LEVEL",
+    ]
+    assert stderr == "\rconnection lost: device hung up\n"
+
+
+def test_terminal_ends_with_ctrl_c_only():
+    process, controller = start_on_terminal()
+    try:
+        # Ctrl-D (end of file in a terminal) does not end dali_mon
+        os.write(controller, b"{00000001:10 FF06}\n\x04")
+        time.sleep(0.5)
+        assert process.poll() is None
+        process.send_signal(signal.SIGINT)
+        stdout, stderr = finish(process)
+    finally:
+        os.close(controller)
+    assert process.returncode == 130
+    assert stdout.split("\n")[:-1] == [
+        "0.001 |    0.000 |     FF06 | BC GEAR              RECALL MIN LEVEL",
+    ]
+    assert stderr == "\rinterrupted\n"
 
 
 # ---- command line parameter errors
