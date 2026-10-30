@@ -1,6 +1,6 @@
 # Changelog for `dali_mon`
 
-## Unreleased
+## Version 1.8.0
 
 - Replace the git submodule `dali_interface` by the python package [dali-interface](https://github.com/sevenlab-de/dali-interface) v2.0.0
 - Track version and dependencies in `pyproject.toml`, `requirements.txt` is removed

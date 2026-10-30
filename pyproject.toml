@@ -1,6 +1,6 @@
 [project]
 name = "dali-mon"
-version = "1.7.0"
+version = "1.8.0"
 description = "Monitor for DALI commands."
 authors = [{ name = "Sven Hädrich", email = "sven.haedrich@sevenlab.de" }]
 readme = "README.md"
