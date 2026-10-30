@@ -1,5 +1,9 @@
 # Changelog for `dali_mon`
 
+## Unreleased
+
+- Remove the runtime type checking with `typeguard`, the dependency is removed
+
 ## Version 1.8.0
 
 - Replace the git submodule `dali_interface` by the python package [dali-interface](https://github.com/sevenlab-de/dali-interface) v2.0.0

@@ -1,5 +1,4 @@
 from bitstring import BitArray
-from typeguard import typechecked
 
 # bit position translation
 #
@@ -11,7 +10,6 @@ from typeguard import typechecked
 #
 
 
-@typechecked
 class EventType:
     RESERVED = 0
     DEVICE = 1
@@ -21,7 +19,6 @@ class EventType:
     INSTANCE_GROUP = 5
 
 
-@typechecked
 class InstanceAddressType:
     RESERVED = 0
     INSTANCE_NUMBER = 1
@@ -37,7 +34,6 @@ class InstanceAddressType:
     DEVICE = 11
 
 
-@typechecked
 class DeviceAddressType:
     RESERVED = 0
     SHORT_ADDRESS = 1
@@ -47,7 +43,6 @@ class DeviceAddressType:
     SPECIAL = 5
 
 
-@typechecked
 class ForwardFrame24Bit:
     LENGTH = 24
 

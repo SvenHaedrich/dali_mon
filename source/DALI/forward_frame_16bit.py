@@ -1,7 +1,3 @@
-from typeguard import typechecked
-
-
-@typechecked
 class DeviceType:
     NONE = 0
     LED = 6
@@ -9,7 +5,6 @@ class DeviceType:
     COLOUR = 8
 
 
-@typechecked
 class ForwardFrame16Bit:
     LENGTH = 16
 

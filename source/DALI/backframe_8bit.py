@@ -1,7 +1,3 @@
-from typeguard import typechecked
-
-
-@typechecked
 class Backframe8Bit:
     LENGTH = 8
 
