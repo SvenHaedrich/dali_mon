@@ -13,6 +13,7 @@
   using 100 % CPU. A piped file ends at the end of the file with exit code 0.
 - Messages go to stderr, the decoded frames to stdout
 - `dali_mon` can be started from any directory, and passes arguments with spaces unchanged
+- `--echo` also works with `--serial-port`, and is rejected together with `--hid`
 - `Ctrl-C` ends `dali_mon` with exit code 130
 - Wrong command line parameters end `dali_mon` with exit code 2: `--hid` together with `--serial-port`,
   `--on` together with `--off`, `--on` or `--off` without `--hid`, and a serial port that does not exist

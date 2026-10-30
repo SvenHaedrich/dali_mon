@@ -94,6 +94,30 @@ def open_connection(open_interface, name: str) -> DaliInterface:
 GET_TIMEOUT_S = 0.5
 
 
+class EchoFrame(DaliFrame):
+    """DALI frame together with the unprocessed input line, for --echo.
+    A line without DALI information gives a frame that is only echoed."""
+
+    line = ""
+    is_dali = True
+
+
+class DaliSerialEcho(DaliSerial):
+    """Serial interface that passes the unprocessed input lines on for --echo.
+    They travel with the frames through the receive queue, so the main thread
+    prints them in order with the decoded frames."""
+
+    def read_frame(self) -> DaliFrame | None:
+        line = self.port.readline().decode(encoding="ascii", errors="ignore").strip()
+        if len(line) == 0:
+            return None
+        frame = self.parse(line)
+        echo = EchoFrame(*frame) if frame else EchoFrame(status=DaliStatus.OK)
+        echo.line = line
+        echo.is_dali = frame is not None
+        return echo
+
+
 def main_connection(
     absolute_time: bool, connection: DaliInterface, on: bool, off: bool
 ) -> None:
@@ -112,6 +136,10 @@ def main_connection(
                 # no frame within the timeout
                 if frame.status == DaliStatus.TIMEOUT:
                     continue
+                if isinstance(frame, EchoFrame):
+                    print(frame.line)
+                    if not frame.is_dali:
+                        continue
                 process_line(frame, absolute_time)
         except RuntimeError as error:
             # the receive thread of the interface stopped
@@ -216,6 +244,9 @@ def dali_mon(hid, debug, echo, absolute, serial_port, on, off):
     # only the USB converters have a power supply to switch
     if (on or off) and not hid:
         raise click.UsageError(f"{'--on' if on else '--off'} needs --hid.")
+    # the USB converters deliver no text lines that could be echoed
+    if echo and hid:
+        raise click.UsageError("--echo needs stdin or --serial-port, not --hid.")
 
     process_line.last_timestamp = 0
     process_line.active_device_type = DeviceType.NONE
@@ -224,8 +255,9 @@ def dali_mon(hid, debug, echo, absolute, serial_port, on, off):
             connection = open_connection(DaliUsb, "DALI USB converter")
             main_connection(absolute, connection, on, off)
         elif serial_port:
+            serial_class = DaliSerialEcho if echo else DaliSerial
             connection = open_connection(
-                lambda: DaliSerial(serial_port), f"serial port {serial_port}"
+                lambda: serial_class(serial_port), f"serial port {serial_port}"
             )
             main_connection(absolute, connection, on, off)
         elif sys.stdin.isatty():

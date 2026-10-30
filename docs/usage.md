@@ -110,7 +110,7 @@ If the USB converter has no integrated power supply, `dali_mon` reports
 |--version            |       | Show the version information and exit.              |
 |--absolute           |       | Add absolute time from host machine to output.      |
 |--serial-port <port> | -s    | Use the serial port for DALI communication          |
-|--echo               |       | Echo unprocessed input line to output.              |
+|--echo               |       | Echo unprocessed input line to output (stdin and `--serial-port`). |
 |--hid                | -l    | Use HID class USB connector for DALI communication. |
 |--debug              |       | Enable debug level logging.                         |
 |--on                 |       | Enable power supply (if available), needs `--hid`.  |
@@ -122,6 +122,7 @@ These combinations are rejected with exit code 2:
   environment variable of the other one, e.g. `--hid` overrides `DALI_SERIAL_PORT`.
 * `--on` together with `--off`.
 * `--on` or `--off` without `--hid`.
+* `--echo` together with `--hid`, the USB converters deliver no text lines to echo.
 * `--serial-port` with a port that does not exist.
 
 ### Output Columns

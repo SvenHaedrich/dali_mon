@@ -596,6 +596,23 @@ def test_power_with_hid_environment_variable(usb, option, power):
     assert usb.power_calls == [power]
 
 
+# the USB converters deliver no text lines that could be echoed
+@pytest.mark.parametrize("hid_option", ["--hid", "-l"])
+def test_echo_with_hid(usb, hid_option):
+    result = run_cli([hid_option, "--echo"])
+    assert result.exit_code == 2
+    assert "--echo" in result.output
+    assert "--hid" in result.output
+    assert not usb.opened
+
+
+def test_echo_with_hid_environment_variable(usb):
+    result = run_cli(["--echo"], env={"DALI_HID_USB": "1"})
+    assert result.exit_code == 2
+    assert "--echo" in result.output
+    assert not usb.opened
+
+
 # the wrapper script passes the exit code on
 def test_wrapper_returns_exit_code():
     result = subprocess.run(
