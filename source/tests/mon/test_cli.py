@@ -11,6 +11,7 @@ import dali_mon
 import pytest
 from click.testing import CliRunner
 from dali_interface import DaliFrame, DaliSerial, DaliStatus
+from usb.core import NoBackendError, USBError
 
 REPOSITORY = Path(__file__).resolve().parents[3]
 SAMPLE = REPOSITORY / "source" / "tests" / "sample.txt"
@@ -332,6 +333,42 @@ def test_serial_port_environment_variable(serial, port):
 def test_power(usb, option, power):
     run_cli(["--hid", option])
     assert usb.power_calls == [power]
+
+
+# predictable problems when opening an interface end with a message on
+# stderr and exit code 1, without a python traceback
+def test_serial_port_is_no_serial_device(tmp_path):
+    no_device = tmp_path / "no_device"
+    no_device.touch()
+    result = run_cli(["--serial-port", str(no_device)])
+    assert result.exit_code == 1
+    assert isinstance(result.exception, SystemExit)
+    assert result.stdout == ""
+    assert result.stderr.startswith(f"\rcannot open serial port {no_device}: ")
+    assert "Traceback" not in result.output
+
+
+@pytest.mark.parametrize(
+    "error,message",
+    [
+        (USBError("DALI interface not found"), "DALI interface not found"),
+        (
+            USBError("Access denied (insufficient permissions)"),
+            "Access denied (insufficient permissions)",
+        ),
+        (NoBackendError("No backend available"), "No backend available"),
+    ],
+)
+def test_usb_converter_cannot_be_opened(monkeypatch, error, message):
+    def open_usb():
+        raise error
+
+    monkeypatch.setattr(dali_mon, "DaliUsb", open_usb)
+    result = run_cli(["--hid"])
+    assert result.exit_code == 1
+    assert isinstance(result.exception, SystemExit)
+    assert result.stdout == ""
+    assert result.stderr == f"\rcannot open DALI USB converter: {message}\n"
 
 
 def test_power_not_supported(usb):

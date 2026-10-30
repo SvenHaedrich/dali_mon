@@ -79,6 +79,17 @@ def exit_with_error(message: str) -> None:
     sys.exit(1)
 
 
+def open_connection(open_interface, name: str) -> DaliInterface:
+    # SerialException and USBError are OSErrors, a missing libusb
+    # raises NoBackendError, a ValueError
+    try:
+        return open_interface()
+    except (OSError, ValueError) as error:
+        # pyusb raises USBError without an error number
+        reason = str(error).removeprefix("[Errno None] ")
+        exit_with_error(f"cannot open {name}: {reason}")
+
+
 # time to wait for a frame before checking that the connection is still alive
 GET_TIMEOUT_S = 0.5
 
@@ -210,9 +221,13 @@ def dali_mon(hid, debug, echo, absolute, serial_port, on, off):
     process_line.active_device_type = DeviceType.NONE
     try:
         if hid:
-            main_connection(absolute, DaliUsb(), on, off)
+            connection = open_connection(DaliUsb, "DALI USB converter")
+            main_connection(absolute, connection, on, off)
         elif serial_port:
-            main_connection(absolute, DaliSerial(serial_port), on, off)
+            connection = open_connection(
+                lambda: DaliSerial(serial_port), f"serial port {serial_port}"
+            )
+            main_connection(absolute, connection, on, off)
         elif sys.stdin.isatty():
             main_tty(echo, absolute)
         else:

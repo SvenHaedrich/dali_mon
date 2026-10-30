@@ -23,7 +23,7 @@ So you can log the frames without the messages:
 | Code | Meaning                                                                      |
 |------|------------------------------------------------------------------------------|
 | 0    | end of the file piped into `dali_mon`                                        |
-| 1    | connection lost, or power control not supported by the USB converter        |
+| 1    | interface cannot be opened, connection lost, or power control not supported |
 | 2    | wrong command line parameters                                                |
 | 130  | stopped with `Ctrl-C`                                                        |
 
