@@ -1,3 +1,6 @@
+from dali_interface import DaliFrame
+
+
 class DeviceType:
     NONE = 0
     LED = 6
@@ -331,12 +334,12 @@ class ForwardFrame16Bit:
     def data(self) -> str:
         return f"{self.frame_data:04X}"
 
-    def __init__(self, data: int, device_type: int = DeviceType.NONE) -> None:
-        self.frame_data = data
+    def __init__(self, frame: DaliFrame, device_type: int = DeviceType.NONE) -> None:
+        self.frame_data = frame.data
         standard_command = True
 
-        address_byte = (data >> 8) & 0xFF
-        opcode_byte = data & 0xFF
+        address_byte = frame.address_byte
+        opcode_byte = frame.opcode_byte
         if (address_byte & 0x01) == 0x00:
             standard_command = False
             self.command = f"DAPC {opcode_byte}"

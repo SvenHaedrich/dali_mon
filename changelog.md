@@ -7,6 +7,7 @@
 - `source/tests/run_lint.sh` checks formatting, lint and types
 - Every pull request runs `markdownlint`, `run_lint.sh` and the tests without hardware on GitHub
 - The exit code of `run_mon.sh` and `run_hid.sh` is the result of the tests, a failing setup stops them
+- All decoders take a `DaliFrame`, the decoders for 16 and 24 bit frames use its getters `address_byte`, `instance_byte` and `opcode_byte`
 
 ## Version 1.8.0
 

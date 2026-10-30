@@ -1,4 +1,5 @@
 from bitstring import BitArray
+from dali_interface import DaliFrame
 
 # bit position translation
 #
@@ -94,7 +95,7 @@ class ForwardFrame24Bit:
             0x48: "QUERY RESET STATE",
             0x49: "QUERY APPLICATION CONTROLLER ALWAYS ACTIVE",
         }
-        opcode_byte = self.frame_bits[16:].uint
+        opcode_byte = self.frame.opcode_byte
         return code_dictionary.get(
             opcode_byte,
             f"--- CODE 0x{opcode_byte:02X} = {opcode_byte} UNDEFINED CONTROL DEVICE COMMAND",
@@ -164,16 +165,16 @@ class ForwardFrame24Bit:
             0x93: "QUERY INSTANCE CONFIGURATION (DTR0)",
             0x94: "QUERY AVAILABLE INSTANCE TYPES",
         }
-        opcode_byte = self.frame_bits[16:].uint
+        opcode_byte = self.frame.opcode_byte
         return code_dictionary.get(
             opcode_byte,
             f"--- CODE 0x{opcode_byte:02X} = {opcode_byte} UNDEFINED INSTANCE COMMAND",
         )
 
     def device_special_command(self) -> str:
-        address_byte = self.frame_bits[:8].uint
-        instance_byte = self.frame_bits[8:16].uint
-        opcode_byte = self.frame_bits[16:].uint
+        address_byte = self.frame.address_byte
+        instance_byte = self.frame.instance_byte
+        opcode_byte = self.frame.opcode_byte
         if address_byte == 0xC1:
             if instance_byte == 0x00:
                 return "TERMINATE"
@@ -226,7 +227,7 @@ class ForwardFrame24Bit:
 
     # IEC 62386-103:2022 Table 2 - instance byte in a command frame
     def get_instance_address_type(self) -> int:
-        instance_byte = self.frame_bits[8:16].uint
+        instance_byte = self.frame.instance_byte
         if instance_byte == 0xFE:
             return InstanceAddressType.DEVICE
         if instance_byte == 0xFC:
@@ -254,9 +255,9 @@ class ForwardFrame24Bit:
 
     # IEC 62386-103:2022 Table 1 - command frame encoding
     def get_device_address_type(self) -> int:
-        if self.frame_bits[:8].uint == 0xFF:
+        if self.frame.address_byte == 0xFF:
             return DeviceAddressType.BROADCAST
-        if self.frame_bits[:8].uint == 0xFD:
+        if self.frame.address_byte == 0xFD:
             return DeviceAddressType.BROADCAST_UNADDR
         if not self.frame_bits[0]:
             return DeviceAddressType.SHORT_ADDRESS
@@ -377,9 +378,10 @@ class ForwardFrame24Bit:
     def data(self) -> str:
         return f"{self.frame_data:06X}"
 
-    def __init__(self, data: int) -> None:
-        self.frame_bits = BitArray(uint=data, length=24)
-        self.frame_data = data
+    def __init__(self, frame: DaliFrame) -> None:
+        self.frame = frame
+        self.frame_bits = BitArray(uint=frame.data, length=24)
+        self.frame_data = frame.data
 
         # see iec 62386-103 7.2.2.1
         if self.frame_bits[:11].uint == 0x7F7:
@@ -394,7 +396,7 @@ class ForwardFrame24Bit:
                 self.command = "RESERVED EVENT"
             else:
                 self.address = self.build_event_source_string(event_source_type)
-                self.command = f"EVENT DATA 0x{(data & 0x3FF):03X} = {(data & 0x3FF)} = {(data & 0x3FF):012b}b"
+                self.command = f"EVENT DATA 0x{(frame.data & 0x3FF):03X} = {(frame.data & 0x3FF)} = {(frame.data & 0x3FF):012b}b"
             return
 
         if (

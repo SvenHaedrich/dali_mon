@@ -1,4 +1,5 @@
 from bitstring import BitArray
+from dali_interface import DaliFrame
 
 # bit position translation
 #
@@ -90,9 +91,9 @@ class ForwardFrame32Bit:
     def data(self) -> str:
         return f"{self.frame_data:08X}"
 
-    def __init__(self, data: int) -> None:
-        self.frame_data = data
-        self.frame_bits = BitArray(uint=data, length=ForwardFrame32Bit.LENGTH)
+    def __init__(self, frame: DaliFrame) -> None:
+        self.frame_data = frame.data
+        self.frame_bits = BitArray(uint=frame.data, length=ForwardFrame32Bit.LENGTH)
         if self.data_transfer_commands():
             return
         if self.build_address_string() and self.frame_bits[8:16].uint == 0xFB:

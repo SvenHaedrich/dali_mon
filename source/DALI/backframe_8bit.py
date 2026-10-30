@@ -1,3 +1,6 @@
+from dali_interface import DaliFrame
+
+
 class Backframe8Bit:
     LENGTH = 8
 
@@ -10,5 +13,5 @@ class Backframe8Bit:
     def data(self) -> str:
         return f"{self.frame_data:02X}"
 
-    def __init__(self, data: int) -> None:
-        self.frame_data = data
+    def __init__(self, frame: DaliFrame) -> None:
+        self.frame_data = frame.data

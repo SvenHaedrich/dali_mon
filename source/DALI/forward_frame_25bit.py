@@ -1,3 +1,6 @@
+from dali_interface import DaliFrame
+
+
 class DeviceClass:
     SENSOR = 4
     INPUT = 5
@@ -182,11 +185,12 @@ class ForwardFrame25Bit:
     def data(self) -> str:
         return f"{self.frame_data:07X}"
 
-    def __init__(self, data: int) -> None:
-        self.frame_data = data
-        class_byte = (data >> 17) & 0xF
-        address_byte = (data >> 9) & 0xFF
-        opcode_byte = data & 0xFF
+    def __init__(self, frame: DaliFrame) -> None:
+        self.frame_data = frame.data
+        # the getters of DaliFrame are for 16 and 24 bit frames only
+        class_byte = (frame.data >> 17) & 0xF
+        address_byte = (frame.data >> 9) & 0xFF
+        opcode_byte = frame.data & 0xFF
 
         # ---- special broadcast commands
         if address_byte == 0xA1:

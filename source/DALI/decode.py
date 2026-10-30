@@ -8,9 +8,9 @@ from .forward_frame_32bit import ForwardFrame32Bit
 
 
 class UndefinedFrame:
-    def __init__(self, data: int, length: int) -> None:
-        self.data_frame = data
-        self.length = length
+    def __init__(self, frame: DaliFrame) -> None:
+        self.data_frame = frame.data
+        self.length = frame.length
 
     def adr(self) -> str:
         return ""
@@ -31,22 +31,21 @@ class Decode:
         # command accepted by control gear, other frames don't end it
         self.next_device_type = device_type
         if frame.length == Backframe8Bit.LENGTH:
-            self.dali_frame = Backframe8Bit(frame.data)
+            self.dali_frame = Backframe8Bit(frame)
         elif frame.length == ForwardFrame16Bit.LENGTH:
-            self.dali_frame = ForwardFrame16Bit(frame.data, device_type)
-            address_byte = (frame.data >> 8) & 0xFF
-            if address_byte == 0xC1:
-                self.next_device_type = frame.data & 0xFF
+            self.dali_frame = ForwardFrame16Bit(frame, device_type)
+            if frame.address_byte == 0xC1:
+                self.next_device_type = frame.opcode_byte
             else:
                 self.next_device_type = DeviceType.NONE
         elif frame.length == ForwardFrame24Bit.LENGTH:
-            self.dali_frame = ForwardFrame24Bit(frame.data)
+            self.dali_frame = ForwardFrame24Bit(frame)
         elif frame.length == ForwardFrame25Bit.LENGTH:
-            self.dali_frame = ForwardFrame25Bit(frame.data)
+            self.dali_frame = ForwardFrame25Bit(frame)
         elif frame.length == ForwardFrame32Bit.LENGTH:
-            self.dali_frame = ForwardFrame32Bit(frame.data)
+            self.dali_frame = ForwardFrame32Bit(frame)
         else:
-            self.dali_frame = UndefinedFrame(frame.data, frame.length)
+            self.dali_frame = UndefinedFrame(frame)
 
     def get_next_device_type(self) -> int:
         return self.next_device_type
