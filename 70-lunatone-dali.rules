@@ -1,0 +1,19 @@
+# Lunatone DALI USB udev rules
+#
+# Instructions:
+# Copy this file to the udev rules, reload the rules and apply them to a connected adapter
+#    sudo cp 70-lunatone-dali.rules /etc/udev/rules.d/
+#    sudo udevadm control --reload-rules
+#    sudo udevadm trigger --attr-match=idVendor=17b5
+#
+# TAG+="uaccess" grants access to the user logged in locally at the computer,
+# no group membership and no new login are needed. The file name must sort
+# before 73-seat-late.rules, which evaluates the tag.
+#
+# uaccess does not grant access to users logged in remotely (e.g. via ssh).
+# For them, replace TAG+="uaccess" by GROUP="plugdev", MODE="0660" and add
+# the users to the plugdev group:
+#    sudo usermod -a -G plugdev {user}
+
+# Lunatone DALI USB
+SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTRS{idVendor}=="17b5", ATTRS{idProduct}=="0020", TAG+="uaccess"
