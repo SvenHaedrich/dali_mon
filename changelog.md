@@ -6,6 +6,7 @@
 - Static type checking with `pyright`, strict for the program and standard for the tests, like `dali-interface`
 - `source/tests/run_lint.sh` checks formatting, lint and types
 - Every pull request runs `markdownlint`, `run_lint.sh` and the tests without hardware on GitHub
+- The exit code of `run_mon.sh` and `run_hid.sh` is the result of the tests, a failing setup stops them
 
 ## Version 1.8.0
 
