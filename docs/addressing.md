@@ -4,6 +4,7 @@
 
 For control gear addressing check IEC 62386-102 7.2.1 \
 For control device addressing check IEC 62386-103 7.2.1
+
 | Description                          | Representation |
 |--------------------------------------|----------------|
 | Control gear short address           | G*s*           |
@@ -18,6 +19,7 @@ For control device addressing check IEC 62386-103 7.2.1
 ## Event Schemes
 
 See also IEC 62386-103:2022 9.7.3
+
 | eventScheme | Description                                                                      | Representation |
 |-------------|----------------------------------------------------------------------------------|----------------|
 | 0 (default) | Instance addressing, using instance type *t* and number *i*.                     | T*t*, I*i*     |
@@ -29,6 +31,7 @@ See also IEC 62386-103:2022 9.7.3
 ## Instance Types
 
 See also IEC 62386-103:2022 Table 4
+
 | instance type | IEC 62386 | Description                                           |
 |---------------|-----------|-------------------------------------------------------|
 | 0             | 103       | Generic devices that do not implement a specific type |
@@ -40,6 +43,7 @@ See also IEC 62386-103:2022 Table 4
 ## Addressing Modes
 
 See also IEC 62386-103:2022 Table 2
+
 | Addressing                          | Representation |
 |-------------------------------------|----------------|
 | Instance Number                     | I*n*           |

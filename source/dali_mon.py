@@ -81,8 +81,6 @@ def exit_with_error(message: str) -> None:
 
 
 def open_connection(open_interface, name: str) -> DaliInterface:
-    # SerialException and USBError are OSErrors, a missing libusb
-    # raises NoBackendError, a ValueError
     try:
         return open_interface()
     except (OSError, ValueError) as error:
@@ -158,8 +156,6 @@ def process_tty_line(line: str, transparent: bool, absolute_time: bool) -> None:
 
 
 def main_tty(transparent: bool, absolute_time: bool) -> None:
-    # A serial device sends new lines as long as it is connected. An empty read
-    # (e.g. Ctrl-D in a terminal) is no end of the input, only a hang-up is.
     logger.debug("read from tty device")
     stdin = sys.stdin.fileno()
     poller = select.poll()
@@ -242,10 +238,8 @@ def dali_mon(hid, debug, echo, absolute, serial_port, on, off):
             hid = False
     if on and off:
         raise click.UsageError("--on and --off exclude each other.")
-    # only the USB converters have a power supply to switch
     if (on or off) and not hid:
         raise click.UsageError(f"{'--on' if on else '--off'} needs --hid.")
-    # the USB converters deliver no text lines that could be echoed
     if echo and hid:
         raise click.UsageError("--echo needs stdin or --serial-port, not --hid.")
 
@@ -272,5 +266,4 @@ def dali_mon(hid, debug, echo, absolute, serial_port, on, off):
 
 
 if __name__ == "__main__":
-    # the program is called dali_mon, not after this file
     dali_mon(prog_name="dali_mon")
