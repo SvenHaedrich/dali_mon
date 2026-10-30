@@ -10,6 +10,7 @@
 - All decoders take a `DaliFrame`, the decoders for 16 and 24 bit frames use its getters `address_byte`, `instance_byte` and `opcode_byte`
 - Device types, eDALI device classes and the address and event types of 24 bit frames are `IntEnum`s with `@unique`
 - The decoders for 24 and 32 bit frames use byte and bit operations instead of `bitstring`, the dependency is removed
+- Fix the command names `QUERY CATCHING`, `SET REPORT TIMER (DTR0) - TYPE 303` and `CANCEL HOLD TIMER - TYPE 303` of IEC 62386-303
 
 ## Version 1.8.0
 
