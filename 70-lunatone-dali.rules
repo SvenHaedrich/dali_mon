@@ -1,7 +1,9 @@
 # Lunatone DALI USB udev rules
 #
 # Instructions:
-# Copy this file to the udev rules, reload the rules and apply them to a connected adapter
+# Remove the rule of earlier versions (it grants access to everyone), copy this file
+# to the udev rules, reload the rules and apply them to a connected adapter
+#    sudo rm -f /etc/udev/rules.d/99-lunatone-dali.rules
 #    sudo cp 70-lunatone-dali.rules /etc/udev/rules.d/
 #    sudo udevadm control --reload-rules
 #    sudo udevadm trigger --attr-match=idVendor=17b5

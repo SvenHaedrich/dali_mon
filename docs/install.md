@@ -9,7 +9,9 @@ The DALI interfaces are accessed through the python package [dali-interface](htt
 ## HID-USB Support
 
 For the Lunatone USB adapter you need to copy the file `70-lunatone-dali.rules` into the `udev` folder, reload the `udev` rules and apply them to a connected adapter.
+Remove the rule `99-lunatone-dali.rules` of earlier versions, it grants read and write access to everyone.
 
+    sudo rm -f /etc/udev/rules.d/99-lunatone-dali.rules
     sudo cp 70-lunatone-dali.rules /etc/udev/rules.d/
     sudo udevadm control --reload-rules
     sudo udevadm trigger --attr-match=idVendor=17b5
