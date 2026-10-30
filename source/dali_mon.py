@@ -45,7 +45,7 @@ def print_command(
 ) -> None:
     print_local_time(absolute_time)
     cprint(f"{timestamp:.03f} | {delta_s:8.03f} | {data:>8} | ", color="green", end="")
-    cprint(f"{address:<20} {command}", color="white", end="")
+    cprint(f"{address:<22} {command}", color="white", end="")
     cprint("")
 
 

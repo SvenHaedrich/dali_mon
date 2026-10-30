@@ -234,7 +234,25 @@ def run_thru_instance_addressing(basic_data, basic_addressing, target_cmd):
         build_24bit_frame_and_test(test_data, target_adr, target_cmd)
 
 
-# TODO add tests for broadcast
+# refer to iec62386 103 Table 2: broadcast instance bytes, separated from
+# the device address by a comma like the other instance addresses
+@pytest.mark.parametrize(
+    "instance_byte,target_instance",
+    [
+        (0xFF, "BC INST"),
+        (0xFD, "BC FEAT INST"),
+        (0xF9, "BC FEAT"),
+        (0xFC, "FEAT DEV"),
+    ],
+)
+def test_instance_broadcast_addressing(instance_byte, target_instance):
+    devices = [(0x01 + (short << 1), f"D{short:02}") for short in range(0x40)]
+    devices += [(0x81 + (group << 1), f"DG{group:02}") for group in range(0x20)]
+    devices += [(0xFF, "BC DEV"), (0xFD, "BC DEV UN")]
+    for address_byte, target_device in devices:
+        test_data = (address_byte << 16) + (instance_byte << 8)
+        target_adr = f"{target_device},{target_instance}"
+        build_24bit_frame_and_test(test_data, target_adr, "")
 
 
 @pytest.mark.parametrize(

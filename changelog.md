@@ -16,6 +16,8 @@
 - Wrong command line parameters end `dali_mon` with exit code 2: `--hid` together with `--serial-port`,
   `--on` together with `--off`, `--on` or `--off` without `--hid`, and a serial port that does not exist
 - `power control not supported` ends `dali_mon` with exit code 1
+- 24 bit frames: broadcast instance addresses are separated by a comma (e.g. `BC DEV,BC INST`),
+  the address column is 22 characters wide to fit the longest address
 
 ## Version 1.7.0
 

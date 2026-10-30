@@ -321,13 +321,13 @@ class ForwardFrame24Bit:
             type = self.frame_bits[11:16].uint
             address_string += f",FT{type:02}"
         elif instance_type == InstanceAddressType.FEATURE_BROADCAST:
-            address_string += "BC FEAT"
+            address_string += ",BC FEAT"
         elif instance_type == InstanceAddressType.FEATURE_ON_INSTANCE_BROADCAST:
-            address_string += "BC FEAT INST"
+            address_string += ",BC FEAT INST"
         elif instance_type == InstanceAddressType.INSTANCE_BROADCAST:
-            address_string += "BC INST"
+            address_string += ",BC INST"
         elif instance_type == InstanceAddressType.FEATURE_ON_DEVICE:
-            address_string += "FEAT DEV"
+            address_string += ",FEAT DEV"
         if (
             instance_type == InstanceAddressType.RESERVED
             or address_type == DeviceAddressType.RESERVED

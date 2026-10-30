@@ -192,11 +192,11 @@ def test_sample_file():
     assert result.exit_code == 0
     assert result.stderr == ""
     assert output_lines(result) == [
-        "0.001 |    0.000 |     FF06 | BC GEAR              RECALL MIN LEVEL",
-        "0.002 |    0.001 |     FF05 | BC GEAR              RECALL MAX LEVEL",
-        "0.003 |    0.001 |     0102 | G00                  DOWN",
-        "0.004 |    0.001 |     0102 | G00                  DOWN",
-        "0.005 |    0.001 |     0100 | G00                  OFF",
+        "0.001 |    0.000 |     FF06 | BC GEAR                RECALL MIN LEVEL",
+        "0.002 |    0.001 |     FF05 | BC GEAR                RECALL MAX LEVEL",
+        "0.003 |    0.001 |     0102 | G00                    DOWN",
+        "0.004 |    0.001 |     0102 | G00                    DOWN",
+        "0.005 |    0.001 |     0100 | G00                    OFF",
         "0.006 |    0.001 | ERROR: SYSTEM FAILURE",
         "0.007 |    0.001 | SYSTEM RECOVER",
     ]
@@ -205,8 +205,8 @@ def test_sample_file():
 def test_delta_time():
     result = run_cli([], input="{000003E8:10 FF06}\n{00000BB8:10 FF05}\n")
     assert output_lines(result) == [
-        "1.000 |    0.000 |     FF06 | BC GEAR              RECALL MIN LEVEL",
-        "3.000 |    2.000 |     FF05 | BC GEAR              RECALL MAX LEVEL",
+        "1.000 |    0.000 |     FF06 | BC GEAR                RECALL MIN LEVEL",
+        "3.000 |    2.000 |     FF05 | BC GEAR                RECALL MAX LEVEL",
     ]
 
 
@@ -214,7 +214,7 @@ def test_lines_without_dali_information_are_ignored():
     text = "*** Booting Zephyr OS ***\n\n{00000001:10 FF06}\nno frame here\n"
     result = run_cli([], input=text)
     assert output_lines(result) == [
-        "0.001 |    0.000 |     FF06 | BC GEAR              RECALL MIN LEVEL",
+        "0.001 |    0.000 |     FF06 | BC GEAR                RECALL MIN LEVEL",
     ]
 
 
@@ -224,7 +224,7 @@ def test_echo():
     assert output_lines(result) == [
         "*** Booting Zephyr OS ***",
         "{00000001:10 FF06}",
-        "0.001 |    0.000 |     FF06 | BC GEAR              RECALL MIN LEVEL",
+        "0.001 |    0.000 |     FF06 | BC GEAR                RECALL MIN LEVEL",
     ]
 
 
@@ -246,8 +246,8 @@ def test_hid(usb):
     # Ctrl-C is the expected end of a connection
     assert result.exit_code == 130
     assert stdout_lines(result) == [
-        "1.000 |    0.000 |     FF06 | BC GEAR              RECALL MIN LEVEL",
-        "1.250 |    0.250 |       12 |                      DATA 0x12 =  18 = 00010010b",
+        "1.000 |    0.000 |     FF06 | BC GEAR                RECALL MIN LEVEL",
+        "1.250 |    0.250 |       12 |                        DATA 0x12 =  18 = 00010010b",
     ]
     assert result.stderr == "\rinterrupted\n"
     assert usb.closed
@@ -286,7 +286,7 @@ def test_serial_port(serial, port, option):
     assert serial.port == port
     assert result.exit_code == 130
     assert stdout_lines(result) == [
-        "0.001 |    0.000 |     FF06 | BC GEAR              RECALL MIN LEVEL",
+        "0.001 |    0.000 |     FF06 | BC GEAR                RECALL MIN LEVEL",
     ]
     assert result.stderr == "\rinterrupted\n"
     assert serial.closed
@@ -329,7 +329,7 @@ def test_connection_lost(usb):
     result = run_cli(["--hid"])
     assert result.exit_code == 1
     assert stdout_lines(result) == [
-        "1.000 |    0.000 |     FF06 | BC GEAR              RECALL MIN LEVEL",
+        "1.000 |    0.000 |     FF06 | BC GEAR                RECALL MIN LEVEL",
     ]
     assert result.stderr == "\rconnection lost: Input/Output Error\n"
     assert usb.closed
@@ -352,8 +352,8 @@ def test_connection_waits_with_timeout(usb):
     usb.frames = [frame(1.0, 16, 0xFF06), no_frame, no_frame, frame(1.25, 8, 0x12)]
     result = run_cli(["--hid"])
     assert stdout_lines(result) == [
-        "1.000 |    0.000 |     FF06 | BC GEAR              RECALL MIN LEVEL",
-        "1.250 |    0.250 |       12 |                      DATA 0x12 =  18 = 00010010b",
+        "1.000 |    0.000 |     FF06 | BC GEAR                RECALL MIN LEVEL",
+        "1.250 |    0.250 |       12 |                        DATA 0x12 =  18 = 00010010b",
     ]
     assert None not in usb.timeouts
 
@@ -414,7 +414,7 @@ def test_terminal_hang_up():
     stdout, stderr = finish(process)
     assert process.returncode == 1
     assert stdout.split("\n")[:-1] == [
-        "0.001 |    0.000 |     FF06 | BC GEAR              RECALL MIN LEVEL",
+        "0.001 |    0.000 |     FF06 | BC GEAR                RECALL MIN LEVEL",
     ]
     assert stderr == "\rconnection lost: device hung up\n"
 
@@ -432,7 +432,7 @@ def test_terminal_ends_with_ctrl_c_only():
         os.close(controller)
     assert process.returncode == 130
     assert stdout.split("\n")[:-1] == [
-        "0.001 |    0.000 |     FF06 | BC GEAR              RECALL MIN LEVEL",
+        "0.001 |    0.000 |     FF06 | BC GEAR                RECALL MIN LEVEL",
     ]
     assert stderr == "\rinterrupted\n"
 
