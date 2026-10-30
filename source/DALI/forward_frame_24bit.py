@@ -287,10 +287,11 @@ class ForwardFrame24Bit:
         self, address_type: int, instance_type: int
     ) -> str:
         # todo make address_type instance_type a class_member
+        address_string = ""
         if address_type == DeviceAddressType.SHORT_ADDRESS:
             short_address = self.frame_bits[1:7].uint
             address_string = f"D{short_address:02}"
-        elif address_type == DeviceAddressType().GROUP_ADDRESS:
+        elif address_type == DeviceAddressType.GROUP_ADDRESS:
             group_address = self.frame_bits[2:7].uint
             address_string = f"DG{group_address:02}"
         elif address_type == DeviceAddressType.BROADCAST_UNADDR:

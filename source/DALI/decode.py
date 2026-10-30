@@ -48,5 +48,5 @@ class Decode:
         else:
             self.dali_frame = UndefinedFrame(frame.data, frame.length)
 
-    def get_next_device_type(self) -> DeviceType:
+    def get_next_device_type(self) -> int:
         return self.next_device_type

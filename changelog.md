@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Remove the runtime type checking with `typeguard`, the dependency is removed
+- Static type checking with `pyright`, strict for the program and standard for the tests, like `dali-interface`
 
 ## Version 1.8.0
 

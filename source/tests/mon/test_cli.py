@@ -53,6 +53,9 @@ class FakeConnection:
         self.power_calls = []
         self.timeouts = []
         self.closed = False
+        # set by the fixtures
+        self.opened = False
+        self.port: str | None = None
 
     def get(self, timeout=None):
         self.timeouts.append(timeout)

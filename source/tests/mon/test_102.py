@@ -257,10 +257,12 @@ def decode_sequence(frames: list[DaliFrame]) -> str:
     # pass the device type from frame to frame like dali_mon does,
     # return the command of the last frame
     device_type = DeviceType.NONE
+    command = ""
     for frame in frames:
         decoding = Decode(frame, device_type)
         device_type = decoding.get_next_device_type()
-    return decoding.get_strings()[2]
+        command = decoding.get_strings()[2]
+    return command
 
 
 # refer to iec62386 102 11.2: ENABLE DEVICE TYPE stays active until the

@@ -86,7 +86,7 @@ class ForwardFrame25Bit:
             0xFB: "QUERY CONFIGURATION BYTE",
         }
         if opcode in code_dictionary:
-            return code_dictionary.get(opcode)
+            return code_dictionary[opcode]
         else:
             return f"--- CODE 0x{opcode:02X} = {opcode} UNKNOWN eDALI SENSOR COMMAND"
 
@@ -161,11 +161,11 @@ class ForwardFrame25Bit:
             0xFB: "QUERY CONFIGURATION BYTE",
         }
         if opcode in code_dictionary:
-            return code_dictionary.get(opcode)
+            return code_dictionary[opcode]
         else:
             return f"--- CODE 0x{opcode:02X} = {opcode} UNKNOWN eDALI INPUT COMMAND"
 
-    def e_DALI_command(self, device_class: DeviceClass, opcode: int) -> str:
+    def e_DALI_command(self, device_class: int, opcode: int) -> str:
         if device_class == DeviceClass.SENSOR:
             return self.e_DALI_sensor_command(opcode)
         elif device_class == DeviceClass.INPUT:

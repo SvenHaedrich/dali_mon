@@ -19,6 +19,10 @@ test = [
     "pytest",
     "pytest-cov",
 ]
+lint = [
+    "ruff",
+    "pyright",
+]
 
 [project.urls]
 repository = "https://github.com/SvenHaedrich/dali_mon"
@@ -36,6 +40,16 @@ allow-direct-references = true
 # The scripts run from the source tree, the project is installed for its dependencies only.
 [tool.hatch.build.targets.wheel]
 bypass-selection = true
+
+[tool.pyright]
+include = ["source"]
+exclude = ["**/.venv", "**/__pycache__"]
+# the modules of the project (DALI, dali_mon) are in source/
+extraPaths = ["source"]
+pythonVersion = "3.11"
+# strict for the program like dali-interface, standard for the tests
+typeCheckingMode = "standard"
+strict = ["source/dali_mon.py", "source/DALI"]
 
 [tool.ruff]
 # the modules of the project (DALI, dali_mon) are in source/

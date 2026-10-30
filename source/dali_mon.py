@@ -6,8 +6,11 @@ import os
 import select
 import sys
 import tomllib
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from typing import NoReturn
 
 import click
 from click.core import ParameterSource
@@ -37,7 +40,7 @@ def print_local_time(enabled: bool) -> None:
 
 
 def print_command(
-    absolute_time: float,
+    absolute_time: bool,
     timestamp: float,
     delta_s: float,
     data: str,
@@ -51,36 +54,49 @@ def print_command(
 
 
 def print_error(
-    absolute_time: float, timestamp: float, delta_s: float, message: str
+    absolute_time: bool, timestamp: float, delta_s: float, message: str
 ) -> None:
     print_local_time(absolute_time)
     cprint(f"{timestamp:.03f} | {delta_s:8.03f} | ", color="green", end="")
     cprint(f"{message}", color="red")
 
 
-def process_line(frame: DaliFrame | None, absolute_time: float) -> None:
+@dataclass
+class DecoderState:
+    """What process_line keeps from one frame to the next."""
+
+    last_timestamp: float = 0
+    active_device_type: int = DeviceType.NONE
+
+
+state = DecoderState()
+
+
+def process_line(frame: DaliFrame | None, absolute_time: bool) -> None:
     if frame is None:
         return
-    if process_line.last_timestamp != 0:
-        delta_s = frame.timestamp - process_line.last_timestamp
+    if state.last_timestamp != 0:
+        delta_s = frame.timestamp - state.last_timestamp
     else:
         delta_s = 0
     if frame.status in (DaliStatus.OK, DaliStatus.FRAME, DaliStatus.LOOPBACK):
-        decoding = Decode(frame, process_line.active_device_type)
+        decoding = Decode(frame, state.active_device_type)
         data, address, command = decoding.get_strings()
         print_command(absolute_time, frame.timestamp, delta_s, data, address, command)
-        process_line.active_device_type = decoding.get_next_device_type()
+        state.active_device_type = decoding.get_next_device_type()
     else:
         print_error(absolute_time, frame.timestamp, delta_s, frame.message)
-    process_line.last_timestamp = frame.timestamp
+    state.last_timestamp = frame.timestamp
 
 
-def exit_with_error(message: str) -> None:
+def exit_with_error(message: str) -> NoReturn:
     cprint(f"\r{message}", color="red", file=sys.stderr)
     sys.exit(1)
 
 
-def open_connection(open_interface, name: str) -> DaliInterface:
+def open_connection(
+    open_interface: Callable[[], DaliInterface], name: str
+) -> DaliInterface:
     try:
         return open_interface()
     except (OSError, ValueError) as error:
@@ -113,10 +129,13 @@ class DaliSerialEcho(DaliSerial):
         frame = self.parse(line)
         # the receive thread drops timeout frames, so a timeout line travels
         # as a frame that is only echoed
-        is_dali = frame is not None and frame.status != DaliStatus.TIMEOUT
-        echo = EchoFrame(*frame) if is_dali else EchoFrame(status=DaliStatus.OK)
+        if frame is not None and frame.status != DaliStatus.TIMEOUT:
+            echo = EchoFrame(**frame._asdict())
+            echo.is_dali = True
+        else:
+            echo = EchoFrame(status=DaliStatus.OK)
+            echo.is_dali = False
         echo.line = line
-        echo.is_dali = is_dali
         return echo
 
 
@@ -218,7 +237,15 @@ def main_file(transparent: bool, absolute_time: bool) -> None:
     show_envvar=True,
     type=click.Path(dir_okay=False),
 )
-def dali_mon(hid, debug, echo, absolute, serial_port, on, off):
+def dali_mon(
+    hid: bool,
+    debug: bool,
+    echo: bool,
+    absolute: bool,
+    serial_port: str | None,
+    on: bool,
+    off: bool,
+) -> None:
     """
     Monitor for DALI commands.
     sevenlab engineering 2026
@@ -251,8 +278,8 @@ def dali_mon(hid, debug, echo, absolute, serial_port, on, off):
         parameter = next(p for p in context.command.params if p.name == "serial_port")
         click.Path(exists=True, dir_okay=False).convert(serial_port, parameter, context)
 
-    process_line.last_timestamp = 0
-    process_line.active_device_type = DeviceType.NONE
+    state.last_timestamp = 0
+    state.active_device_type = DeviceType.NONE
     try:
         if hid:
             connection = open_connection(DaliUsb, "DALI USB converter")
