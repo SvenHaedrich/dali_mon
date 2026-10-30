@@ -1,7 +1,10 @@
+from enum import IntEnum, unique
+
 from dali_interface import DaliFrame
 
 
-class DeviceClass:
+@unique
+class DeviceClass(IntEnum):
     SENSOR = 4
     INPUT = 5
     SEQUENCER = 6

@@ -1,7 +1,10 @@
+from enum import IntEnum, unique
+
 from dali_interface import DaliFrame
 
 
-class DeviceType:
+@unique
+class DeviceType(IntEnum):
     NONE = 0
     LED = 6
     SWITCH = 7
