@@ -2,8 +2,8 @@
 
 ## Short Addresses
 
-For control gear addressing check IEC 62368-102 7.2.1 \
-For control device addressing check IEC 62368-103 7.2.1
+For control gear addressing check IEC 62386-102 7.2.1 \
+For control device addressing check IEC 62386-103 7.2.1
 | Description                          | Representation |
 |--------------------------------------|----------------|
 | Control gear short address           | G*s*           |

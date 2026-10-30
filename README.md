@@ -24,7 +24,7 @@ This script is based on the following standards
 * IEC 62386-301:2017 input devices - push buttons
 * IEC 62386-302:2017 input devices - absolute input devices
 * IEC 62386-303:2017 input devices - occupancy sensor
-* IEC 62386-304:3017 input devices - light sensor
+* IEC 62386-304:2017 input devices - light sensor
 
 ## Further Documents
 

@@ -183,7 +183,7 @@ class ForwardFrame24Bit:
             if instance_byte == 0x00:
                 return "TERMINATE"
             elif instance_byte == 0x01:
-                # IEC 62386-103:2022 Table 25 Device addressing with INITALISE
+                # IEC 62386-103:2022 Table 25 Device addressing with INITIALISE
                 if opcode_byte in range(0x40):
                     return f"INITIALISE (D{opcode_byte:02})"
                 if opcode_byte == 0x7F:

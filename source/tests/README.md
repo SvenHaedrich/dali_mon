@@ -3,7 +3,7 @@
 ## Description
 
 The tests cover the following aspects
-1. Correct translation of binary codes into command memonics
+1. Correct translation of binary codes into command mnemonics
 2. Correct function of the interfaces to the DALI bus
 
 ## Run 
@@ -20,4 +20,4 @@ To run the test for the USB HID device enter
     cd source/tests
     ./run_hid.sh
 
-Theses tests expect a HID device available at a USB port, also a serial connector. The two connetcors should have their respective DALI ports connected and a bus power supply should be connected as well.
+These tests expect a HID device available at a USB port, also a serial connector. The two connectors should have their respective DALI ports connected and a bus power supply should be connected as well.

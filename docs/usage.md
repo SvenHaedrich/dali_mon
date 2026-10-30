@@ -66,7 +66,7 @@ Alternatively, you can use the short form of the same parameter.
 
     ./dali_mon -s /dev/ttyUSB0
 
-Or, you can store the serial port into an environment variable and use the ususal approach to make this a permanent setting.
+Or, you can store the serial port into an environment variable and use the usual approach to make this a permanent setting.
 
     export DALI_SERIAL_PORT=/dev/ttyUSB0
     ./dali_mon

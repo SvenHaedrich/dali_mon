@@ -8,6 +8,8 @@
 - ENABLE DEVICE TYPE only changes the meaning of the application extended commands 0xE0 to 0xFF,
   and stays active until the next command for control gear
 - `--help` shows the description of `dali_mon` again
+- Fix typos in the output: `CONTINUOUS UP/DOWN`, `COLOUR TEMPERATURE TC STEP WARMER`, `QUERY PARAMETER`,
+  and the eDALI addresses (`BC UN` instead of `BC una`, single spaces)
 - Serial port, USB converter, and a serial device piped into `dali_mon` keep listening until `Ctrl-C`.
   A lost connection is reported with `connection lost` and exit code 1, instead of hanging or
   using 100 % CPU. A piped file ends at the end of the file with exit code 0.
