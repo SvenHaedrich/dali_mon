@@ -2,8 +2,10 @@
 
 import sys
 import logging
+import tomllib
 import click
 from datetime import datetime
+from pathlib import Path
 from termcolor import cprint
 
 from DALI.dali_interface.dali_interface import (
@@ -17,6 +19,10 @@ from DALI.forward_frame_16bit import DeviceType
 from DALI.decode import Decode
 
 logger = logging.getLogger(__name__)
+
+PYPROJECT = Path(__file__).resolve().parent.parent / "pyproject.toml"
+with PYPROJECT.open("rb") as pyproject:
+    VERSION = tomllib.load(pyproject)["project"]["version"]
 
 
 def print_local_time(enabled: bool) -> None:
@@ -112,7 +118,7 @@ def main_file(transparent: bool, absolute_time: bool) -> None:
 
 
 @click.command()
-@click.version_option("1.7.0")
+@click.version_option(VERSION)
 @click.option(
     "-l",
     "--hid",
