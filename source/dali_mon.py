@@ -111,9 +111,12 @@ class DaliSerialEcho(DaliSerial):
         if len(line) == 0:
             return None
         frame = self.parse(line)
-        echo = EchoFrame(*frame) if frame else EchoFrame(status=DaliStatus.OK)
+        # the receive thread drops timeout frames, so a timeout line travels
+        # as a frame that is only echoed
+        is_dali = frame is not None and frame.status != DaliStatus.TIMEOUT
+        echo = EchoFrame(*frame) if is_dali else EchoFrame(status=DaliStatus.OK)
         echo.line = line
-        echo.is_dali = frame is not None
+        echo.is_dali = is_dali
         return echo
 
 
@@ -213,7 +216,7 @@ def main_file(transparent: bool, absolute_time: bool) -> None:
     help="Serial port used for DALI communication.",
     envvar="DALI_SERIAL_PORT",
     show_envvar=True,
-    type=click.Path(exists=True, dir_okay=False),
+    type=click.Path(dir_okay=False),
 )
 def dali_mon(hid, debug, echo, absolute, serial_port, on, off):
     """
@@ -242,6 +245,11 @@ def dali_mon(hid, debug, echo, absolute, serial_port, on, off):
         raise click.UsageError(f"{'--on' if on else '--off'} needs --hid.")
     if echo and hid:
         raise click.UsageError("--echo needs stdin or --serial-port, not --hid.")
+    if serial_port:
+        # check the port only when it is used, --hid overrides DALI_SERIAL_PORT
+        context = click.get_current_context()
+        parameter = next(p for p in context.command.params if p.name == "serial_port")
+        click.Path(exists=True, dir_okay=False).convert(serial_port, parameter, context)
 
     process_line.last_timestamp = 0
     process_line.active_device_type = DeviceType.NONE

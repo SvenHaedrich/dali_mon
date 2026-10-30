@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 from dali_interface import DaliFrame, DaliSerial, DaliStatus
+from serial import SerialException
 from usb.core import NoBackendError, USBError
 
 import dali_mon
@@ -330,6 +331,51 @@ def test_serial_port_environment_variable(serial, port):
     assert "RECALL MIN LEVEL" in result.output
 
 
+class FakeSerialPort:
+    """Stands in for the pyserial port below the real DaliSerial: returns the
+    given lines, then reports a disconnected device."""
+
+    def __init__(self, lines):
+        self.lines = [line.encode() + b"\r\n" for line in lines]
+
+    def readline(self):
+        # like a real device the lines arrive after the start, dali-interface
+        # flushes the receive queue when it starts
+        time.sleep(0.1)
+        if self.lines:
+            return self.lines.pop(0)
+        # give dali_mon time to take the frames from the receive queue
+        time.sleep(1)
+        raise SerialException("device disconnected")
+
+    def set_low_latency_mode(self, enable):
+        pass
+
+    def write(self, data):
+        pass
+
+    def close(self):
+        pass
+
+
+# --echo shows every line of the serial port, also timeout lines that the
+# receive thread of dali-interface does not pass on as frames
+def test_serial_echo_keeps_timeout_lines(monkeypatch, port):
+    lines = ["{00000001:10 FF06}", "{00000002:81 0000}", "*** Booting Zephyr OS ***"]
+    monkeypatch.setattr(
+        "dali_interface.serial.serial.Serial", lambda **_: FakeSerialPort(lines)
+    )
+    result = run_cli(["--serial-port", port, "--echo"])
+    assert result.exit_code == 1
+    assert stdout_lines(result) == [
+        "{00000001:10 FF06}",
+        "0.001 |    0.000 |     FF06 | BC GEAR                RECALL MIN LEVEL",
+        "{00000002:81 0000}",
+        "*** Booting Zephyr OS ***",
+    ]
+    assert result.stderr.endswith("\rconnection lost: device disconnected\n")
+
+
 @pytest.mark.parametrize("option,power", [("--on", True), ("--off", False)])
 def test_power(usb, option, power):
     run_cli(["--hid", option])
@@ -531,6 +577,32 @@ def test_serial_port_does_not_exist(serial):
     result = run_cli(["--serial-port", "/dev/does-not-exist"])
     assert result.exit_code == 2
     assert "/dev/does-not-exist" in result.output
+    assert serial.port is None
+
+
+def test_serial_port_environment_variable_does_not_exist(serial):
+    result = run_cli([], env={"DALI_SERIAL_PORT": "/dev/does-not-exist"})
+    assert result.exit_code == 2
+    assert "/dev/does-not-exist" in result.output
+    assert serial.port is None
+
+
+def test_serial_port_not_readable(serial, port):
+    os.chmod(port, 0)
+    result = run_cli(["--serial-port", port])
+    assert result.exit_code == 2
+    assert port in result.output
+    assert serial.port is None
+
+
+# --hid on the command line overrides DALI_SERIAL_PORT, also when that port
+# does not exist (any more)
+def test_hid_overrides_missing_serial_port_environment_variable(usb, serial):
+    usb.frames = [frame(1.0, 16, 0xFF06)]
+    result = run_cli(["--hid"], env={"DALI_SERIAL_PORT": "/dev/does-not-exist"})
+    assert result.exit_code == 130
+    assert "RECALL MIN LEVEL" in result.stdout
+    assert usb.opened
     assert serial.port is None
 
 
