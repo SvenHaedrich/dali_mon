@@ -8,12 +8,11 @@ requires-python = ">=3.11"
 license = "MIT"
 
 dependencies = [
-    "pyusb",
+    "dali-interface @ git+https://github.com/sevenlab-de/dali-interface@v2.0.0",
     "termcolor",
     "click",
     "bitstring",
     "typeguard",
-    "pyserial",
 ]
 
 [dependency-groups]
@@ -30,6 +29,10 @@ changelog = "https://github.com/SvenHaedrich/dali_mon/blob/main/changelog.md"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+# dali-interface is not on PyPI, it is installed from its GitHub release tag.
+[tool.hatch.metadata]
+allow-direct-references = true
 
 # The scripts run from the source tree, the project is installed for its dependencies only.
 [tool.hatch.build.targets.wheel]

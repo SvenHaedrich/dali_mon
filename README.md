@@ -7,7 +7,10 @@ This script converts DALI codes into human readable messages. DALI is the digita
 The source for the DALI code aka frames can be one of
 
 * stdin
+* serial port
 * HID class DALI / USB converter (e.g. [Lunatone](https://www.lunatone.com/produkt/dali-usb/))
+
+Serial ports and USB converters are accessed through the python package [dali-interface](https://github.com/sevenlab-de/dali-interface).
 
 This script is based on the following standards
 

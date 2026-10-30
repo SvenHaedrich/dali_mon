@@ -1,4 +1,4 @@
-from DALI.dali_interface.dali_interface import DaliStatus, DaliSerial
+from dali_interface import DaliStatus, DaliSerial
 
 
 def test_raw_from_string():

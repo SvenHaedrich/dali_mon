@@ -8,7 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from termcolor import cprint
 
-from DALI.dali_interface.dali_interface import (
+from dali_interface import (
     DaliInterface,
     DaliFrame,
     DaliSerial,
@@ -88,6 +88,9 @@ def main_connection(
             process_line(connection.get(), absolute_time)
     except KeyboardInterrupt:
         print("\rinterrupted")
+        connection.close()
+    except RuntimeError as error:
+        cprint(f"\rconnection lost: {error.__cause__ or error}", color="red")
         connection.close()
 
 

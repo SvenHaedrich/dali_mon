@@ -2,7 +2,11 @@
 
     git clone https://github.com/SvenHaedrich/dali_mon.git
     cd dali_mon
-    git submodule update --init
+
+The script `dali_mon` creates a virtual environment `.venv` on its first run and installs
+the dependencies listed in `pyproject.toml`. The DALI interfaces are accessed through the
+python package [dali-interface](https://github.com/sevenlab-de/dali-interface), which is
+installed from its GitHub release tag, so the first run needs access to GitHub.
 
 ## HID-USB Support
 

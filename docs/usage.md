@@ -85,7 +85,7 @@ To disable the power supply use:
 ### Output Columns
   
 * if enabled: absolute timestamp (from host machine)
-* timestamp in seconds (from serial message, or host machine for USB HID interface)
+* timestamp in seconds (from serial message, or monotonic clock of the host machine for USB HID interface)
 * delta time to previous command
 * hex data received
 * DALI command translation
