@@ -4,6 +4,8 @@
 
 - Remove the runtime type checking with `typeguard`, the dependency is removed
 - Static type checking with `pyright`, strict for the program and standard for the tests, like `dali-interface`
+- `source/tests/run_lint.sh` checks formatting, lint and types
+- Every pull request runs `markdownlint`, `run_lint.sh` and the tests without hardware on GitHub
 
 ## Version 1.8.0
 
