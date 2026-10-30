@@ -8,6 +8,7 @@
 - ENABLE DEVICE TYPE only changes the meaning of the application extended commands 0xE0 to 0xFF,
   and stays active until the next command for control gear
 - `--help` shows the description of `dali_mon` again
+- `--version` and the usage line show the program name `dali_mon` instead of `dali_mon.py`
 - Fix typos in the output: `CONTINUOUS UP/DOWN`, `COLOUR TEMPERATURE TC STEP WARMER`, `QUERY PARAMETER`,
   and the eDALI addresses (`BC UN` instead of `BC una`, single spaces)
 - The udev rule is `70-lunatone-dali.rules` and grants access with `TAG+="uaccess"` instead of `MODE="0666"`

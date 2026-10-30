@@ -195,8 +195,8 @@ def main_file(transparent: bool, absolute_time: bool) -> None:
             process_line(frame, absolute_time)
 
 
-@click.command()
-@click.version_option(VERSION)
+@click.command(name="dali_mon")
+@click.version_option(VERSION, prog_name="dali_mon")
 @click.option(
     "-l",
     "--hid",
@@ -271,4 +271,5 @@ def dali_mon(hid, debug, echo, absolute, serial_port, on, off):
 
 
 if __name__ == "__main__":
-    dali_mon()
+    # the program is called dali_mon, not after this file
+    dali_mon(prog_name="dali_mon")

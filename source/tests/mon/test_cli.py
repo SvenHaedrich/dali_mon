@@ -118,7 +118,7 @@ def frame(timestamp: float, length: int, data: int) -> DaliFrame:
 def test_version():
     result = run_cli(["--version"])
     assert result.exit_code == 0
-    assert project_version() in result.output
+    assert result.output == f"dali_mon, version {project_version()}\n"
 
 
 @pytest.mark.parametrize(
@@ -181,7 +181,7 @@ def test_wrapper_version():
         timeout=300,
     )
     assert result.returncode == 0
-    assert project_version() in result.stdout
+    assert result.stdout == f"dali_mon, version {project_version()}\n"
 
 
 # the wrapper works from any directory and uses the environment next to it
@@ -625,3 +625,5 @@ def test_wrapper_returns_exit_code():
     )
     assert result.returncode == 2
     assert "No such option" in result.stderr
+    # the program is called dali_mon, also in the usage line
+    assert result.stderr.startswith("Usage: dali_mon [OPTIONS]")
