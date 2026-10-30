@@ -3,7 +3,7 @@ import pytest
 from dali_interface import DaliFrame
 from DALI.backframe_8bit import Backframe8Bit
 from DALI.forward_frame_16bit import ForwardFrame16Bit
-from DALI.decode import Decode
+from DALI.decode import Decode, DeviceType
 
 
 def build_16bit_frame_and_test(
@@ -233,3 +233,72 @@ def test_initialise_short_address():
 def test_initialise_special_cases(test_data, target_cmd):
     target_adr = ""
     build_16bit_frame_and_test(test_data, target_adr, target_cmd)
+
+
+# refer to iec62386 102 11.2: ENABLE DEVICE TYPE selects the meaning of
+# the application extended commands 0xE0 to 0xFF only, the standard
+# commands 0x00 to 0xDF keep their meaning
+@pytest.mark.parametrize(
+    "device_type", [DeviceType.LED, DeviceType.SWITCH, DeviceType.COLOUR]
+)
+def test_standard_command_after_enable_device_type(device_type):
+    enable_frame = DaliFrame(length=ForwardFrame16Bit.LENGTH, data=0xC100 + device_type)
+    active_device_type = Decode(enable_frame).get_next_device_type()
+    assert active_device_type == device_type
+    for opcode in range(0xE0):
+        test_frame = DaliFrame(length=ForwardFrame16Bit.LENGTH, data=0xFF00 + opcode)
+        _, _, target_cmd = Decode(test_frame).get_strings()
+        _, adr, cmd = Decode(test_frame, active_device_type).get_strings()
+        assert adr == "BC GEAR"
+        assert cmd == target_cmd, f"opcode 0x{opcode:02X}"
+
+
+def decode_sequence(frames: list[DaliFrame]) -> str:
+    # pass the device type from frame to frame like dali_mon does,
+    # return the command of the last frame
+    device_type = DeviceType.NONE
+    for frame in frames:
+        decoding = Decode(frame, device_type)
+        device_type = decoding.get_next_device_type()
+    return decoding.get_strings()[2]
+
+
+# refer to iec62386 102 11.2: ENABLE DEVICE TYPE stays active until the
+# next command accepted by control gear, frames that are not 102 forward
+# frames don't end it
+@pytest.mark.parametrize(
+    "device_type,target_cmd",
+    [
+        (DeviceType.LED, "REFERENCE SYSTEM POWER"),
+        (DeviceType.SWITCH, "REFERENCE SYSTEM POWER"),
+        (DeviceType.COLOUR, "SET TEMPORARY X-COORDINATE"),
+    ],
+)
+@pytest.mark.parametrize(
+    "length,data",
+    [
+        pytest.param(8, 0x12, id="backward frame"),
+        pytest.param(24, 0xFFFE00, id="103 command"),
+        pytest.param(24, 0x000000, id="103 event"),
+        pytest.param(32, 0xCB000000, id="105 command"),
+        pytest.param(25, 0x1FFFF00, id="eDALI frame"),
+        pytest.param(17, 0x1FF90, id="Helvar frame"),
+    ],
+)
+def test_enable_device_type_kept_by_other_frames(device_type, target_cmd, length, data):
+    enable_frame = DaliFrame(length=ForwardFrame16Bit.LENGTH, data=0xC100 + device_type)
+    other_frame = DaliFrame(length=length, data=data)
+    command_frame = DaliFrame(length=ForwardFrame16Bit.LENGTH, data=0xFFE0)
+    cmd = decode_sequence([enable_frame, other_frame, command_frame])
+    assert cmd == target_cmd
+
+
+@pytest.mark.parametrize(
+    "device_type", [DeviceType.LED, DeviceType.SWITCH, DeviceType.COLOUR]
+)
+def test_enable_device_type_ended_by_gear_command(device_type):
+    enable_frame = DaliFrame(length=ForwardFrame16Bit.LENGTH, data=0xC100 + device_type)
+    gear_frame = DaliFrame(length=ForwardFrame16Bit.LENGTH, data=0xFF90)
+    command_frame = DaliFrame(length=ForwardFrame16Bit.LENGTH, data=0xFFE0)
+    cmd = decode_sequence([enable_frame, gear_frame, command_frame])
+    assert cmd.startswith("--- CODE 0xE0 = 224 UNKNOWN CONTROL GEAR COMMAND")

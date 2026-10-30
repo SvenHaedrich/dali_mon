@@ -365,9 +365,10 @@ class ForwardFrame16Bit:
             self.address = "BC GEAR"
         if standard_command:
             self.command = self.gear_command(opcode_byte)
-            if device_type == DeviceType.COLOUR:
-                self.command = self.gear_colour_command(opcode_byte)
-            elif device_type == DeviceType.SWITCH:
-                self.command = self.gear_switch_command(opcode_byte)
-            elif device_type == DeviceType.LED:
-                self.command = self.gear_led_command(opcode_byte)
+            if opcode_byte >= 0xE0:
+                if device_type == DeviceType.COLOUR:
+                    self.command = self.gear_colour_command(opcode_byte)
+                elif device_type == DeviceType.SWITCH:
+                    self.command = self.gear_switch_command(opcode_byte)
+                elif device_type == DeviceType.LED:
+                    self.command = self.gear_led_command(opcode_byte)

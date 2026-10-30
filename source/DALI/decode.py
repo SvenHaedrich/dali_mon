@@ -28,7 +28,9 @@ class Decode:
         return self.dali_frame.data(), self.dali_frame.adr(), self.dali_frame.cmd()
 
     def __init__(self, frame: DaliFrame, device_type: int = DeviceType.NONE) -> None:
-        self.next_device_type = DeviceType.NONE
+        # iec 62386-102 11.2: ENABLE DEVICE TYPE stays active until the next
+        # command accepted by control gear, other frames don't end it
+        self.next_device_type = device_type
         if frame.length == Backframe8Bit.LENGTH:
             self.dali_frame = Backframe8Bit(frame.data)
         elif frame.length == ForwardFrame16Bit.LENGTH:
