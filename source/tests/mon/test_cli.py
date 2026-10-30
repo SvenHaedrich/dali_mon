@@ -302,11 +302,11 @@ def test_reference_options(options, reference):
 
 # a command without a reference keeps the columns, without spaces at the end
 def test_command_without_reference():
-    result = run_cli([], input="{00000001:10 FF22}\n")
+    result = run_cli([], input="{00000001:10 BD00}\n")
     assert stdout_lines(result) == [
         (
-            "0.001 |    0.000 |     FF22 | BC GEAR                "
-            "SAVE PERSISTENT VARIABLES (DEPRECATED)                      |                    |"
+            "0.001 |    0.000 |     BD00 |                        "
+            "PHYSICAL SELECTION  (DEPRECATED)                            |                    |"
         )
     ]
 

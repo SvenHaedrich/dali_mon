@@ -12,6 +12,7 @@
 - The decoders for 24 and 32 bit frames use byte and bit operations instead of `bitstring`, the dependency is removed
 - Each command shows the standard that defines it (e.g. `IEC 62386-102:2022`) and the clause, in columns with fixed width; `eDALI` for eDALI frames
 - `--no-standard`, `--no-clause` and `--no-reference` hide these columns
+- `SAVE PERSISTENT VARIABLES`, removed in the current editions, refers to IEC 62386-102:2014 and IEC 62386-103:2014
 - Fix the command names `QUERY CATCHING`, `SET REPORT TIMER (DTR0) - TYPE 303` and `CANCEL HOLD TIMER - TYPE 303` of IEC 62386-303
 
 ## Version 1.8.0

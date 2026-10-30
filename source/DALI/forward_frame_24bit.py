@@ -5,6 +5,7 @@ from dali_interface import DaliFrame
 
 from .reference import (
     IEC_62386_103,
+    IEC_62386_103_2014,
     IEC_62386_301,
     IEC_62386_302,
     IEC_62386_303,
@@ -111,7 +112,9 @@ class ForwardFrame24Bit:
             0x1E: Command("STOP QUIESCENT MODE", IEC_62386_103, "11.5.14"),
             0x1F: Command("ENABLE POWER CYCLE NOTIFICATION", IEC_62386_103, "11.5.15"),
             0x20: Command("DISABLE POWER CYCLE NOTIFICATION", IEC_62386_103, "11.5.16"),
-            0x21: Command("SAVE PERSISTENT VARIABLES (DEPRECATED)"),
+            0x21: Command(
+                "SAVE PERSISTENT VARIABLES (DEPRECATED)", IEC_62386_103_2014, "11.5.17"
+            ),
             0x30: Command("QUERY DEVICE STATUS", IEC_62386_103, "11.6.3"),
             0x31: Command(
                 "QUERY APPLICATION CONTROLLER ERROR", IEC_62386_103, "11.6.4"

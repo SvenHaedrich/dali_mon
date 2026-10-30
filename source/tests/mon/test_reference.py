@@ -177,6 +177,23 @@ def reference(
             "11.3.3.1",
             id="BEGIN BLOCK",
         ),
+        # removed in the current editions, defined in the editions of 2014
+        pytest.param(
+            16,
+            0xFF22,
+            DeviceType.NONE,
+            "IEC 62386-102:2014",
+            "11.4.4",
+            id="SAVE PERSISTENT VARIABLES",
+        ),
+        pytest.param(
+            24,
+            0xFFFE21,
+            DeviceType.NONE,
+            "IEC 62386-103:2014",
+            "11.5.17",
+            id="SAVE PERSISTENT VARIABLES device",
+        ),
     ],
 )
 def test_reference(length, data, device_type, standard, clause):
@@ -186,12 +203,10 @@ def test_reference(length, data, device_type, standard, clause):
 @pytest.mark.parametrize(
     "length,data",
     [
-        pytest.param(16, 0xFF22, id="SAVE PERSISTENT VARIABLES deprecated"),
         pytest.param(16, 0xBD00, id="PHYSICAL SELECTION deprecated"),
         pytest.param(16, 0xFF26, id="unknown gear command"),
         pytest.param(16, 0xA101, id="unknown special command"),
         pytest.param(16, 0xCC00, id="reserved address"),
-        pytest.param(24, 0xFFFE21, id="SAVE PERSISTENT VARIABLES device deprecated"),
         pytest.param(24, 0xE10000, id="reserved command space"),
         pytest.param(12, 0x000, id="undefined frame length"),
     ],

@@ -5,6 +5,7 @@ from dali_interface import DaliFrame
 
 from .reference import (
     IEC_62386_102,
+    IEC_62386_102_2014,
     IEC_62386_207,
     IEC_62386_208,
     IEC_62386_209,
@@ -81,7 +82,9 @@ class ForwardFrame16Bit:
             0x1F: Command("GO TO SCENE 15", IEC_62386_102, "11.3.15"),
             0x20: Command("RESET", IEC_62386_102, "11.4.2"),
             0x21: Command("STORE ACTUAL LEVEL IN DTR0", IEC_62386_102, "11.4.3"),
-            0x22: Command("SAVE PERSISTENT VARIABLES (DEPRECATED)"),
+            0x22: Command(
+                "SAVE PERSISTENT VARIABLES (DEPRECATED)", IEC_62386_102_2014, "11.4.4"
+            ),
             0x23: Command("SET OPERATING MODE (DTR0)", IEC_62386_102, "11.4.4"),
             0x24: Command("RESET MEMORY BANK (DTR0)", IEC_62386_102, "11.4.5"),
             0x25: Command("IDENTIFY DEVICE", IEC_62386_102, "11.4.6"),
