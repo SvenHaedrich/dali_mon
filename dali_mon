@@ -6,4 +6,4 @@ if [ ! -f .venv/.installed ] || [ pyproject.toml -nt .venv/.installed ]; then
     python3 -m pip install --upgrade pip > /dev/null
     python3 -m pip install -q -e . > /dev/null && touch .venv/.installed
 fi
-python3 -OO source/dali_mon.py $*
+python3 -O source/dali_mon.py $*

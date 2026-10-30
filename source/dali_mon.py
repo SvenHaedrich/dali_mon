@@ -4,6 +4,7 @@ import sys
 import logging
 import tomllib
 import click
+from click.core import ParameterSource
 from datetime import datetime
 from pathlib import Path
 from termcolor import cprint
@@ -82,7 +83,7 @@ def main_connection(
     except RuntimeError:
         print("\rpower control not supported")
         connection.close()
-        return
+        sys.exit(1)
     try:
         while True:
             process_line(connection.get(), absolute_time)
@@ -92,6 +93,7 @@ def main_connection(
     except RuntimeError as error:
         cprint(f"\rconnection lost: {error.__cause__ or error}", color="red")
         connection.close()
+        sys.exit(1)
 
 
 def main_tty(transparent: bool, absolute_time: bool) -> None:
@@ -141,7 +143,7 @@ def main_file(transparent: bool, absolute_time: bool) -> None:
     help="Serial port used for DALI communication.",
     envvar="DALI_SERIAL_PORT",
     show_envvar=True,
-    type=click.Path(),
+    type=click.Path(exists=True, dir_okay=False),
 )
 def dali_mon(hid, debug, echo, absolute, serial_port, on, off):
     """
@@ -150,6 +152,25 @@ def dali_mon(hid, debug, echo, absolute, serial_port, on, off):
     """
     if debug:
         logging.basicConfig(level=logging.DEBUG)
+
+    if hid and serial_port:
+        # an option on the command line overrides an environment variable
+        context = click.get_current_context()
+        hid_given = context.get_parameter_source("hid") == ParameterSource.COMMANDLINE
+        port_given = (
+            context.get_parameter_source("serial_port") == ParameterSource.COMMANDLINE
+        )
+        if hid_given == port_given:
+            raise click.UsageError("--hid and --serial-port exclude each other.")
+        if hid_given:
+            serial_port = None
+        else:
+            hid = False
+    if on and off:
+        raise click.UsageError("--on and --off exclude each other.")
+    # only the USB converters have a power supply to switch
+    if (on or off) and not hid:
+        raise click.UsageError(f"{'--on' if on else '--off'} needs --hid.")
 
     process_line.last_timestamp = 0
     process_line.active_device_type = DeviceType.NONE
