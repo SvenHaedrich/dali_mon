@@ -3,7 +3,7 @@
 import sys
 import logging
 import click
-import datetime
+from datetime import datetime
 from termcolor import cprint
 
 from DALI.dali_interface.dali_interface import (
