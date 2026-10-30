@@ -1,9 +1,11 @@
 #!/bin/bash
-[ -f .venv/bin/activate ] || python3 -m venv .venv
-source ./.venv/bin/activate
+# paths relative to this script, so it can be started from any directory
+DIR=$(dirname "$(realpath "$0")")
+[ -f "$DIR/.venv/bin/activate" ] || python3 -m venv "$DIR/.venv"
+source "$DIR/.venv/bin/activate"
 # install the dependencies only for a new environment or a changed pyproject.toml
-if [ ! -f .venv/.installed ] || [ pyproject.toml -nt .venv/.installed ]; then
+if [ ! -f "$DIR/.venv/.installed" ] || [ "$DIR/pyproject.toml" -nt "$DIR/.venv/.installed" ]; then
     python3 -m pip install --upgrade pip > /dev/null
-    python3 -m pip install -q -e . > /dev/null && touch .venv/.installed
+    python3 -m pip install -q -e "$DIR" > /dev/null && touch "$DIR/.venv/.installed"
 fi
-python3 -O source/dali_mon.py $*
+exec python3 -O "$DIR/source/dali_mon.py" "$@"

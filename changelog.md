@@ -12,6 +12,7 @@
   A lost connection is reported with `connection lost` and exit code 1, instead of hanging or
   using 100 % CPU. A piped file ends at the end of the file with exit code 0.
 - Messages go to stderr, the decoded frames to stdout
+- `dali_mon` can be started from any directory, and passes arguments with spaces unchanged
 - `Ctrl-C` ends `dali_mon` with exit code 130
 - Wrong command line parameters end `dali_mon` with exit code 2: `--hid` together with `--serial-port`,
   `--on` together with `--off`, `--on` or `--off` without `--hid`, and a serial port that does not exist

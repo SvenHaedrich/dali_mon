@@ -183,6 +183,35 @@ def test_wrapper_version():
     assert project_version() in result.stdout
 
 
+# the wrapper works from any directory and uses the environment next to it
+def test_wrapper_from_other_directory(tmp_path):
+    result = subprocess.run(
+        [str(REPOSITORY / "dali_mon"), "--version"],
+        cwd=tmp_path,
+        capture_output=True,
+        check=False,
+        text=True,
+        timeout=300,
+    )
+    assert result.returncode == 0
+    assert project_version() in result.stdout
+    assert not (tmp_path / ".venv").exists()
+
+
+# the wrapper passes arguments with spaces unchanged
+def test_wrapper_argument_with_space():
+    result = subprocess.run(
+        ["./dali_mon", "--serial-port", "/does not/exist"],
+        cwd=REPOSITORY,
+        capture_output=True,
+        check=False,
+        text=True,
+        timeout=300,
+    )
+    assert result.returncode == 2
+    assert "'/does not/exist' does not exist" in result.stderr
+
+
 # ---- input from stdin
 
 
