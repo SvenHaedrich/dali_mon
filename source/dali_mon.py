@@ -6,21 +6,22 @@ import os
 import select
 import sys
 import tomllib
-import click
-from click.core import ParameterSource
 from datetime import datetime
 from pathlib import Path
-from termcolor import cprint
 
+import click
+from click.core import ParameterSource
 from dali_interface import (
-    DaliInterface,
     DaliFrame,
+    DaliInterface,
     DaliSerial,
     DaliStatus,
     DaliUsb,
 )
-from DALI.forward_frame_16bit import DeviceType
+from termcolor import cprint
+
 from DALI.decode import Decode
+from DALI.forward_frame_16bit import DeviceType
 
 logger = logging.getLogger(__name__)
 

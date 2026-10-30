@@ -345,7 +345,7 @@ class ForwardFrame16Bit:
         if (address_byte & 0x01) == 0x00:
             standard_command = False
             self.command = f"DAPC {opcode_byte}"
-        if address_byte in range(0x00, 0x80):
+        if address_byte in range(0x80):
             short_address = address_byte >> 1
             self.address = f"G{short_address:02}"
         elif address_byte in range(0x80, 0xA0):

@@ -1,6 +1,6 @@
-import pytest
 import logging
 
+import pytest
 from dali_interface import (
     DaliFrame,
     DaliSerial,

@@ -7,11 +7,12 @@ import time
 import tomllib
 from pathlib import Path
 
-import dali_mon
 import pytest
 from click.testing import CliRunner
 from dali_interface import DaliFrame, DaliSerial, DaliStatus
 from usb.core import NoBackendError, USBError
+
+import dali_mon
 
 REPOSITORY = Path(__file__).resolve().parents[3]
 SAMPLE = REPOSITORY / "source" / "tests" / "sample.txt"

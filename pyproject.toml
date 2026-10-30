@@ -38,6 +38,10 @@ allow-direct-references = true
 [tool.hatch.build.targets.wheel]
 bypass-selection = true
 
+[tool.ruff]
+# the modules of the project (DALI, dali_mon) are in source/
+src = ["source"]
+
 [tool.ruff.lint]
 # never complain about line length violations
 ignore = ["E501"]

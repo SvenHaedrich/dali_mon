@@ -1,8 +1,8 @@
 import pytest
-
 from dali_interface import DaliFrame
-from DALI.forward_frame_32bit import ForwardFrame32Bit
+
 from DALI.decode import Decode
+from DALI.forward_frame_32bit import ForwardFrame32Bit
 
 
 def build_firmware_frame(

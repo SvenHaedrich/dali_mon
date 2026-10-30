@@ -1,8 +1,8 @@
 import pytest
-
 from dali_interface import DaliFrame
-from DALI.forward_frame_16bit import ForwardFrame16Bit
+
 from DALI.decode import Decode, DeviceType
+from DALI.forward_frame_16bit import ForwardFrame16Bit
 
 
 def build_dt6_frame_and_test(test_data: int, target_adr: str, target_cmd: str) -> None:
@@ -43,12 +43,12 @@ def test_dt6_command(target_cmd, opcode):
     test_data = 0xFD00 + opcode
     build_dt6_frame_and_test(test_data, "BC GEAR UN", target_cmd)
     # short address
-    for short_address in range(0, 0x40):
+    for short_address in range(0x40):
         test_data = 0x0100 + (short_address << 9) + opcode
         target_adr = f"G{short_address:02}"
         build_dt6_frame_and_test(test_data, target_adr, target_cmd)
     # group address
-    for group_address in range(0, 0x10):
+    for group_address in range(0x10):
         test_data = 0x8100 + (group_address << 9) + opcode
         target_adr = f"GG{group_address:02}"
         build_dt6_frame_and_test(test_data, target_adr, target_cmd)
@@ -83,12 +83,12 @@ def test_dt6_undefined_codes(opcode):
     test_data = 0xFD00 + opcode
     build_dt6_frame_and_test(test_data, "BC GEAR UN", "---")
     # short address
-    for short_address in range(0, 0x40):
+    for short_address in range(0x40):
         test_data = 0x0100 + (short_address << 9) + opcode
         target_adr = f"G{short_address:02}"
         build_dt6_frame_and_test(test_data, target_adr, "---")
     # group address
-    for group_address in range(0, 0x10):
+    for group_address in range(0x10):
         test_data = 0x8100 + (group_address << 9) + opcode
         target_adr = f"GG{group_address:02}"
         build_dt6_frame_and_test(test_data, target_adr, "---")

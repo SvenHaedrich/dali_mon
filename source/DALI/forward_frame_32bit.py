@@ -95,10 +95,9 @@ class ForwardFrame32Bit:
         self.frame_bits = BitArray(uint=data, length=ForwardFrame32Bit.LENGTH)
         if self.data_transfer_commands():
             return
-        if self.build_address_string():
-            if self.frame_bits[8:16].uint == 0xFB:
-                self.command_string = self.device_command()
-                return
+        if self.build_address_string() and self.frame_bits[8:16].uint == 0xFB:
+            self.command_string = self.device_command()
+            return
         self.address_string = ""
         self.command_string = "---"
         return
