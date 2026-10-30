@@ -39,6 +39,22 @@ def print_local_time(enabled: bool) -> None:
         cprint(f"{time_string} | ", color="yellow", end="")
 
 
+# widths of the command and the standard column, the longest texts over all frames
+COMMAND_WIDTH = 59
+STANDARD_WIDTH = 18
+
+
+@dataclass
+class OutputOptions:
+    """Which references to the standard are shown after the command."""
+
+    show_standard: bool = True
+    show_clause: bool = True
+
+
+output = OutputOptions()
+
+
 def print_command(
     absolute_time: bool,
     timestamp: float,
@@ -46,11 +62,21 @@ def print_command(
     data: str,
     address: str,
     command: str,
+    standard: str,
+    clause: str,
 ) -> None:
     print_local_time(absolute_time)
     cprint(f"{timestamp:.03f} | {delta_s:8.03f} | {data:>8} | ", color="green", end="")
-    cprint(f"{address:<22} {command}", color="white", end="")
-    cprint("")
+    if not (output.show_standard or output.show_clause):
+        cprint(f"{address:<22} {command}", color="white")
+        return
+    cprint(f"{address:<22} {command:<{COMMAND_WIDTH}}", color="white", end="")
+    references = ""
+    if output.show_standard:
+        references += f" | {standard:<{STANDARD_WIDTH}}"
+    if output.show_clause:
+        references += f" | {clause}"
+    cprint(references.rstrip(), color="cyan")
 
 
 def print_error(
@@ -82,7 +108,17 @@ def process_line(frame: DaliFrame | None, absolute_time: bool) -> None:
     if frame.status in (DaliStatus.OK, DaliStatus.FRAME, DaliStatus.LOOPBACK):
         decoding = Decode(frame, state.active_device_type)
         data, address, command = decoding.get_strings()
-        print_command(absolute_time, frame.timestamp, delta_s, data, address, command)
+        standard, clause = decoding.get_reference()
+        print_command(
+            absolute_time,
+            frame.timestamp,
+            delta_s,
+            data,
+            address,
+            command,
+            standard,
+            clause,
+        )
         state.active_device_type = decoding.get_next_device_type()
     else:
         print_error(absolute_time, frame.timestamp, delta_s, frame.message)
@@ -227,6 +263,15 @@ def main_file(transparent: bool, absolute_time: bool) -> None:
 @click.option("--debug", help="Enable debug level logging.", hidden=True, is_flag=True)
 @click.option("--echo", help="Echo unprocessed input line to output.", is_flag=True)
 @click.option("--absolute", help="Add absolute local time to output.", is_flag=True)
+@click.option(
+    "--no-standard", help="Hide the standard that defines a command.", is_flag=True
+)
+@click.option(
+    "--no-clause", help="Hide the clause that defines a command.", is_flag=True
+)
+@click.option(
+    "--no-reference", help="Hide standard and clause of a command.", is_flag=True
+)
 @click.option("--on", help="Enable power supply (if available).", is_flag=True)
 @click.option("--off", help="Disable power supply (if available).", is_flag=True)
 @click.option(
@@ -245,6 +290,9 @@ def dali_mon(
     serial_port: str | None,
     on: bool,
     off: bool,
+    no_standard: bool,
+    no_clause: bool,
+    no_reference: bool,
 ) -> None:
     """
     Monitor for DALI commands.
@@ -278,6 +326,8 @@ def dali_mon(
         parameter = next(p for p in context.command.params if p.name == "serial_port")
         click.Path(exists=True, dir_okay=False).convert(serial_port, parameter, context)
 
+    output.show_standard = not (no_standard or no_reference)
+    output.show_clause = not (no_clause or no_reference)
     state.last_timestamp = 0
     state.active_device_type = DeviceType.NONE
     try:

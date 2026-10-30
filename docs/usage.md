@@ -29,11 +29,11 @@ So you can log the frames without the messages:
 ## Sample Output
 
     ./dali_mon < source/tests/sample.txt
-    0.001 |    0.000 |     FF06 | BC GEAR                RECALL MIN LEVEL
-    0.002 |    0.001 |     FF05 | BC GEAR                RECALL MAX LEVEL
-    0.003 |    0.001 |     0102 | G00                    DOWN
-    0.004 |    0.001 |     0102 | G00                    DOWN
-    0.005 |    0.001 |     0100 | G00                    OFF
+    0.001 |    0.000 |     FF06 | BC GEAR                RECALL MIN LEVEL                                            | IEC 62386-102:2022 | 11.3.8
+    0.002 |    0.001 |     FF05 | BC GEAR                RECALL MAX LEVEL                                            | IEC 62386-102:2022 | 11.3.7
+    0.003 |    0.001 |     0102 | G00                    DOWN                                                        | IEC 62386-102:2022 | 11.3.4
+    0.004 |    0.001 |     0102 | G00                    DOWN                                                        | IEC 62386-102:2022 | 11.3.4
+    0.005 |    0.001 |     0100 | G00                    OFF                                                         | IEC 62386-102:2022 | 11.3.2
     0.006 |    0.001 | ERROR: SYSTEM FAILURE
     0.007 |    0.001 | SYSTEM RECOVER
 
@@ -112,6 +112,9 @@ If the USB converter has no integrated power supply, `dali_mon` reports `power c
 | `--debug`              |       | Enable debug level logging.                                        |
 | `--on`                 |       | Enable power supply (if available), needs `--hid`.                 |
 | `--off`                |       | Disable power supply (if available), needs `--hid`.                |
+| `--no-standard`        |       | Hide the standard that defines a command.                          |
+| `--no-clause`          |       | Hide the clause that defines a command.                            |
+| `--no-reference`       |       | Hide standard and clause of a command.                             |
 
 These combinations are rejected with exit code 2:
 
@@ -128,4 +131,11 @@ These combinations are rejected with exit code 2:
 * timestamp in seconds (from serial message, or monotonic clock of the host machine for USB HID interface)
 * delta time to previous command
 * hex data received
+* address of the command
 * DALI command translation
+* standard that defines the command, e.g. `IEC 62386-102:2022`, or `eDALI` for eDALI frames
+* clause of the standard that defines the command, e.g. `11.3.7`
+
+Command, standard and clause have a fixed width, so the columns are aligned.
+Commands that are unknown, reserved, or no longer part of the current editions of the standards show empty standard and clause columns.
+`--no-standard`, `--no-clause` and `--no-reference` hide these columns, with `--no-reference` the output is the same as in version 1.8.0.

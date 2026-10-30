@@ -2,6 +2,8 @@ from enum import IntEnum, unique
 
 from dali_interface import DaliFrame
 
+from .reference import EDALI
+
 
 @unique
 class DeviceClass(IntEnum):
@@ -190,6 +192,9 @@ class ForwardFrame25Bit:
 
     def __init__(self, frame: DaliFrame) -> None:
         self.frame = frame
+        # eDALI is not part of IEC 62386
+        self.clause = ""
+        self.standard = EDALI
         # the getters of DaliFrame are for 16 and 24 bit frames only
         class_byte = (frame.data >> 17) & 0xF
         address_byte = (frame.data >> 9) & 0xFF

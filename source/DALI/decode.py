@@ -10,6 +10,8 @@ from .forward_frame_32bit import ForwardFrame32Bit
 class UndefinedFrame:
     def __init__(self, frame: DaliFrame) -> None:
         self.frame = frame
+        self.clause = ""
+        self.standard = ""
 
     def adr(self) -> str:
         return ""
@@ -24,6 +26,10 @@ class UndefinedFrame:
 class Decode:
     def get_strings(self) -> tuple[str, str, str]:
         return self.dali_frame.data(), self.dali_frame.adr(), self.dali_frame.cmd()
+
+    def get_reference(self) -> tuple[str, str]:
+        """The standard and the clause that define the command, empty if there is none."""
+        return self.dali_frame.standard, self.dali_frame.clause
 
     def __init__(self, frame: DaliFrame, device_type: int = DeviceType.NONE) -> None:
         # iec 62386-102 11.2: ENABLE DEVICE TYPE stays active until the next

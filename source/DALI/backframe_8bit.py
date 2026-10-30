@@ -1,5 +1,7 @@
 from dali_interface import DaliFrame
 
+from .reference import IEC_62386_101
+
 
 class Backframe8Bit:
     LENGTH = 8
@@ -15,3 +17,5 @@ class Backframe8Bit:
 
     def __init__(self, frame: DaliFrame) -> None:
         self.frame = frame
+        self.clause = "7.4.5"
+        self.standard = IEC_62386_101

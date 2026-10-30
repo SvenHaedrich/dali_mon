@@ -1,26 +1,29 @@
 from dali_interface import DaliFrame
 
+from .reference import IEC_62386_105, Command, lookup
+
 # frame_bytes[0] holds bits 31 to 24 of the frame, frame_bytes[3] bits 7 to 0
 
 
 class ForwardFrame32Bit:
     LENGTH = 32
 
-    def device_command(self) -> str:
+    def device_command(self) -> Command:
         # see iec 62386-105 11.2 table 6 - standard commands
         code_dictionary = {
-            0x00: "START FW TRANSFER",
-            0x01: "RESTART FW",
-            0x02: "ENABLE RESTART",
-            0x03: "FINISH FW UPDATE",
-            0x04: "CANCEL FW UPDATE",
-            0x05: "QUERY FW UPDATE FEATURES",
-            0x06: "QUERY FW RESTART ENABLED",
-            0x07: "QUERY FW UPDATE RUNNING",
-            0x08: "QUERY BLOCK FAULT",
+            0x00: Command("START FW TRANSFER", IEC_62386_105, "11.3.2.1"),
+            0x01: Command("RESTART FW", IEC_62386_105, "11.3.2.8"),
+            0x02: Command("ENABLE RESTART", IEC_62386_105, "11.3.2.7"),
+            0x03: Command("FINISH FW UPDATE", IEC_62386_105, "11.3.2.2"),
+            0x04: Command("CANCEL FW UPDATE", IEC_62386_105, "11.3.2.6"),
+            0x05: Command("QUERY FW UPDATE FEATURES", IEC_62386_105, "11.3.2.3"),
+            0x06: Command("QUERY FW RESTART ENABLED", IEC_62386_105, "11.3.2.9"),
+            0x07: Command("QUERY FW UPDATE RUNNING", IEC_62386_105, "11.3.2.4"),
+            0x08: Command("QUERY BLOCK FAULT", IEC_62386_105, "11.3.2.5"),
         }
         opcode_byte = self.frame_bytes[2]
-        return code_dictionary.get(
+        return lookup(
+            code_dictionary,
             opcode_byte,
             f"--- CODE 0x{opcode_byte:02X} = {opcode_byte} UNKNOWN FIRMWARE UPDATE COMMAND",
         )
@@ -68,10 +71,12 @@ class ForwardFrame32Bit:
         if self.frame_bytes[0] == BEGIN_BLOCK:
             self.address_string = ""
             self.command_string = "BEGIN BLOCK " + self.data_bytes()
+            self.standard, self.clause = IEC_62386_105, "11.3.3.1"
             return True
         if self.frame_bytes[0] == TRANSFER_BLOCK:
             self.address_string = ""
             self.command_string = "TRANSFER BLOCK DATA " + self.data_bytes()
+            self.standard, self.clause = IEC_62386_105, "11.3.3.2"
             return True
         return False
 
@@ -87,10 +92,12 @@ class ForwardFrame32Bit:
     def __init__(self, frame: DaliFrame) -> None:
         self.frame = frame
         self.frame_bytes = frame.data.to_bytes(4, byteorder="big")
+        self.clause = ""
+        self.standard = ""
         if self.data_transfer_commands():
             return
         if self.build_address_string() and self.frame_bytes[1] == 0xFB:
-            self.command_string = self.device_command()
+            self.command_string, self.standard, self.clause = self.device_command()
             return
         self.address_string = ""
         self.command_string = "---"
