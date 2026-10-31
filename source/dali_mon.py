@@ -24,6 +24,7 @@ from dali_interface import (
 from termcolor import cprint
 
 from DALI.decode import Decode
+from DALI.decoded_frame import DecodedFrame
 from DALI.forward_frame_16bit import DeviceType
 
 logger = logging.getLogger(__name__)
@@ -63,28 +64,23 @@ def print_local_time() -> None:
         cprint(f"{time_string} | ", color="yellow", end="")
 
 
-def print_command(timestamp: float, delta_s: float, decoding: Decode) -> None:
+def print_command(timestamp: float, delta_s: float, decoded: DecodedFrame) -> None:
     print_local_time()
     cprint(
-        f"{timestamp:.03f} | {delta_s:8.03f} | {decoding.data():>{DATA_WIDTH}} | ",
+        f"{timestamp:.03f} | {delta_s:8.03f} | {decoded.data():>{DATA_WIDTH}} | ",
         color="green",
         end="",
     )
+    address = f"{decoded.address():<{ADDRESS_WIDTH}}"
     if not (output.show_standard or output.show_clause):
-        cprint(
-            f"{decoding.address():<{ADDRESS_WIDTH}} {decoding.command()}", color="white"
-        )
+        cprint(f"{address} {decoded.command()}", color="white")
         return
-    cprint(
-        f"{decoding.address():<{ADDRESS_WIDTH}} {decoding.command():<{COMMAND_WIDTH}}",
-        color="white",
-        end="",
-    )
+    cprint(f"{address} {decoded.command():<{COMMAND_WIDTH}}", color="white", end="")
     references = ""
     if output.show_standard:
-        references += f" | {decoding.standard():<{STANDARD_WIDTH}}"
+        references += f" | {decoded.standard():<{STANDARD_WIDTH}}"
     if output.show_clause:
-        references += f" | {decoding.clause()}"
+        references += f" | {decoded.reference()}"
     cprint(references.rstrip(), color="cyan")
 
 
@@ -114,8 +110,8 @@ def process_line(frame: DaliFrame | None) -> None:
         delta_s = 0
     if frame.status in (DaliStatus.OK, DaliStatus.FRAME, DaliStatus.LOOPBACK):
         decoding = Decode(frame, state.active_device_type)
-        print_command(frame.timestamp, delta_s, decoding)
-        state.active_device_type = decoding.get_next_device_type()
+        print_command(frame.timestamp, delta_s, decoding.dali_frame)
+        state.active_device_type = decoding.next_device_type
     else:
         print_error(frame.timestamp, delta_s, frame.message)
     state.last_timestamp = frame.timestamp

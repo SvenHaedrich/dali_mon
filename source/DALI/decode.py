@@ -15,7 +15,8 @@ class UndefinedFrame(DecodedFrame):
 
 
 class Decode:
-    """Decodes a DALI frame, the getters give its texts.
+    """Decodes a DALI frame: the getters of dali_frame give its texts,
+    next_device_type is the device type for the next frame.
 
     The decoder class is chosen by the length of the frame. Only the 16 bit forward
     frames depend on the frames before, by the device type of ENABLE DEVICE TYPE.
@@ -25,6 +26,7 @@ class Decode:
         # iec 62386-102 11.2: ENABLE DEVICE TYPE stays active until the next
         # command accepted by control gear, other frames don't end it
         self.next_device_type = device_type
+        self.dali_frame: DecodedFrame
         if frame.length == Backframe8Bit.LENGTH:
             self.dali_frame = Backframe8Bit(frame)
         elif frame.length == ForwardFrame16Bit.LENGTH:
@@ -41,21 +43,3 @@ class Decode:
             self.dali_frame = ForwardFrame32Bit(frame)
         else:
             self.dali_frame = UndefinedFrame(frame)
-
-    def data(self) -> str:
-        return self.dali_frame.data()
-
-    def address(self) -> str:
-        return self.dali_frame.address()
-
-    def command(self) -> str:
-        return self.dali_frame.command()
-
-    def standard(self) -> str:
-        return self.dali_frame.standard()
-
-    def clause(self) -> str:
-        return self.dali_frame.clause()
-
-    def get_next_device_type(self) -> int:
-        return self.next_device_type

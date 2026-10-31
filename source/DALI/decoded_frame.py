@@ -39,7 +39,7 @@ class DecodedFrame:
         self._address = ""
         self._command = ""
         self._standard = ""
-        self._clause = ""
+        self._reference = ""
 
     def data(self) -> str:
         return f"{self.frame.data:0{self.DATA_DIGITS}X}"
@@ -53,8 +53,8 @@ class DecodedFrame:
     def standard(self) -> str:
         return self._standard
 
-    def clause(self) -> str:
-        return self._clause
+    def reference(self) -> str:
+        return self._reference
 
     @staticmethod
     def lookup(

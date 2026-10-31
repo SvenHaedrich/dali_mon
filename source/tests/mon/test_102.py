@@ -11,8 +11,8 @@ def build_16bit_frame_and_test(
 ) -> None:
     test_frame = DaliFrame(length=ForwardFrame16Bit.LENGTH, data=test_data)
     target_data = f"{test_data:04X}"
-    decoding = Decode(test_frame)
-    data_str, adr, cmd = decoding.data(), decoding.address(), decoding.command()
+    decoded = Decode(test_frame).dali_frame
+    data_str, adr, cmd = decoded.data(), decoded.address(), decoded.command()
     assert data_str == target_data
     assert adr == target_adr
     assert cmd[: len(target_cmd)] == target_cmd
@@ -21,11 +21,11 @@ def build_16bit_frame_and_test(
 def test_backframe():
     for data in range(0x100):
         test_frame = DaliFrame(length=Backframe8Bit.LENGTH, data=data)
-        decoding = Decode(test_frame)
+        decoded = Decode(test_frame).dali_frame
         data_str, address, command = (
-            decoding.data(),
-            decoding.address(),
-            decoding.command(),
+            decoded.data(),
+            decoded.address(),
+            decoded.command(),
         )
         target_command = f"DATA 0x{data:02X}"
         assert data_str == f"{data:02X}"
@@ -248,13 +248,13 @@ def test_initialise_special_cases(test_data, target_cmd):
 )
 def test_standard_command_after_enable_device_type(device_type):
     enable_frame = DaliFrame(length=ForwardFrame16Bit.LENGTH, data=0xC100 + device_type)
-    active_device_type = Decode(enable_frame).get_next_device_type()
+    active_device_type = Decode(enable_frame).next_device_type
     assert active_device_type == device_type
     for opcode in range(0xE0):
         test_frame = DaliFrame(length=ForwardFrame16Bit.LENGTH, data=0xFF00 + opcode)
-        target_cmd = Decode(test_frame).command()
-        decoding = Decode(test_frame, active_device_type)
-        adr, cmd = decoding.address(), decoding.command()
+        target_cmd = Decode(test_frame).dali_frame.command()
+        decoded = Decode(test_frame, active_device_type).dali_frame
+        adr, cmd = decoded.address(), decoded.command()
         assert adr == "BC GEAR"
         assert cmd == target_cmd, f"opcode 0x{opcode:02X}"
 
@@ -266,8 +266,8 @@ def decode_sequence(frames: list[DaliFrame]) -> str:
     command = ""
     for frame in frames:
         decoding = Decode(frame, device_type)
-        device_type = decoding.get_next_device_type()
-        command = decoding.command()
+        device_type = decoding.next_device_type
+        command = decoding.dali_frame.command()
     return command
 
 

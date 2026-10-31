@@ -72,12 +72,12 @@ class ForwardFrame32Bit(DecodedFrame):
         if self.frame_bytes[0] == BEGIN_BLOCK:
             self._address = ""
             self._command = "BEGIN BLOCK " + self.data_bytes()
-            self._standard, self._clause = IEC_62386_105, "11.3.3.1"
+            self._standard, self._reference = IEC_62386_105, "11.3.3.1"
             return True
         if self.frame_bytes[0] == TRANSFER_BLOCK:
             self._address = ""
             self._command = "TRANSFER BLOCK DATA " + self.data_bytes()
-            self._standard, self._clause = IEC_62386_105, "11.3.3.2"
+            self._standard, self._reference = IEC_62386_105, "11.3.3.2"
             return True
         return False
 
@@ -87,7 +87,7 @@ class ForwardFrame32Bit(DecodedFrame):
         if self.data_transfer_commands():
             return
         if self.build_address_string() and self.frame_bytes[1] == 0xFB:
-            self._command, self._standard, self._clause = self.device_command()
+            self._command, self._standard, self._reference = self.device_command()
             return
         self._address = ""
         self._command = "---"

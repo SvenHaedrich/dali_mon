@@ -417,4 +417,4 @@ class ForwardFrame16Bit(DecodedFrame):
                     command = self.gear_switch_command(frame.opcode_byte)
                 elif device_type == DeviceType.LED:
                     command = self.gear_led_command(frame.opcode_byte)
-        self._command, self._standard, self._clause = command
+        self._command, self._standard, self._reference = command

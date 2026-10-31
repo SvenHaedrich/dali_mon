@@ -12,4 +12,4 @@ class Backframe8Bit(DecodedFrame):
         value = frame.data
         self._command = f"DATA 0x{value:02X} = {value:3} = {value:08b}b"
         self._standard = IEC_62386_101
-        self._clause = "7.4.5"
+        self._reference = "7.4.5"

@@ -437,7 +437,7 @@ class ForwardFrame24Bit(DecodedFrame):
         if self.frame.data >> 13 == 0x7F7:
             self._address = self.build_power_event_device()
             self._command = "POWER CYCLE EVENT"
-            self._standard, self._clause = IEC_62386_103, "9.7.2"
+            self._standard, self._reference = IEC_62386_103, "9.7.2"
             return
 
         if not self.frame.address_byte & 0x01:
@@ -448,7 +448,7 @@ class ForwardFrame24Bit(DecodedFrame):
                 self._address = self.build_event_source_string(event_source_type)
                 self._command = f"EVENT DATA 0x{(frame.data & 0x3FF):03X} = {(frame.data & 0x3FF)} = {(frame.data & 0x3FF):012b}b"
                 # the event message is the INPUT NOTIFICATION command
-                self._standard, self._clause = IEC_62386_103, "11.3.1"
+                self._standard, self._reference = IEC_62386_103, "11.3.1"
             return
 
         if (
@@ -474,7 +474,7 @@ class ForwardFrame24Bit(DecodedFrame):
                 command = self.device_command()
             else:
                 command = self.instance_commands()
-            self._command, self._standard, self._clause = command
+            self._command, self._standard, self._reference = command
         if device_address_type == DeviceAddressType.SPECIAL:
             command = self.special_command_with_reference()
-            self._command, self._standard, self._clause = command
+            self._command, self._standard, self._reference = command
