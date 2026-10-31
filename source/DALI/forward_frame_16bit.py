@@ -3,6 +3,7 @@ from typing import ClassVar
 
 from dali_interface import DaliFrame
 
+from .output_row import OutputRow
 from .reference import (
     IEC_62386_102,
     IEC_62386_102_2014,
@@ -398,15 +399,6 @@ class ForwardFrame16Bit:
         else:
             return f"--- CODE 0x{self.frame.address_byte:02X} = {self.frame.address_byte} UNKNOWN CONTROL GEAR SPECIAL COMMAND"
 
-    def adr(self) -> str:
-        return self.address
-
-    def cmd(self) -> str:
-        return self.command
-
-    def data(self) -> str:
-        return f"{self.frame.data:04X}"
-
     def special_command_with_reference(self) -> Command:
         name = self.special_command()
         reference = self.SPECIAL_COMMAND_REFERENCES.get(self.frame.address_byte)
@@ -450,3 +442,12 @@ class ForwardFrame16Bit:
                 elif device_type == DeviceType.LED:
                     command = self.gear_led_command(frame.opcode_byte)
         self.command, self.standard, self.clause = command
+
+    def output_row(self) -> OutputRow:
+        return OutputRow(
+            f"{self.frame.data:04X}",
+            self.address,
+            self.command,
+            self.standard,
+            self.clause,
+        )

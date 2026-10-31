@@ -25,6 +25,7 @@ from termcolor import cprint
 
 from DALI.decode import Decode
 from DALI.forward_frame_16bit import DeviceType
+from DALI.output_row import OutputRow
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +40,10 @@ def print_local_time(enabled: bool) -> None:
         cprint(f"{time_string} | ", color="yellow", end="")
 
 
-# widths of the command and the standard column, the longest texts over all frames
+# widths of the columns, the longest texts over all frames; the clause is the last
+# column and needs no width
+DATA_WIDTH = 8
+ADDRESS_WIDTH = 22
 COMMAND_WIDTH = 59
 STANDARD_WIDTH = 18
 
@@ -56,26 +60,27 @@ output = OutputOptions()
 
 
 def print_command(
-    absolute_time: bool,
-    timestamp: float,
-    delta_s: float,
-    data: str,
-    address: str,
-    command: str,
-    standard: str,
-    clause: str,
+    absolute_time: bool, timestamp: float, delta_s: float, row: OutputRow
 ) -> None:
     print_local_time(absolute_time)
-    cprint(f"{timestamp:.03f} | {delta_s:8.03f} | {data:>8} | ", color="green", end="")
+    cprint(
+        f"{timestamp:.03f} | {delta_s:8.03f} | {row.data:>{DATA_WIDTH}} | ",
+        color="green",
+        end="",
+    )
     if not (output.show_standard or output.show_clause):
-        cprint(f"{address:<22} {command}", color="white")
+        cprint(f"{row.address:<{ADDRESS_WIDTH}} {row.command}", color="white")
         return
-    cprint(f"{address:<22} {command:<{COMMAND_WIDTH}}", color="white", end="")
+    cprint(
+        f"{row.address:<{ADDRESS_WIDTH}} {row.command:<{COMMAND_WIDTH}}",
+        color="white",
+        end="",
+    )
     references = ""
     if output.show_standard:
-        references += f" | {standard:<{STANDARD_WIDTH}}"
+        references += f" | {row.standard:<{STANDARD_WIDTH}}"
     if output.show_clause:
-        references += f" | {clause}"
+        references += f" | {row.clause}"
     cprint(references.rstrip(), color="cyan")
 
 
@@ -107,18 +112,7 @@ def process_line(frame: DaliFrame | None, absolute_time: bool) -> None:
         delta_s = 0
     if frame.status in (DaliStatus.OK, DaliStatus.FRAME, DaliStatus.LOOPBACK):
         decoding = Decode(frame, state.active_device_type)
-        data, address, command = decoding.get_strings()
-        standard, clause = decoding.get_reference()
-        print_command(
-            absolute_time,
-            frame.timestamp,
-            delta_s,
-            data,
-            address,
-            command,
-            standard,
-            clause,
-        )
+        print_command(absolute_time, frame.timestamp, delta_s, decoding.output_row())
         state.active_device_type = decoding.get_next_device_type()
     else:
         print_error(absolute_time, frame.timestamp, delta_s, frame.message)

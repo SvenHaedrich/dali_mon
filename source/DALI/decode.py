@@ -5,31 +5,27 @@ from .forward_frame_16bit import DeviceType, ForwardFrame16Bit
 from .forward_frame_24bit import ForwardFrame24Bit
 from .forward_frame_25bit import ForwardFrame25Bit
 from .forward_frame_32bit import ForwardFrame32Bit
+from .output_row import OutputRow
 
 
 class UndefinedFrame:
     def __init__(self, frame: DaliFrame) -> None:
         self.frame = frame
-        self.clause = ""
-        self.standard = ""
 
-    def adr(self) -> str:
-        return ""
-
-    def cmd(self) -> str:
-        return f"--- UNDEFINED FRAMELENGTH {self.frame.length} BITS"
-
-    def data(self) -> str:
-        return f"{self.frame.data:08X}"
+    def output_row(self) -> OutputRow:
+        return OutputRow(
+            data=f"{self.frame.data:08X}",
+            address="",
+            command=f"--- UNDEFINED FRAMELENGTH {self.frame.length} BITS",
+        )
 
 
 class Decode:
-    def get_strings(self) -> tuple[str, str, str]:
-        return self.dali_frame.data(), self.dali_frame.adr(), self.dali_frame.cmd()
+    """Transforms a DALI frame into the row of the output.
 
-    def get_reference(self) -> tuple[str, str]:
-        """The standard and the clause that define the command, empty if there is none."""
-        return self.dali_frame.standard, self.dali_frame.clause
+    The decoder class is chosen by the length of the frame. Only the 16 bit forward
+    frames depend on the frames before, by the device type of ENABLE DEVICE TYPE.
+    """
 
     def __init__(self, frame: DaliFrame, device_type: int = DeviceType.NONE) -> None:
         # iec 62386-102 11.2: ENABLE DEVICE TYPE stays active until the next
@@ -51,6 +47,9 @@ class Decode:
             self.dali_frame = ForwardFrame32Bit(frame)
         else:
             self.dali_frame = UndefinedFrame(frame)
+
+    def output_row(self) -> OutputRow:
+        return self.dali_frame.output_row()
 
     def get_next_device_type(self) -> int:
         return self.next_device_type

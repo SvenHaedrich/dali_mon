@@ -3,6 +3,7 @@ from typing import ClassVar
 
 from dali_interface import DaliFrame
 
+from .output_row import OutputRow
 from .reference import (
     IEC_62386_103,
     IEC_62386_103_2014,
@@ -442,15 +443,6 @@ class ForwardFrame24Bit:
         else:
             return f"{group_result}".rstrip()
 
-    def adr(self) -> str:
-        return self.address
-
-    def cmd(self) -> str:
-        return self.command
-
-    def data(self) -> str:
-        return f"{self.frame.data:06X}"
-
     def special_command_with_reference(self) -> Command:
         name = self.device_special_command()
         if self.frame.address_byte == 0xC1:
@@ -512,4 +504,12 @@ class ForwardFrame24Bit:
         if device_address_type == DeviceAddressType.SPECIAL:
             command = self.special_command_with_reference()
             self.command, self.standard, self.clause = command
-        return
+
+    def output_row(self) -> OutputRow:
+        return OutputRow(
+            f"{self.frame.data:06X}",
+            self.address,
+            self.command,
+            self.standard,
+            self.clause,
+        )

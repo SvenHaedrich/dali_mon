@@ -2,6 +2,7 @@ from enum import IntEnum, unique
 
 from dali_interface import DaliFrame
 
+from .output_row import OutputRow
 from .reference import EDALI
 
 
@@ -181,15 +182,6 @@ class ForwardFrame25Bit:
         else:
             return f"--- CLASS {device_class} NOT IMPLEMENTED"
 
-    def adr(self) -> str:
-        return self.address
-
-    def cmd(self) -> str:
-        return self.command
-
-    def data(self) -> str:
-        return f"{self.frame.data:07X}"
-
     def __init__(self, frame: DaliFrame) -> None:
         self.frame = frame
         # eDALI is not part of IEC 62386
@@ -231,4 +223,12 @@ class ForwardFrame25Bit:
         else:
             self.address = f"C{class_byte:1d} E{((address_byte >> 1) & 0x3F):02d}"
         self.command = self.e_DALI_command(class_byte, opcode_byte)
-        return
+
+    def output_row(self) -> OutputRow:
+        return OutputRow(
+            f"{self.frame.data:07X}",
+            self.address,
+            self.command,
+            self.standard,
+            self.clause,
+        )

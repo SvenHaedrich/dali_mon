@@ -11,7 +11,7 @@ def test_type_specific_commands():
     # undefined device
     test_frame = DaliFrame(length=ForwardFrame24Bit.LENGTH, data=0x010121)
     decoder = Decode(test_frame)
-    data_str, adr, cmd = decoder.get_strings()
+    data_str, adr, cmd, _, _ = decoder.output_row()
     target_adr = "D00,I01"
     target_cmd = "SET HOLD TIMER (DTR0) - TYPE 303"
     target_data = f"{test_frame.data:06X}"
@@ -21,7 +21,7 @@ def test_type_specific_commands():
 
     test_frame = DaliFrame(length=ForwardFrame24Bit.LENGTH, data=0x01020A)
     decoder = Decode(test_frame)
-    data_str, adr, cmd = decoder.get_strings()
+    data_str, adr, cmd, _, _ = decoder.output_row()
     target_adr = "D00,I02"
     target_cmd = "QUERY SHORT TIMER - TYPE 301"
     target_data = f"{test_frame.data:06X}"

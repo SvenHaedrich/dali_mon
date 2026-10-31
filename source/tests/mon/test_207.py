@@ -8,7 +8,7 @@ from DALI.forward_frame_16bit import ForwardFrame16Bit
 def build_dt6_frame_and_test(test_data: int, target_adr: str, target_cmd: str) -> None:
     test_frame = DaliFrame(length=ForwardFrame16Bit.LENGTH, data=test_data)
     target_data = f"{test_data:04X}"
-    data_str, adr, cmd = Decode(test_frame, DeviceType.LED).get_strings()
+    data_str, adr, cmd, _, _ = Decode(test_frame, DeviceType.LED).output_row()
     assert data_str == target_data
     assert adr == target_adr
     assert cmd[: len(target_cmd)] == target_cmd

@@ -1,5 +1,6 @@
 from dali_interface import DaliFrame
 
+from .output_row import OutputRow
 from .reference import IEC_62386_105, Command, lookup
 
 # frame_bytes[0] holds bits 31 to 24 of the frame, frame_bytes[3] bits 7 to 0
@@ -80,15 +81,6 @@ class ForwardFrame32Bit:
             return True
         return False
 
-    def adr(self) -> str:
-        return self.address_string
-
-    def cmd(self) -> str:
-        return self.command_string
-
-    def data(self) -> str:
-        return f"{self.frame.data:08X}"
-
     def __init__(self, frame: DaliFrame) -> None:
         self.frame = frame
         self.frame_bytes = frame.data.to_bytes(4, byteorder="big")
@@ -101,4 +93,12 @@ class ForwardFrame32Bit:
             return
         self.address_string = ""
         self.command_string = "---"
-        return
+
+    def output_row(self) -> OutputRow:
+        return OutputRow(
+            f"{self.frame.data:08X}",
+            self.address_string,
+            self.command_string,
+            self.standard,
+            self.clause,
+        )
