@@ -2,7 +2,7 @@ from enum import IntEnum, unique
 
 from dali_interface import DaliFrame
 
-from .output_row import EDALI, OutputRow
+from .decoded_frame import EDALI, DecodedFrame
 
 
 @unique
@@ -12,8 +12,9 @@ class DeviceClass(IntEnum):
     SEQUENCER = 6
 
 
-class ForwardFrame25Bit:
+class ForwardFrame25Bit(DecodedFrame):
     LENGTH = 25
+    DATA_DIGITS = 7
 
     def e_DALI_sensor_command(self, opcode: int) -> str:
         code_dictionary = {
@@ -182,10 +183,9 @@ class ForwardFrame25Bit:
             return f"--- CLASS {device_class} NOT IMPLEMENTED"
 
     def __init__(self, frame: DaliFrame) -> None:
-        self.frame = frame
+        super().__init__(frame)
         # eDALI is not part of IEC 62386
-        self.clause = ""
-        self.standard = EDALI
+        self._standard = EDALI
         # the getters of DaliFrame are for 16 and 24 bit frames only
         class_byte = (frame.data >> 17) & 0xF
         address_byte = (frame.data >> 9) & 0xFF
@@ -193,41 +193,32 @@ class ForwardFrame25Bit:
 
         # ---- special broadcast commands
         if address_byte == 0xA1:
-            self.address = f"C{class_byte:1d}"
-            self.command = f"QUERY CONTROL TYPE (0x{opcode_byte:02X}) = {opcode_byte}"
+            self._address = f"C{class_byte:1d}"
+            self._command = f"QUERY CONTROL TYPE (0x{opcode_byte:02X}) = {opcode_byte}"
             return
         if address_byte == 0xA3:
-            self.address = f"C{class_byte:1d}"
-            self.command = f"QUERY CONTROL CLASS (0x{(opcode_byte & 0xF):1X}) = {(opcode_byte & 0xF)}"
+            self._address = f"C{class_byte:1d}"
+            self._command = f"QUERY CONTROL CLASS (0x{(opcode_byte & 0xF):1X}) = {(opcode_byte & 0xF)}"
             return
         if address_byte == 0xA5:
             if opcode_byte == 0:
-                self.address = f"C{class_byte:1d}"
-                self.command = "ENHANCED INITIALISE (ALL)"
+                self._address = f"C{class_byte:1d}"
+                self._command = "ENHANCED INITIALISE (ALL)"
             elif opcode_byte == 0xFF:
-                self.address = f"C{class_byte:1d}"
-                self.command = "ENHANCED INITIALISE (UNADDRESSED)"
+                self._address = f"C{class_byte:1d}"
+                self._command = "ENHANCED INITIALISE (UNADDRESSED)"
             else:
-                self.address = f"C{class_byte:1d} E{((opcode_byte >> 1) & 0x3F):02d}"
-                self.command = "ENHANCED INITIALISE"
+                self._address = f"C{class_byte:1d} E{((opcode_byte >> 1) & 0x3F):02d}"
+                self._command = "ENHANCED INITIALISE"
             return
         # ---- other commands
         if address_byte & 0x80:
             if address_byte == 0xFF:
-                self.address = f"C{class_byte:1d} BC"
+                self._address = f"C{class_byte:1d} BC"
             elif address_byte == 0xFD:
-                self.address = f"C{class_byte:1d} BC UN"
+                self._address = f"C{class_byte:1d} BC UN"
             else:
-                self.address = f"C{class_byte:1d} G{((address_byte >> 1) & 0x3F):02d}"
+                self._address = f"C{class_byte:1d} G{((address_byte >> 1) & 0x3F):02d}"
         else:
-            self.address = f"C{class_byte:1d} E{((address_byte >> 1) & 0x3F):02d}"
-        self.command = self.e_DALI_command(class_byte, opcode_byte)
-
-    def output_row(self) -> OutputRow:
-        return OutputRow(
-            f"{self.frame.data:07X}",
-            self.address,
-            self.command,
-            self.standard,
-            self.clause,
-        )
+            self._address = f"C{class_byte:1d} E{((address_byte >> 1) & 0x3F):02d}"
+        self._command = self.e_DALI_command(class_byte, opcode_byte)

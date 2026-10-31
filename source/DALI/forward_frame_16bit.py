@@ -3,13 +3,13 @@ from typing import ClassVar
 
 from dali_interface import DaliFrame
 
-from .output_row import (
+from .decoded_frame import (
     IEC_62386_102,
     IEC_62386_102_2014,
     IEC_62386_207,
     IEC_62386_208,
     IEC_62386_209,
-    OutputRow,
+    DecodedFrame,
 )
 
 
@@ -21,8 +21,9 @@ class DeviceType(IntEnum):
     COLOUR = 8
 
 
-class ForwardFrame16Bit:
+class ForwardFrame16Bit(DecodedFrame):
     LENGTH = 16
+    DATA_DIGITS = 4
     # iec 62386-102:2022 Table 18: reference of the special commands by address byte,
     # PHYSICAL SELECTION (0xBD) is no longer part of the standard
     SPECIAL_COMMAND_REFERENCES: ClassVar[dict[int, tuple[str, str]]] = {
@@ -211,7 +212,7 @@ class ForwardFrame16Bit:
             0xC5: ("READ MEMORY LOCATION (DTR1,DTR0)", IEC_62386_102, "11.5.34"),
             0xFF: ("QUERY EXTENDED VERSION NUMBER", IEC_62386_102, "11.6.2"),
         }
-        return OutputRow.lookup(
+        return self.lookup(
             code_dictionary,
             opcode,
             f"--- CODE 0x{opcode:02X} = {opcode} UNKNOWN CONTROL GEAR COMMAND",
@@ -250,7 +251,7 @@ class ForwardFrame16Bit:
             0xFC: ("QUERY ASSIGNED COLOUR", IEC_62386_209, "11.3.4.3"),
             0xFF: ("QUERY EXTENDED VERSION NUMBER", IEC_62386_209, "11.3.4.3"),
         }
-        return OutputRow.lookup(
+        return self.lookup(
             code_dictionary,
             opcode,
             f"--- CODE 0x{opcode:02X} = {opcode} UNKNOWN COLOUR GEAR COMMAND",
@@ -278,7 +279,7 @@ class ForwardFrame16Bit:
             0xFA: ("QUERY REFERENCE MEASUREMENT FAILED", IEC_62386_208, "11.3.4.2"),
             0xFF: ("QUERY EXTENDED VERSION NUMBER", IEC_62386_208, "11.3.4.2"),
         }
-        return OutputRow.lookup(
+        return self.lookup(
             code_dictionary,
             opcode,
             f"--- CODE 0x{opcode:02X} = {opcode} UNKNOWN SWITCH GEAR COMMAND",
@@ -305,7 +306,7 @@ class ForwardFrame16Bit:
             0xFE: ("QUERY MIN FAST FADE TIME", IEC_62386_207, "11.3.3.12"),
             0xFF: ("QUERY EXTENDED VERSION NUMBER", IEC_62386_207, "11.3.3.13"),
         }
-        return OutputRow.lookup(
+        return self.lookup(
             code_dictionary,
             opcode,
             f"--- CODE 0x{opcode:02X} = {opcode} UNKNOWN LED GEAR COMMAND",
@@ -382,7 +383,7 @@ class ForwardFrame16Bit:
         return (name, *reference)
 
     def __init__(self, frame: DaliFrame, device_type: int = DeviceType.NONE) -> None:
-        self.frame = frame
+        super().__init__(frame)
         standard_command = True
         command = ("", "", "")
 
@@ -391,22 +392,22 @@ class ForwardFrame16Bit:
             command = (f"DAPC {frame.opcode_byte}", IEC_62386_102, "11.3.1")
         if frame.address_byte in range(0x80):
             short_address = frame.address_byte >> 1
-            self.address = f"G{short_address:02}"
+            self._address = f"G{short_address:02}"
         elif frame.address_byte in range(0x80, 0xA0):
             group_address = (frame.address_byte >> 1) & 0x0F
-            self.address = f"GG{group_address:02}"
+            self._address = f"GG{group_address:02}"
         elif frame.address_byte in range(0xA0, 0xCC):
             standard_command = False
-            self.address = ""
+            self._address = ""
             command = self.special_command_with_reference()
         elif frame.address_byte in range(0xCC, 0xFC):
             standard_command = False
-            self.address = ""
+            self._address = ""
             command = ("RESERVED", "", "")
         elif (frame.address_byte == 0xFD) or (frame.address_byte == 0xFC):
-            self.address = "BC GEAR UN"
+            self._address = "BC GEAR UN"
         elif (frame.address_byte == 0xFF) or (frame.address_byte == 0xFE):
-            self.address = "BC GEAR"
+            self._address = "BC GEAR"
         if standard_command:
             command = self.gear_command(frame.opcode_byte)
             if frame.opcode_byte >= 0xE0:
@@ -416,13 +417,4 @@ class ForwardFrame16Bit:
                     command = self.gear_switch_command(frame.opcode_byte)
                 elif device_type == DeviceType.LED:
                     command = self.gear_led_command(frame.opcode_byte)
-        self.command, self.standard, self.clause = command
-
-    def output_row(self) -> OutputRow:
-        return OutputRow(
-            f"{self.frame.data:04X}",
-            self.address,
-            self.command,
-            self.standard,
-            self.clause,
-        )
+        self._command, self._standard, self._clause = command

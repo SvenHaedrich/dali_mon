@@ -9,8 +9,8 @@ from DALI.forward_frame_16bit import DeviceType
 def reference(
     length: int, data: int, device_type: int = DeviceType.NONE
 ) -> tuple[str, str]:
-    row = Decode(DaliFrame(length=length, data=data), device_type).output_row()
-    return row.standard, row.clause
+    decoding = Decode(DaliFrame(length=length, data=data), device_type)
+    return decoding.standard(), decoding.clause()
 
 
 # the clauses as given in the command tables and contents of the standards
@@ -240,11 +240,7 @@ def all_commands():
 def test_references_are_complete():
     for length, data, device_type in all_commands():
         standard, clause = reference(length, data, device_type)
-        command = (
-            Decode(DaliFrame(length=length, data=data), device_type)
-            .output_row()
-            .command
-        )
+        command = Decode(DaliFrame(length=length, data=data), device_type).command()
         assert bool(standard) == bool(clause), f"{length} bit {data:X}: {command}"
         if not standard:
             assert command.startswith("---") or "DEPRECATED" in command, (
@@ -262,20 +258,12 @@ def test_command_width():
             DeviceType.SWITCH,
             DeviceType.COLOUR,
         ):
-            command = (
-                Decode(DaliFrame(length=16, data=data), device_type)
-                .output_row()
-                .command
-            )
+            command = Decode(DaliFrame(length=16, data=data), device_type).command()
             longest = max(longest, command, key=len)
     for address in range(0x100):
         for instance in range(0x100):
-            command = (
-                Decode(
-                    DaliFrame(length=24, data=(address << 16) | (instance << 8) | 0xFF)
-                )
-                .output_row()
-                .command
-            )
+            command = Decode(
+                DaliFrame(length=24, data=(address << 16) | (instance << 8) | 0xFF)
+            ).command()
             longest = max(longest, command, key=len)
     assert len(longest) <= dali_mon.COMMAND_WIDTH, longest

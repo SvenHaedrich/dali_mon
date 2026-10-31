@@ -3,14 +3,14 @@ from typing import ClassVar
 
 from dali_interface import DaliFrame
 
-from .output_row import (
+from .decoded_frame import (
     IEC_62386_103,
     IEC_62386_103_2014,
     IEC_62386_301,
     IEC_62386_302,
     IEC_62386_303,
     IEC_62386_304,
-    OutputRow,
+    DecodedFrame,
 )
 
 # The fields are taken from the bytes of the frame: address_byte holds bits 23 to 16,
@@ -53,8 +53,9 @@ class DeviceAddressType(IntEnum):
     SPECIAL = 5
 
 
-class ForwardFrame24Bit:
+class ForwardFrame24Bit(DecodedFrame):
     LENGTH = 24
+    DATA_DIGITS = 6
     # iec 62386-103:2022 Table 24: reference of the special commands, by instance byte
     # for the address byte 0xC1, by address byte for the others
     SPECIAL_COMMAND_REFERENCES: ClassVar[dict[int, tuple[str, str]]] = {
@@ -146,7 +147,7 @@ class ForwardFrame24Bit:
                 "11.6.27",
             ),
         }
-        return OutputRow.lookup(
+        return self.lookup(
             code_dictionary,
             self.frame.opcode_byte,
             f"--- CODE 0x{self.frame.opcode_byte:02X} = {self.frame.opcode_byte} UNDEFINED CONTROL DEVICE COMMAND",
@@ -220,7 +221,7 @@ class ForwardFrame24Bit:
             0x93: ("QUERY INSTANCE CONFIGURATION (DTR0)", IEC_62386_103, "11.9.19"),
             0x94: ("QUERY AVAILABLE INSTANCE TYPES", IEC_62386_103, "11.9.20"),
         }
-        return OutputRow.lookup(
+        return self.lookup(
             code_dictionary,
             self.frame.opcode_byte,
             f"--- CODE 0x{self.frame.opcode_byte:02X} = {self.frame.opcode_byte} UNDEFINED INSTANCE COMMAND",
@@ -431,27 +432,23 @@ class ForwardFrame24Bit:
         return (name, *reference)
 
     def __init__(self, frame: DaliFrame) -> None:
-        self.frame = frame
-        self.clause = ""
-        self.standard = ""
-
+        super().__init__(frame)
         # see iec 62386-103 7.2.2.1
         if self.frame.data >> 13 == 0x7F7:
-            self.address = self.build_power_event_device()
-            self.command = "POWER CYCLE EVENT"
-            self.standard, self.clause = IEC_62386_103, "9.7.2"
+            self._address = self.build_power_event_device()
+            self._command = "POWER CYCLE EVENT"
+            self._standard, self._clause = IEC_62386_103, "9.7.2"
             return
 
-        self.address = ""
         if not self.frame.address_byte & 0x01:
             event_source_type = self.get_event_source_type()
             if event_source_type == EventType.RESERVED:
-                self.command = "RESERVED EVENT"
+                self._command = "RESERVED EVENT"
             else:
-                self.address = self.build_event_source_string(event_source_type)
-                self.command = f"EVENT DATA 0x{(frame.data & 0x3FF):03X} = {(frame.data & 0x3FF)} = {(frame.data & 0x3FF):012b}b"
+                self._address = self.build_event_source_string(event_source_type)
+                self._command = f"EVENT DATA 0x{(frame.data & 0x3FF):03X} = {(frame.data & 0x3FF)} = {(frame.data & 0x3FF):012b}b"
                 # the event message is the INPUT NOTIFICATION command
-                self.standard, self.clause = IEC_62386_103, "11.3.1"
+                self._standard, self._clause = IEC_62386_103, "11.3.1"
             return
 
         if (
@@ -459,7 +456,7 @@ class ForwardFrame24Bit:
             or (self.frame.address_byte >> 3 == 0x1E)
             or (self.frame.address_byte >> 2 == 0x3E)
         ):
-            self.command = "RESERVED"
+            self._command = "RESERVED"
             return
 
         instance_address_type = self.get_instance_address_type()
@@ -470,23 +467,14 @@ class ForwardFrame24Bit:
             or (device_address_type == DeviceAddressType.BROADCAST)
             or (device_address_type == DeviceAddressType.BROADCAST_UNADDR)
         ):
-            self.address = self.build_command_address_string(
+            self._address = self.build_command_address_string(
                 device_address_type, instance_address_type
             )
             if instance_address_type == InstanceAddressType.DEVICE:
                 command = self.device_command()
             else:
                 command = self.instance_commands()
-            self.command, self.standard, self.clause = command
+            self._command, self._standard, self._clause = command
         if device_address_type == DeviceAddressType.SPECIAL:
             command = self.special_command_with_reference()
-            self.command, self.standard, self.clause = command
-
-    def output_row(self) -> OutputRow:
-        return OutputRow(
-            f"{self.frame.data:06X}",
-            self.address,
-            self.command,
-            self.standard,
-            self.clause,
-        )
+            self._command, self._standard, self._clause = command

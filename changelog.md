@@ -10,8 +10,8 @@
 - All decoders take a `DaliFrame`, the decoders for 16 and 24 bit frames use its getters `address_byte`, `instance_byte` and `opcode_byte`
 - Device types, eDALI device classes and the address and event types of 24 bit frames are `IntEnum`s with `@unique`
 - The decoders for 24 and 32 bit frames use byte and bit operations instead of `bitstring`, the dependency is removed
-- Every decoder turns a `DaliFrame` into an `OutputRow`, a named tuple of the strings data, address, command, standard and clause; `Decode` chooses the decoder by the frame length and returns its row.
-  The command tables hold tuples of command, standard and clause, `OutputRow.lookup` finds a command in them
+- Every decoder takes a `DaliFrame` and derives from `DecodedFrame`, whose getters `data()`, `address()`, `command()`, `standard()` and `clause()` give the texts of the frame; `Decode` chooses the decoder by the frame length and passes the getters on.
+  The command tables hold tuples of command, standard and clause, `DecodedFrame.lookup` finds a command in them
 - `OutputOptions` holds all output options of `dali_mon`: `--absolute`, `--echo` and the shown references
 - Each command shows the standard that defines it (e.g. `IEC 62386-102:2022`) and the clause, in columns with fixed width; `eDALI` for eDALI frames
 - `--no-standard`, `--no-clause` and `--no-reference` hide these columns

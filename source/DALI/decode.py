@@ -1,27 +1,21 @@
 from dali_interface import DaliFrame
 
 from .backframe_8bit import Backframe8Bit
+from .decoded_frame import DecodedFrame
 from .forward_frame_16bit import DeviceType, ForwardFrame16Bit
 from .forward_frame_24bit import ForwardFrame24Bit
 from .forward_frame_25bit import ForwardFrame25Bit
 from .forward_frame_32bit import ForwardFrame32Bit
-from .output_row import OutputRow
 
 
-class UndefinedFrame:
+class UndefinedFrame(DecodedFrame):
     def __init__(self, frame: DaliFrame) -> None:
-        self.frame = frame
-
-    def output_row(self) -> OutputRow:
-        return OutputRow(
-            data=f"{self.frame.data:08X}",
-            address="",
-            command=f"--- UNDEFINED FRAMELENGTH {self.frame.length} BITS",
-        )
+        super().__init__(frame)
+        self._command = f"--- UNDEFINED FRAMELENGTH {frame.length} BITS"
 
 
 class Decode:
-    """Transforms a DALI frame into the row of the output.
+    """Decodes a DALI frame, the getters give its texts.
 
     The decoder class is chosen by the length of the frame. Only the 16 bit forward
     frames depend on the frames before, by the device type of ENABLE DEVICE TYPE.
@@ -48,8 +42,20 @@ class Decode:
         else:
             self.dali_frame = UndefinedFrame(frame)
 
-    def output_row(self) -> OutputRow:
-        return self.dali_frame.output_row()
+    def data(self) -> str:
+        return self.dali_frame.data()
+
+    def address(self) -> str:
+        return self.dali_frame.address()
+
+    def command(self) -> str:
+        return self.dali_frame.command()
+
+    def standard(self) -> str:
+        return self.dali_frame.standard()
+
+    def clause(self) -> str:
+        return self.dali_frame.clause()
 
     def get_next_device_type(self) -> int:
         return self.next_device_type

@@ -10,8 +10,8 @@ from DALI.forward_frame_24bit import ForwardFrame24Bit
 def test_type_specific_commands():
     # undefined device
     test_frame = DaliFrame(length=ForwardFrame24Bit.LENGTH, data=0x010121)
-    decoder = Decode(test_frame)
-    data_str, adr, cmd, _, _ = decoder.output_row()
+    decoding = Decode(test_frame)
+    data_str, adr, cmd = decoding.data(), decoding.address(), decoding.command()
     target_adr = "D00,I01"
     target_cmd = "SET HOLD TIMER (DTR0) - TYPE 303"
     target_data = f"{test_frame.data:06X}"
@@ -20,8 +20,8 @@ def test_type_specific_commands():
     assert cmd == target_cmd
 
     test_frame = DaliFrame(length=ForwardFrame24Bit.LENGTH, data=0x01020A)
-    decoder = Decode(test_frame)
-    data_str, adr, cmd, _, _ = decoder.output_row()
+    decoding = Decode(test_frame)
+    data_str, adr, cmd = decoding.data(), decoding.address(), decoding.command()
     target_adr = "D00,I02"
     target_cmd = "QUERY SHORT TIMER - TYPE 301"
     target_data = f"{test_frame.data:06X}"

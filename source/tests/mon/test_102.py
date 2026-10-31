@@ -11,7 +11,8 @@ def build_16bit_frame_and_test(
 ) -> None:
     test_frame = DaliFrame(length=ForwardFrame16Bit.LENGTH, data=test_data)
     target_data = f"{test_data:04X}"
-    data_str, adr, cmd, _, _ = Decode(test_frame).output_row()
+    decoding = Decode(test_frame)
+    data_str, adr, cmd = decoding.data(), decoding.address(), decoding.command()
     assert data_str == target_data
     assert adr == target_adr
     assert cmd[: len(target_cmd)] == target_cmd
@@ -20,8 +21,12 @@ def build_16bit_frame_and_test(
 def test_backframe():
     for data in range(0x100):
         test_frame = DaliFrame(length=Backframe8Bit.LENGTH, data=data)
-        decoder = Decode(test_frame)
-        data_str, address, command, _, _ = decoder.output_row()
+        decoding = Decode(test_frame)
+        data_str, address, command = (
+            decoding.data(),
+            decoding.address(),
+            decoding.command(),
+        )
         target_command = f"DATA 0x{data:02X}"
         assert data_str == f"{data:02X}"
         assert address == ""
@@ -247,9 +252,9 @@ def test_standard_command_after_enable_device_type(device_type):
     assert active_device_type == device_type
     for opcode in range(0xE0):
         test_frame = DaliFrame(length=ForwardFrame16Bit.LENGTH, data=0xFF00 + opcode)
-        target_cmd = Decode(test_frame).output_row().command
-        row = Decode(test_frame, active_device_type).output_row()
-        adr, cmd = row.address, row.command
+        target_cmd = Decode(test_frame).command()
+        decoding = Decode(test_frame, active_device_type)
+        adr, cmd = decoding.address(), decoding.command()
         assert adr == "BC GEAR"
         assert cmd == target_cmd, f"opcode 0x{opcode:02X}"
 
@@ -262,7 +267,7 @@ def decode_sequence(frames: list[DaliFrame]) -> str:
     for frame in frames:
         decoding = Decode(frame, device_type)
         device_type = decoding.get_next_device_type()
-        command = decoding.output_row().command
+        command = decoding.command()
     return command
 
 

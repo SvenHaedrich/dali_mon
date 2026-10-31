@@ -1,12 +1,13 @@
 from dali_interface import DaliFrame
 
-from .output_row import IEC_62386_105, OutputRow
+from .decoded_frame import IEC_62386_105, DecodedFrame
 
 # frame_bytes[0] holds bits 31 to 24 of the frame, frame_bytes[3] bits 7 to 0
 
 
-class ForwardFrame32Bit:
+class ForwardFrame32Bit(DecodedFrame):
     LENGTH = 32
+    DATA_DIGITS = 8
 
     def device_command(self) -> tuple[str, str, str]:
         # see iec 62386-105 11.2 table 6 - standard commands
@@ -22,7 +23,7 @@ class ForwardFrame32Bit:
             0x08: ("QUERY BLOCK FAULT", IEC_62386_105, "11.3.2.5"),
         }
         opcode_byte = self.frame_bytes[2]
-        return OutputRow.lookup(
+        return self.lookup(
             code_dictionary,
             opcode_byte,
             f"--- CODE 0x{opcode_byte:02X} = {opcode_byte} UNKNOWN FIRMWARE UPDATE COMMAND",
@@ -34,30 +35,30 @@ class ForwardFrame32Bit:
         if self.frame_bytes[0] & 0x01:
             # control device address space
             if self.frame_bytes[0] >> 1 == BROADCAST:
-                self.address_string = "BC DEV"
+                self._address = "BC DEV"
                 return True
             elif self.frame_bytes[0] >> 1 == BROADCAST_UNADDRESSED:
-                self.address_string = "BC DEV UN"
+                self._address = "BC DEV UN"
                 return True
             else:
                 if not self.frame_bytes[0] & 0x80:
                     short_address = (self.frame_bytes[0] >> 1) & 0x3F
-                    self.address_string = f"D{short_address:02}"
+                    self._address = f"D{short_address:02}"
                     return True
         else:
             # control gear address space
             if self.frame_bytes[0] >> 1 == BROADCAST:
-                self.address_string = "BC GEAR"
+                self._address = "BC GEAR"
                 return True
             elif self.frame_bytes[0] >> 1 == BROADCAST_UNADDRESSED:
-                self.address_string = "BC GEAR UN"
+                self._address = "BC GEAR UN"
                 return True
             else:
                 if not self.frame_bytes[0] & 0x80:
                     short_address = (self.frame_bytes[0] >> 1) & 0x3F
-                    self.address_string = f"G{short_address:02}"
+                    self._address = f"G{short_address:02}"
                     return True
-            self.address_string = ""
+            self._address = ""
         return False
 
     def data_bytes(self) -> str:
@@ -69,35 +70,24 @@ class ForwardFrame32Bit:
         BEGIN_BLOCK = 0xCB
         TRANSFER_BLOCK = 0xBD
         if self.frame_bytes[0] == BEGIN_BLOCK:
-            self.address_string = ""
-            self.command_string = "BEGIN BLOCK " + self.data_bytes()
-            self.standard, self.clause = IEC_62386_105, "11.3.3.1"
+            self._address = ""
+            self._command = "BEGIN BLOCK " + self.data_bytes()
+            self._standard, self._clause = IEC_62386_105, "11.3.3.1"
             return True
         if self.frame_bytes[0] == TRANSFER_BLOCK:
-            self.address_string = ""
-            self.command_string = "TRANSFER BLOCK DATA " + self.data_bytes()
-            self.standard, self.clause = IEC_62386_105, "11.3.3.2"
+            self._address = ""
+            self._command = "TRANSFER BLOCK DATA " + self.data_bytes()
+            self._standard, self._clause = IEC_62386_105, "11.3.3.2"
             return True
         return False
 
     def __init__(self, frame: DaliFrame) -> None:
-        self.frame = frame
+        super().__init__(frame)
         self.frame_bytes = frame.data.to_bytes(4, byteorder="big")
-        self.clause = ""
-        self.standard = ""
         if self.data_transfer_commands():
             return
         if self.build_address_string() and self.frame_bytes[1] == 0xFB:
-            self.command_string, self.standard, self.clause = self.device_command()
+            self._command, self._standard, self._clause = self.device_command()
             return
-        self.address_string = ""
-        self.command_string = "---"
-
-    def output_row(self) -> OutputRow:
-        return OutputRow(
-            f"{self.frame.data:08X}",
-            self.address_string,
-            self.command_string,
-            self.standard,
-            self.clause,
-        )
+        self._address = ""
+        self._command = "---"

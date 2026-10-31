@@ -10,7 +10,8 @@ def build_24bit_frame_and_test(
 ) -> None:
     test_frame = DaliFrame(length=ForwardFrame24Bit.LENGTH, data=test_data)
     target_data = f"{test_data:06X}"
-    data_str, adr, cmd, _, _ = Decode(test_frame).output_row()
+    decoding = Decode(test_frame)
+    data_str, adr, cmd = decoding.data(), decoding.address(), decoding.command()
     assert data_str == target_data
     assert adr == target_adr
     assert cmd[: len(target_cmd)] == target_cmd

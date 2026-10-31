@@ -1,10 +1,10 @@
-"""The result of decoding a DALI frame: one row of the output, every column a string.
+"""The base class of the decoders, which take a DALI frame and give its texts.
 
 Every command code names its standard on its own, so a single command can refer
 to another edition than the others of its table, e.g. when it was deprecated.
 """
 
-from typing import NamedTuple
+from dali_interface import DaliFrame
 
 IEC_62386_101 = "IEC 62386-101:2022"
 IEC_62386_102 = "IEC 62386-102:2022"
@@ -24,17 +24,37 @@ IEC_62386_103_2014 = "IEC 62386-103:2014"
 EDALI = "eDALI"
 
 
-class OutputRow(NamedTuple):
-    """The columns of the output for one DALI frame.
+class DecodedFrame:
+    """The texts of a decoded DALI frame, read by the getters.
 
+    The decoders set address, command, standard and clause in their __init__.
     Deprecated, reserved and unknown commands leave standard and clause empty.
     """
 
-    data: str
-    address: str
-    command: str
-    standard: str = ""
-    clause: str = ""
+    # number of hex digits of the frame data
+    DATA_DIGITS = 8
+
+    def __init__(self, frame: DaliFrame) -> None:
+        self.frame = frame
+        self._address = ""
+        self._command = ""
+        self._standard = ""
+        self._clause = ""
+
+    def data(self) -> str:
+        return f"{self.frame.data:0{self.DATA_DIGITS}X}"
+
+    def address(self) -> str:
+        return self._address
+
+    def command(self) -> str:
+        return self._command
+
+    def standard(self) -> str:
+        return self._standard
+
+    def clause(self) -> str:
+        return self._clause
 
     @staticmethod
     def lookup(
