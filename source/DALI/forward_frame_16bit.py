@@ -40,7 +40,7 @@ class ForwardFrame16Bit(DecodedFrame):
     # iec 62386-102:2022 Table 18: reference of the special commands by address byte,
     # PHYSICAL SELECTION (0xBD) is no longer part of the standard
     SPECIAL_COMMAND_REFERENCES: ClassVar[dict[int, tuple[str, str]]] = {
-        0xA1: (IEC_62386_102, "11.7.1"),
+        0xA1: (IEC_62386_102, "11.7.2"),
         0xA3: (IEC_62386_102, "11.7.3"),
         0xA5: (IEC_62386_102, "11.7.4"),
         0xA7: (IEC_62386_102, "11.7.5"),

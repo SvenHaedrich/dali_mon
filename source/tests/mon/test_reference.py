@@ -72,7 +72,7 @@ def reference(
             id="QUERY NEXT DEVICE TYPE",
         ),
         pytest.param(
-            16, 0xA100, DeviceType.NONE, "IEC 62386-102:2022", "11.7.1", id="TERMINATE"
+            16, 0xA100, DeviceType.NONE, "IEC 62386-102:2022", "11.7.2", id="TERMINATE"
         ),
         pytest.param(
             16,

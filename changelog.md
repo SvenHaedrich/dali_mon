@@ -7,18 +7,18 @@
 - `source/tests/run_lint.sh` checks formatting, lint and types
 - Every pull request runs `markdownlint`, `run_lint.sh` and the tests without hardware on GitHub
 - The exit code of `run_mon.sh` and `run_hid.sh` is the result of the tests, a failing setup stops them
-- All decoders take a `DaliFrame`, the decoders for 16 and 24 bit frames use its getters `address_byte`, `instance_byte` and `opcode_byte`
+- Every decoder takes a `DaliFrame` and derives from `DecodedFrame`, whose getters `data()`, `address()`, `command()`, `standard()` and `reference()` give the texts of the frame; the decoders for 16 and 24 bit frames use the getters `address_byte`, `instance_byte` and `opcode_byte` of `DaliFrame`.
+  `Decode` chooses the decoder by the frame length and keeps it in `dali_frame`, the device type for the next frame in `next_device_type`.
+  The command tables hold tuples of command, standard and clause, `DecodedFrame.lookup` finds a command in them.
 - Device types, eDALI device classes and the address and event types of 24 bit frames are `IntEnum`s with `@unique`
 - The decoders for 24 and 32 bit frames use byte and bit operations instead of `bitstring`, the dependency is removed
-- Every decoder takes a `DaliFrame` and derives from `DecodedFrame`, whose getters `data()`, `address()`, `command()`, `standard()` and `reference()` give the texts of the frame; `Decode` chooses the decoder by the frame length and keeps it in `dali_frame`, the device type for the next frame in `next_device_type`.
-  The command tables hold tuples of command, standard and clause, `DecodedFrame.lookup` finds a command in them
 - `MonitorState` holds the output options of `dali_mon` (`--absolute`, `--echo` and the shown references) and what is kept from frame to frame; `dali_mon` creates it and passes it to the functions instead of using globals
 - Each command shows the standard that defines it (e.g. `IEC 62386-102:2022`) and the clause, in columns with fixed width; `eDALI` for eDALI frames
 - `--no-standard`, `--no-clause` and `--no-reference` hide these columns
 - `SAVE PERSISTENT VARIABLES`, removed in the current editions, refers to IEC 62386-102:2014 and IEC 62386-103:2014
 - Uniform number formats: hex values in upper case, binary values with a trailing `b` (also the DTR of 24 bit frames), `SEARCHADDRH/M/L` in the same format in 16 and 24 bit frames (e.g. `SEARCHADDRH (0x12) =  18 = 00010010b`), the 10 bits of 24 bit event data without leading zeros beyond them, no double spaces within a command (`PHYSICAL SELECTION (DEPRECATED)`)
 - Fix the typo `START PARAMETER DOWMLOAD` of eDALI, it is `START PARAMETER DOWNLOAD`
-- Fix the clauses of `QUERY LAMP FAILURE` (11.5.5) and `QUERY PHYSICAL MINIMUM` (11.5.14) of IEC 62386-102
+- Fix the clauses of `QUERY LAMP FAILURE` (11.5.5), `QUERY PHYSICAL MINIMUM` (11.5.14) and `TERMINATE` (11.7.2) of IEC 62386-102
 - Fix the command names `QUERY CATCHING`, `SET REPORT TIMER (DTR0) - TYPE 303` and `CANCEL HOLD TIMER - TYPE 303` of IEC 62386-303
 
 ## Version 1.8.0
