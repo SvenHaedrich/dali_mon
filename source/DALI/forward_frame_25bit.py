@@ -2,8 +2,7 @@ from enum import IntEnum, unique
 
 from dali_interface import DaliFrame
 
-from .output_row import OutputRow
-from .reference import EDALI
+from .output_row import EDALI, OutputRow
 
 
 @unique

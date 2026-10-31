@@ -1,7 +1,6 @@
 from dali_interface import DaliFrame
 
-from .output_row import OutputRow
-from .reference import IEC_62386_105, Command, lookup
+from .output_row import IEC_62386_105, OutputRow
 
 # frame_bytes[0] holds bits 31 to 24 of the frame, frame_bytes[3] bits 7 to 0
 
@@ -9,21 +8,21 @@ from .reference import IEC_62386_105, Command, lookup
 class ForwardFrame32Bit:
     LENGTH = 32
 
-    def device_command(self) -> Command:
+    def device_command(self) -> tuple[str, str, str]:
         # see iec 62386-105 11.2 table 6 - standard commands
         code_dictionary = {
-            0x00: Command("START FW TRANSFER", IEC_62386_105, "11.3.2.1"),
-            0x01: Command("RESTART FW", IEC_62386_105, "11.3.2.8"),
-            0x02: Command("ENABLE RESTART", IEC_62386_105, "11.3.2.7"),
-            0x03: Command("FINISH FW UPDATE", IEC_62386_105, "11.3.2.2"),
-            0x04: Command("CANCEL FW UPDATE", IEC_62386_105, "11.3.2.6"),
-            0x05: Command("QUERY FW UPDATE FEATURES", IEC_62386_105, "11.3.2.3"),
-            0x06: Command("QUERY FW RESTART ENABLED", IEC_62386_105, "11.3.2.9"),
-            0x07: Command("QUERY FW UPDATE RUNNING", IEC_62386_105, "11.3.2.4"),
-            0x08: Command("QUERY BLOCK FAULT", IEC_62386_105, "11.3.2.5"),
+            0x00: ("START FW TRANSFER", IEC_62386_105, "11.3.2.1"),
+            0x01: ("RESTART FW", IEC_62386_105, "11.3.2.8"),
+            0x02: ("ENABLE RESTART", IEC_62386_105, "11.3.2.7"),
+            0x03: ("FINISH FW UPDATE", IEC_62386_105, "11.3.2.2"),
+            0x04: ("CANCEL FW UPDATE", IEC_62386_105, "11.3.2.6"),
+            0x05: ("QUERY FW UPDATE FEATURES", IEC_62386_105, "11.3.2.3"),
+            0x06: ("QUERY FW RESTART ENABLED", IEC_62386_105, "11.3.2.9"),
+            0x07: ("QUERY FW UPDATE RUNNING", IEC_62386_105, "11.3.2.4"),
+            0x08: ("QUERY BLOCK FAULT", IEC_62386_105, "11.3.2.5"),
         }
         opcode_byte = self.frame_bytes[2]
-        return lookup(
+        return OutputRow.lookup(
             code_dictionary,
             opcode_byte,
             f"--- CODE 0x{opcode_byte:02X} = {opcode_byte} UNKNOWN FIRMWARE UPDATE COMMAND",

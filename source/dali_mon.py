@@ -34,12 +34,6 @@ with PYPROJECT.open("rb") as pyproject:
     VERSION = tomllib.load(pyproject)["project"]["version"]
 
 
-def print_local_time(enabled: bool) -> None:
-    if enabled:
-        time_string = datetime.now().strftime("%H:%M:%S")
-        cprint(f"{time_string} | ", color="yellow", end="")
-
-
 # widths of the columns, the longest texts over all frames; the clause is the last
 # column and needs no width
 DATA_WIDTH = 8
@@ -50,8 +44,13 @@ STANDARD_WIDTH = 18
 
 @dataclass
 class OutputOptions:
-    """Which references to the standard are shown after the command."""
+    """What is shown besides the decoded frames."""
 
+    # the local time in front of each frame, --absolute
+    absolute_time: bool = False
+    # the unprocessed input line before each frame, --echo
+    echo: bool = False
+    # the standard and the clause that define the command
     show_standard: bool = True
     show_clause: bool = True
 
@@ -59,10 +58,14 @@ class OutputOptions:
 output = OutputOptions()
 
 
-def print_command(
-    absolute_time: bool, timestamp: float, delta_s: float, row: OutputRow
-) -> None:
-    print_local_time(absolute_time)
+def print_local_time() -> None:
+    if output.absolute_time:
+        time_string = datetime.now().strftime("%H:%M:%S")
+        cprint(f"{time_string} | ", color="yellow", end="")
+
+
+def print_command(timestamp: float, delta_s: float, row: OutputRow) -> None:
+    print_local_time()
     cprint(
         f"{timestamp:.03f} | {delta_s:8.03f} | {row.data:>{DATA_WIDTH}} | ",
         color="green",
@@ -84,10 +87,8 @@ def print_command(
     cprint(references.rstrip(), color="cyan")
 
 
-def print_error(
-    absolute_time: bool, timestamp: float, delta_s: float, message: str
-) -> None:
-    print_local_time(absolute_time)
+def print_error(timestamp: float, delta_s: float, message: str) -> None:
+    print_local_time()
     cprint(f"{timestamp:.03f} | {delta_s:8.03f} | ", color="green", end="")
     cprint(f"{message}", color="red")
 
@@ -103,7 +104,7 @@ class DecoderState:
 state = DecoderState()
 
 
-def process_line(frame: DaliFrame | None, absolute_time: bool) -> None:
+def process_line(frame: DaliFrame | None) -> None:
     if frame is None:
         return
     if state.last_timestamp != 0:
@@ -112,10 +113,10 @@ def process_line(frame: DaliFrame | None, absolute_time: bool) -> None:
         delta_s = 0
     if frame.status in (DaliStatus.OK, DaliStatus.FRAME, DaliStatus.LOOPBACK):
         decoding = Decode(frame, state.active_device_type)
-        print_command(absolute_time, frame.timestamp, delta_s, decoding.output_row())
+        print_command(frame.timestamp, delta_s, decoding.output_row())
         state.active_device_type = decoding.get_next_device_type()
     else:
-        print_error(absolute_time, frame.timestamp, delta_s, frame.message)
+        print_error(frame.timestamp, delta_s, frame.message)
     state.last_timestamp = frame.timestamp
 
 
@@ -169,9 +170,7 @@ class DaliSerialEcho(DaliSerial):
         return echo
 
 
-def main_connection(
-    absolute_time: bool, connection: DaliInterface, on: bool, off: bool
-) -> None:
+def main_connection(connection: DaliInterface, on: bool, off: bool) -> None:
     logger.debug("read from connection")
     try:
         try:
@@ -191,7 +190,7 @@ def main_connection(
                     print(frame.line)
                     if not frame.is_dali:
                         continue
-                process_line(frame, absolute_time)
+                process_line(frame)
         except RuntimeError as error:
             # the receive thread of the interface stopped
             exit_with_error(f"connection lost: {error.__cause__ or error}")
@@ -199,15 +198,15 @@ def main_connection(
         connection.close()
 
 
-def process_tty_line(line: str, transparent: bool, absolute_time: bool) -> None:
+def process_tty_line(line: str) -> None:
     line = line.strip(" \r\n")
     if len(line) > 0:
-        if transparent:
+        if output.echo:
             print(line)
-        process_line(DaliSerial.parse(line), absolute_time)
+        process_line(DaliSerial.parse(line))
 
 
-def main_tty(transparent: bool, absolute_time: bool) -> None:
+def main_tty() -> None:
     logger.debug("read from tty device")
     stdin = sys.stdin.fileno()
     poller = select.poll()
@@ -231,17 +230,17 @@ def main_tty(transparent: bool, absolute_time: bool) -> None:
         pending = pending + data.decode(encoding="ascii", errors="ignore")
         *lines, pending = pending.split("\n")
         for line in lines:
-            process_tty_line(line, transparent, absolute_time)
+            process_tty_line(line)
 
 
-def main_file(transparent: bool, absolute_time: bool) -> None:
+def main_file() -> None:
     logger.debug("read from file")
     for line in sys.stdin:
         if len(line) > 0:
-            if transparent:
+            if output.echo:
                 print(line, end="")
             frame = DaliSerial.parse(line)
-            process_line(frame, absolute_time)
+            process_line(frame)
 
 
 @click.command(name="dali_mon")
@@ -320,6 +319,8 @@ def dali_mon(
         parameter = next(p for p in context.command.params if p.name == "serial_port")
         click.Path(exists=True, dir_okay=False).convert(serial_port, parameter, context)
 
+    output.absolute_time = absolute
+    output.echo = echo
     output.show_standard = not (no_standard or no_reference)
     output.show_clause = not (no_clause or no_reference)
     state.last_timestamp = 0
@@ -327,17 +328,17 @@ def dali_mon(
     try:
         if hid:
             connection = open_connection(DaliUsb, "DALI USB converter")
-            main_connection(absolute, connection, on, off)
+            main_connection(connection, on, off)
         elif serial_port:
-            serial_class = DaliSerialEcho if echo else DaliSerial
+            serial_class = DaliSerialEcho if output.echo else DaliSerial
             connection = open_connection(
                 lambda: serial_class(serial_port), f"serial port {serial_port}"
             )
-            main_connection(absolute, connection, on, off)
+            main_connection(connection, on, off)
         elif sys.stdin.isatty():
-            main_tty(echo, absolute)
+            main_tty()
         else:
-            main_file(echo, absolute)
+            main_file()
     except KeyboardInterrupt:
         # Ctrl-C is the expected end of a connection
         print("\rinterrupted", file=sys.stderr)

@@ -1,7 +1,6 @@
 from dali_interface import DaliFrame
 
-from .output_row import OutputRow
-from .reference import IEC_62386_101
+from .output_row import IEC_62386_101, OutputRow
 
 
 class Backframe8Bit:
