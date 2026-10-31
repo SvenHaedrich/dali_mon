@@ -19,6 +19,10 @@ from .decoded_frame import (
 
 @unique
 class EventType(IntEnum):
+    """The source of an event message, by the event scheme that addresses it
+    (IEC 62386-103:2022 Table 3). RESERVED marks encodings without a meaning.
+    """
+
     RESERVED = 0
     DEVICE = 1
     DEVICE_INSTANCE = 2
@@ -29,6 +33,10 @@ class EventType(IntEnum):
 
 @unique
 class InstanceAddressType(IntEnum):
+    """What the instance byte of a command frame addresses
+    (IEC 62386-103:2022 Table 2). RESERVED marks encodings without a meaning.
+    """
+
     RESERVED = 0
     INSTANCE_NUMBER = 1
     INSTANCE_GROUP = 2
@@ -45,6 +53,11 @@ class InstanceAddressType(IntEnum):
 
 @unique
 class DeviceAddressType(IntEnum):
+    """What the address byte of a command frame addresses
+    (IEC 62386-103:2022 Table 1). SPECIAL are the special commands, RESERVED marks
+    encodings without a meaning.
+    """
+
     RESERVED = 0
     SHORT_ADDRESS = 1
     GROUP_ADDRESS = 2
@@ -54,6 +67,13 @@ class DeviceAddressType(IntEnum):
 
 
 class ForwardFrame24Bit(DecodedFrame):
+    """24 bit forward frame of control devices (IEC 62386-103).
+
+    Commands to a device or to its instances, the instance commands of the
+    input devices of IEC 62386-301 to 304, special commands, event messages and
+    power cycle events.
+    """
+
     LENGTH = 24
     DATA_DIGITS = 6
     # iec 62386-103:2022 Table 24: reference of the special commands, by instance byte

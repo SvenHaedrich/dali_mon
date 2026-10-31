@@ -7,12 +7,22 @@ from .decoded_frame import EDALI, DecodedFrame
 
 @unique
 class DeviceClass(IntEnum):
+    """The eDALI device classes. The commands of sensors and inputs are decoded,
+    those of sequencers are not.
+    """
+
     SENSOR = 4
     INPUT = 5
     SEQUENCER = 6
 
 
 class ForwardFrame25Bit(DecodedFrame):
+    """25 bit eDALI frame, eDALI is not part of IEC 62386.
+
+    The frame holds a device class, an address and an opcode, the commands of the
+    classes sensor and input are decoded.
+    """
+
     LENGTH = 25
     DATA_DIGITS = 7
 

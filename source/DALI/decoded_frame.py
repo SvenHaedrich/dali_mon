@@ -1,7 +1,8 @@
-"""The base class of the decoders, which take a DALI frame and give its texts.
+"""The base class of the decoders, and the standards their commands refer to.
 
-Every command code names its standard on its own, so a single command can refer
-to another edition than the others of its table, e.g. when it was deprecated.
+The command tables of the decoders name the standard for each command, so a
+single command can refer to another edition than the rest of its table, e.g. a
+command that was removed from the current edition.
 """
 
 from dali_interface import DaliFrame
@@ -25,10 +26,14 @@ EDALI = "eDALI"
 
 
 class DecodedFrame:
-    """The texts of a decoded DALI frame, read by the getters.
+    """The texts of a decoded DALI frame, one getter for each column of the output.
 
-    The decoders set address, command, standard and clause in their __init__.
-    Deprecated, reserved and unknown commands leave standard and clause empty.
+    The decoders derive from this class and set _address, _command, _standard and
+    _reference in their __init__, data() gives the frame data with DATA_DIGITS hex
+    digits. Standard and reference are both empty for reserved and unknown commands
+    and for PHYSICAL SELECTION, which was removed before the editions of 2014.
+    Commands removed later refer to the edition that defined them. eDALI frames
+    have the standard eDALI and no reference, eDALI has no clauses.
     """
 
     # number of hex digits of the frame data

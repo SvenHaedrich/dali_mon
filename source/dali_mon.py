@@ -133,7 +133,8 @@ GET_TIMEOUT_S = 0.5
 
 class EchoFrame(DaliFrame):
     """DALI frame together with the unprocessed input line, for --echo.
-    A line without DALI information gives a frame that is only echoed."""
+    A line without a frame to decode, e.g. a timeout, gives a frame that is only
+    echoed (is_dali is False)."""
 
     line = ""
     is_dali = True

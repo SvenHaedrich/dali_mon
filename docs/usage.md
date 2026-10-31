@@ -139,4 +139,5 @@ These combinations are rejected with exit code 2:
 Command, standard and clause have a fixed width, so the columns are aligned.
 Commands that were removed from the current editions of the standards refer to the edition that defined them, e.g. `IEC 62386-102:2014`.
 Commands that are unknown or reserved show empty standard and clause columns, as does `PHYSICAL SELECTION`, which was removed before the editions of 2014.
-`--no-standard`, `--no-clause` and `--no-reference` hide these columns, with `--no-reference` the output is the same as in version 1.8.0.
+`--no-standard`, `--no-clause` and `--no-reference` hide these columns.
+With `--no-reference` the columns are the same as in version 1.8.0, some command texts differ, see the [changelog](../changelog.md).

@@ -9,17 +9,19 @@ from .forward_frame_32bit import ForwardFrame32Bit
 
 
 class UndefinedFrame(DecodedFrame):
+    """A frame with a length that no decoder handles, only its length is shown."""
+
     def __init__(self, frame: DaliFrame) -> None:
         super().__init__(frame)
         self._command = f"--- UNDEFINED FRAMELENGTH {frame.length} BITS"
 
 
 class Decode:
-    """Decodes a DALI frame: the getters of dali_frame give its texts,
-    next_device_type is the device type for the next frame.
+    """Decodes a DALI frame with the decoder for its length.
 
-    The decoder class is chosen by the length of the frame. Only the 16 bit forward
-    frames depend on the frames before, by the device type of ENABLE DEVICE TYPE.
+    dali_frame is the decoder, its getters give the texts of the frame.
+    next_device_type is the device type to decode the next frame with: only
+    16 bit forward frames depend on the frames before, by ENABLE DEVICE TYPE.
     """
 
     def __init__(self, frame: DaliFrame, device_type: int = DeviceType.NONE) -> None:

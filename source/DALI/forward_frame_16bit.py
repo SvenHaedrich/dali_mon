@@ -15,6 +15,12 @@ from .decoded_frame import (
 
 @unique
 class DeviceType(IntEnum):
+    """The device types whose application extended commands are decoded.
+
+    NONE stands for every other device type, also device type 0, and for no
+    ENABLE DEVICE TYPE: the commands 0xE0 to 0xFF are decoded as plain control gear.
+    """
+
     NONE = 0
     LED = 6
     SWITCH = 7
@@ -22,6 +28,13 @@ class DeviceType(IntEnum):
 
 
 class ForwardFrame16Bit(DecodedFrame):
+    """16 bit forward frame to control gear (IEC 62386-102).
+
+    After ENABLE DEVICE TYPE the commands 0xE0 to 0xFF are the application
+    extended commands of the device type: LED modules (IEC 62386-207), switching
+    function (IEC 62386-208) or colour control (IEC 62386-209).
+    """
+
     LENGTH = 16
     DATA_DIGITS = 4
     # iec 62386-102:2022 Table 18: reference of the special commands by address byte,

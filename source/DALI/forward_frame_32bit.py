@@ -6,6 +6,12 @@ from .decoded_frame import IEC_62386_105, DecodedFrame
 
 
 class ForwardFrame32Bit(DecodedFrame):
+    """32 bit forward frame for the firmware transfer (IEC 62386-105).
+
+    The data transfer commands BEGIN BLOCK and TRANSFER BLOCK DATA, and the
+    firmware update commands to control gear or a control device.
+    """
+
     LENGTH = 32
     DATA_DIGITS = 8
 

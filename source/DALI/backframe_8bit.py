@@ -4,6 +4,10 @@ from .decoded_frame import IEC_62386_101, DecodedFrame
 
 
 class Backframe8Bit(DecodedFrame):
+    """8 bit backward frame, the answer of control gear or a control device to a
+    query (IEC 62386-101). It has no address, the command shows the answered value.
+    """
+
     LENGTH = 8
     DATA_DIGITS = 2
 
