@@ -263,11 +263,11 @@ class ForwardFrame24Bit(DecodedFrame):
             elif self.frame.instance_byte == 0x21:
                 return f"WRITE MEMORY LOCATION - NO REPLY - DTR1, DTR0, (0x{self.frame.opcode_byte:02X}) = {self.frame.opcode_byte}"
             elif self.frame.instance_byte == 0x30:
-                return f"DTR0 0x{self.frame.opcode_byte:02X} = {self.frame.opcode_byte:3} = {self.frame.opcode_byte:08b}"
+                return f"DTR0 0x{self.frame.opcode_byte:02X} = {self.frame.opcode_byte:3} = {self.frame.opcode_byte:08b}b"
             elif self.frame.instance_byte == 0x31:
-                return f"DTR1 0x{self.frame.opcode_byte:02X} = {self.frame.opcode_byte:3} = {self.frame.opcode_byte:08b}"
+                return f"DTR1 0x{self.frame.opcode_byte:02X} = {self.frame.opcode_byte:3} = {self.frame.opcode_byte:08b}b"
             elif self.frame.instance_byte == 0x32:
-                return f"DTR2 0x{self.frame.opcode_byte:02X} = {self.frame.opcode_byte:3} = {self.frame.opcode_byte:08b}"
+                return f"DTR2 0x{self.frame.opcode_byte:02X} = {self.frame.opcode_byte:3} = {self.frame.opcode_byte:08b}b"
             elif self.frame.instance_byte == 0x33:
                 return f"SEND TESTFRAME (0x{self.frame.opcode_byte:02X}) = {self.frame.opcode_byte}"
         if self.frame.address_byte == 0xC5:

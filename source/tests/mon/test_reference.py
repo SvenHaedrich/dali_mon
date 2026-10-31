@@ -40,6 +40,38 @@ def reference(
             16, 0xFE80, DeviceType.NONE, "IEC 62386-102:2022", "11.3.1", id="DAPC"
         ),
         pytest.param(
+            16,
+            0xFF92,
+            DeviceType.NONE,
+            "IEC 62386-102:2022",
+            "11.5.5",
+            id="QUERY LAMP FAILURE",
+        ),
+        pytest.param(
+            16,
+            0xFFAA,
+            DeviceType.NONE,
+            "IEC 62386-102:2022",
+            "11.5.4",
+            id="QUERY CONTROL GEAR FAILURE",
+        ),
+        pytest.param(
+            16,
+            0xFF9A,
+            DeviceType.NONE,
+            "IEC 62386-102:2022",
+            "11.5.14",
+            id="QUERY PHYSICAL MINIMUM",
+        ),
+        pytest.param(
+            16,
+            0xFFA7,
+            DeviceType.NONE,
+            "IEC 62386-102:2022",
+            "11.5.13",
+            id="QUERY NEXT DEVICE TYPE",
+        ),
+        pytest.param(
             16, 0xA100, DeviceType.NONE, "IEC 62386-102:2022", "11.7.1", id="TERMINATE"
         ),
         pytest.param(

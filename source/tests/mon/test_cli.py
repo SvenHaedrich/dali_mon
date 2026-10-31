@@ -306,7 +306,7 @@ def test_command_without_reference():
     assert stdout_lines(result) == [
         (
             "0.001 |    0.000 |     BD00 |                        "
-            "PHYSICAL SELECTION  (DEPRECATED)                            |                    |"
+            "PHYSICAL SELECTION (DEPRECATED)                             |                    |"
         )
     ]
 

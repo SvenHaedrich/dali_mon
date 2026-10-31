@@ -164,7 +164,7 @@ class ForwardFrame16Bit(DecodedFrame):
             0x81: ("ENABLE WRITE MEMORY", IEC_62386_102, "11.4.19"),
             0x90: ("QUERY STATUS", IEC_62386_102, "11.5.2"),
             0x91: ("QUERY CONTROL GEAR PRESENT", IEC_62386_102, "11.5.3"),
-            0x92: ("QUERY LAMP FAILURE", IEC_62386_102, "11.5.4"),
+            0x92: ("QUERY LAMP FAILURE", IEC_62386_102, "11.5.5"),
             0x93: ("QUERY LAMP POWER ON", IEC_62386_102, "11.5.6"),
             0x94: ("QUERY LIMIT ERROR", IEC_62386_102, "11.5.7"),
             0x95: ("QUERY RESET STATE", IEC_62386_102, "11.5.8"),
@@ -172,7 +172,7 @@ class ForwardFrame16Bit(DecodedFrame):
             0x97: ("QUERY VERSION NUMBER", IEC_62386_102, "11.5.10"),
             0x98: ("QUERY CONTENT DTR0", IEC_62386_102, "11.5.11"),
             0x99: ("QUERY DEVICE TYPE", IEC_62386_102, "11.5.12"),
-            0x9A: ("QUERY PHYSICAL MINIMUM", IEC_62386_102, "11.5.13"),
+            0x9A: ("QUERY PHYSICAL MINIMUM", IEC_62386_102, "11.5.14"),
             0x9B: ("QUERY POWER FAILURE", IEC_62386_102, "11.5.15"),
             0x9C: ("QUERY CONTENT DTR1", IEC_62386_102, "11.5.16"),
             0x9D: ("QUERY CONTENT DTR2", IEC_62386_102, "11.5.17"),
@@ -330,7 +330,7 @@ class ForwardFrame16Bit(DecodedFrame):
                 return "INITIALISE (UNADDRESSED)"
             if self.frame.opcode_byte == 0x00:
                 return "INITIALISE (ALL)"
-            return f"INITIALISE (NONE) - 0x{self.frame.opcode_byte:02x}"
+            return f"INITIALISE (NONE) - 0x{self.frame.opcode_byte:02X}"
         elif self.frame.address_byte == 0xA7 and self.frame.opcode_byte == 0x00:
             return "RANDOMISE"
         elif self.frame.address_byte == 0xA9 and self.frame.opcode_byte == 0x00:
@@ -340,11 +340,11 @@ class ForwardFrame16Bit(DecodedFrame):
         elif self.frame.address_byte == 0xAD and self.frame.opcode_byte == 0x00:
             return "PING"
         elif self.frame.address_byte == 0xB1:
-            return f"SEARCHADDRH 0x{self.frame.opcode_byte:02X} = {self.frame.opcode_byte:3} = {self.frame.opcode_byte:08b}b"
+            return f"SEARCHADDRH (0x{self.frame.opcode_byte:02X}) = {self.frame.opcode_byte:3} = {self.frame.opcode_byte:08b}b"
         elif self.frame.address_byte == 0xB3:
-            return f"SEARCHADDRM 0x{self.frame.opcode_byte:02X} = {self.frame.opcode_byte:3} = {self.frame.opcode_byte:08b}b"
+            return f"SEARCHADDRM (0x{self.frame.opcode_byte:02X}) = {self.frame.opcode_byte:3} = {self.frame.opcode_byte:08b}b"
         elif self.frame.address_byte == 0xB5:
-            return f"SEARCHADDRL 0x{self.frame.opcode_byte:02X} = {self.frame.opcode_byte:3} = {self.frame.opcode_byte:08b}b"
+            return f"SEARCHADDRL (0x{self.frame.opcode_byte:02X}) = {self.frame.opcode_byte:3} = {self.frame.opcode_byte:08b}b"
         elif self.frame.address_byte == 0xB7:
             if (
                 (self.frame.opcode_byte >> 1) >= 0x00
@@ -361,7 +361,7 @@ class ForwardFrame16Bit(DecodedFrame):
         elif self.frame.address_byte == 0xBB and self.frame.opcode_byte == 0x00:
             return "QUERY SHORT ADDRESS"
         elif self.frame.address_byte == 0xBD:
-            return "PHYSICAL SELECTION  (DEPRECATED)"
+            return "PHYSICAL SELECTION (DEPRECATED)"
         elif self.frame.address_byte == 0xC1:
             return f"ENABLE DEVICE TYPE {self.frame.opcode_byte}"
         elif self.frame.address_byte == 0xC3:

@@ -63,7 +63,7 @@ class ForwardFrame32Bit(DecodedFrame):
 
     def data_bytes(self) -> str:
         first, second, third = self.frame_bytes[1:]
-        return f"(0x{first:02x}, 0x{second:02x}, 0x{third:02x})"
+        return f"(0x{first:02X}, 0x{second:02X}, 0x{third:02X})"
 
     def data_transfer_commands(self):
         # see iec 62386-105 11.2 table 7 - data transfer commands
