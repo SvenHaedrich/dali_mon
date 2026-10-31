@@ -247,11 +247,11 @@ class ForwardFrame24Bit(DecodedFrame):
             elif self.frame.instance_byte == 0x04:
                 return "WITHDRAW"
             elif self.frame.instance_byte == 0x05:
-                return f"SEARCHADDRH (0x{self.frame.opcode_byte:02X}) = {self.frame.opcode_byte}"
+                return f"SEARCHADDRH (0x{self.frame.opcode_byte:02X}) = {self.frame.opcode_byte:3} = {self.frame.opcode_byte:08b}b"
             elif self.frame.instance_byte == 0x06:
-                return f"SEARCHADDRM (0x{self.frame.opcode_byte:02X}) = {self.frame.opcode_byte}"
+                return f"SEARCHADDRM (0x{self.frame.opcode_byte:02X}) = {self.frame.opcode_byte:3} = {self.frame.opcode_byte:08b}b"
             elif self.frame.instance_byte == 0x07:
-                return f"SEARCHADDRL (0x{self.frame.opcode_byte:02X}) = {self.frame.opcode_byte}"
+                return f"SEARCHADDRL (0x{self.frame.opcode_byte:02X}) = {self.frame.opcode_byte:3} = {self.frame.opcode_byte:08b}b"
             elif self.frame.instance_byte == 0x08:
                 return f"PROGRAM SHORT ADDRESS (0x{self.frame.opcode_byte:02X}) = {self.frame.opcode_byte}"
             elif self.frame.instance_byte == 0x09:
@@ -446,7 +446,7 @@ class ForwardFrame24Bit(DecodedFrame):
                 self._command = "RESERVED EVENT"
             else:
                 self._address = self.build_event_source_string(event_source_type)
-                self._command = f"EVENT DATA 0x{(frame.data & 0x3FF):03X} = {(frame.data & 0x3FF)} = {(frame.data & 0x3FF):012b}b"
+                self._command = f"EVENT DATA 0x{(frame.data & 0x3FF):03X} = {(frame.data & 0x3FF)} = {(frame.data & 0x3FF):010b}b"
                 # the event message is the INPUT NOTIFICATION command
                 self._standard, self._reference = IEC_62386_103, "11.3.1"
             return
