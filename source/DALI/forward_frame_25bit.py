@@ -1,12 +1,9 @@
-from enum import IntEnum, unique
-
 from dali_interface import DaliFrame
 
 from .decoded_frame import EDALI, DecodedFrame
 
 
-@unique
-class DeviceClass(IntEnum):
+class DeviceClass:
     """The eDALI device classes. The commands of sensors and inputs are decoded,
     those of sequencers are not.
     """

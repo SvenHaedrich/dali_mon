@@ -1,5 +1,3 @@
-from enum import IntEnum, unique
-
 from dali_interface import DaliFrame
 
 from .decoded_frame import (
@@ -16,8 +14,7 @@ from .decoded_frame import (
 # instance_byte bits 15 to 8 and opcode_byte bits 7 to 0 (IEC 62386-103 bit numbers).
 
 
-@unique
-class EventType(IntEnum):
+class EventType:
     """The source of an event message, by the event scheme that addresses it
     (IEC 62386-103:2022 Table 3). RESERVED marks encodings without a meaning.
     """
@@ -30,8 +27,7 @@ class EventType(IntEnum):
     INSTANCE_GROUP = 5
 
 
-@unique
-class InstanceAddressType(IntEnum):
+class InstanceAddressType:
     """What the instance byte of a command frame addresses
     (IEC 62386-103:2022 Table 2). RESERVED marks encodings without a meaning.
     """
@@ -50,8 +46,7 @@ class InstanceAddressType(IntEnum):
     DEVICE = 11
 
 
-@unique
-class DeviceAddressType(IntEnum):
+class DeviceAddressType:
     """What the address byte of a command frame addresses
     (IEC 62386-103:2022 Table 1). SPECIAL are the special commands, RESERVED marks
     encodings without a meaning.
@@ -303,7 +298,7 @@ class ForwardFrame24Bit(DecodedFrame):
         return f"--- CODE 0x{self.frame.address_byte:02X} = {self.frame.address_byte} UNKNOWN CONTROL DEVICE SPECIAL COMMAND"
 
     # IEC 62386-103:2022 Table 2 - instance byte in a command frame
-    def get_instance_address_type(self) -> InstanceAddressType:
+    def get_instance_address_type(self) -> int:
         if self.frame.instance_byte == 0xFE:
             return InstanceAddressType.DEVICE
         if self.frame.instance_byte == 0xFC:
@@ -330,7 +325,7 @@ class ForwardFrame24Bit(DecodedFrame):
         return InstanceAddressType.RESERVED
 
     # IEC 62386-103:2022 Table 1 - command frame encoding
-    def get_device_address_type(self) -> DeviceAddressType:
+    def get_device_address_type(self) -> int:
         if self.frame.address_byte == 0xFF:
             return DeviceAddressType.BROADCAST
         if self.frame.address_byte == 0xFD:
@@ -344,7 +339,7 @@ class ForwardFrame24Bit(DecodedFrame):
         return DeviceAddressType.RESERVED
 
     # IEC 62386-103:2022 Table 3 - event message frame encoding
-    def get_event_source_type(self) -> EventType:
+    def get_event_source_type(self) -> int:
         if not self.frame.address_byte & 0x80:
             if self.frame.instance_byte & 0x80:
                 return EventType.DEVICE_INSTANCE
@@ -361,7 +356,7 @@ class ForwardFrame24Bit(DecodedFrame):
         return EventType.RESERVED
 
     def build_command_address_string(
-        self, address_type: DeviceAddressType, instance_type: InstanceAddressType
+        self, address_type: int, instance_type: int
     ) -> str:
         # todo make address_type instance_type a class_member
         address_string = ""
@@ -408,7 +403,7 @@ class ForwardFrame24Bit(DecodedFrame):
             address_string = "RESERVED"
         return address_string
 
-    def build_event_source_string(self, event_source_type: EventType) -> str:
+    def build_event_source_string(self, event_source_type: int) -> str:
         if event_source_type == EventType.DEVICE:
             short_address = (self.frame.address_byte >> 1) & 0x3F
             instance_type = (self.frame.instance_byte >> 2) & 0x1F

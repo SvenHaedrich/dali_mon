@@ -1,5 +1,3 @@
-from enum import IntEnum, unique
-
 from dali_interface import DaliFrame
 
 from .decoded_frame import (
@@ -12,8 +10,7 @@ from .decoded_frame import (
 )
 
 
-@unique
-class DeviceType(IntEnum):
+class DeviceType:
     """The device types whose application extended commands are decoded.
 
     NONE stands for every other device type, also device type 0, and for no

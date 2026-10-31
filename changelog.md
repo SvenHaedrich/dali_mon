@@ -10,7 +10,7 @@
 - Every decoder takes a `DaliFrame` and derives from `DecodedFrame`, whose getters `data()`, `address()`, `command()`, `standard()` and `reference()` give the texts of the frame; the decoders for 16 and 24 bit frames use the getters `address_byte`, `instance_byte` and `opcode_byte` of `DaliFrame`.
   `Decode` chooses the decoder by the frame length and keeps it in `dali_frame`, the device type for the next frame in `next_device_type`.
   The command tables are module constants (e.g. `GEAR_COMMANDS`), built once instead of for every frame; they hold tuples of command, standard and clause, `DecodedFrame.lookup` finds a command in them.
-- Device types, eDALI device classes and the address and event types of 24 bit frames are `IntEnum`s with `@unique`
+- Device types, eDALI device classes and the address and event types of 24 bit frames are classes with integer constants, a test checks that their values are unique
 - The decoders for 24 and 32 bit frames use byte and bit operations instead of `bitstring`, the dependency is removed
 - `MonitorState` holds the output options of `dali_mon` (`--absolute`, `--echo` and the shown references) and what is kept from frame to frame; `dali_mon` creates it and passes it to the functions instead of using globals
 - Each command shows the standard that defines it (e.g. `IEC 62386-102:2022`) and the clause, in columns with fixed width; `eDALI` for eDALI frames
