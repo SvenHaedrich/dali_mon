@@ -6,8 +6,11 @@ import os
 import select
 import sys
 import tomllib
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from typing import NoReturn
 
 import click
 from click.core import ParameterSource
@@ -21,6 +24,7 @@ from dali_interface import (
 from termcolor import cprint
 
 from DALI.decode import Decode
+from DALI.decoded_frame import DecodedFrame
 from DALI.forward_frame_16bit import DeviceType
 
 logger = logging.getLogger(__name__)
@@ -30,57 +34,91 @@ with PYPROJECT.open("rb") as pyproject:
     VERSION = tomllib.load(pyproject)["project"]["version"]
 
 
-def print_local_time(enabled: bool) -> None:
-    if enabled:
+# widths of the columns, the longest texts over all frames; the clause is the last
+# column and needs no width
+DATA_WIDTH = 8
+ADDRESS_WIDTH = 22
+COMMAND_WIDTH = 59
+STANDARD_WIDTH = 18
+
+
+@dataclass
+class MonitorState:
+    """The output options, and what is kept from one frame to the next."""
+
+    # the local time in front of each frame, --absolute
+    absolute_time: bool = False
+    # the unprocessed input line before each frame, --echo
+    echo: bool = False
+    # the standard and the clause that define the command
+    show_standard: bool = True
+    show_clause: bool = True
+    # timestamp of the frame before, 0 before the first frame
+    last_timestamp: float = 0
+    # device type of ENABLE DEVICE TYPE for the next 16 bit forward frame
+    active_device_type: int = DeviceType.NONE
+
+
+def print_local_time(state: MonitorState) -> None:
+    if state.absolute_time:
         time_string = datetime.now().strftime("%H:%M:%S")
         cprint(f"{time_string} | ", color="yellow", end="")
 
 
 def print_command(
-    absolute_time: float,
-    timestamp: float,
-    delta_s: float,
-    data: str,
-    address: str,
-    command: str,
+    state: MonitorState, timestamp: float, delta_s: float, decoded: DecodedFrame
 ) -> None:
-    print_local_time(absolute_time)
-    cprint(f"{timestamp:.03f} | {delta_s:8.03f} | {data:>8} | ", color="green", end="")
-    cprint(f"{address:<22} {command}", color="white", end="")
-    cprint("")
+    print_local_time(state)
+    cprint(
+        f"{timestamp:.03f} | {delta_s:8.03f} | {decoded.data():>{DATA_WIDTH}} | ",
+        color="green",
+        end="",
+    )
+    address = f"{decoded.address():<{ADDRESS_WIDTH}}"
+    if not (state.show_standard or state.show_clause):
+        cprint(f"{address} {decoded.command()}", color="white")
+        return
+    cprint(f"{address} {decoded.command():<{COMMAND_WIDTH}}", color="white", end="")
+    references = ""
+    if state.show_standard:
+        references += f" | {decoded.standard():<{STANDARD_WIDTH}}"
+    if state.show_clause:
+        references += f" | {decoded.reference()}"
+    cprint(references.rstrip(), color="cyan")
 
 
 def print_error(
-    absolute_time: float, timestamp: float, delta_s: float, message: str
+    state: MonitorState, timestamp: float, delta_s: float, message: str
 ) -> None:
-    print_local_time(absolute_time)
+    print_local_time(state)
     cprint(f"{timestamp:.03f} | {delta_s:8.03f} | ", color="green", end="")
     cprint(f"{message}", color="red")
 
 
-def process_line(frame: DaliFrame | None, absolute_time: float) -> None:
+def process_line(state: MonitorState, frame: DaliFrame | None) -> None:
     if frame is None:
         return
-    if process_line.last_timestamp != 0:
-        delta_s = frame.timestamp - process_line.last_timestamp
+    if state.last_timestamp != 0:
+        delta_s = frame.timestamp - state.last_timestamp
     else:
         delta_s = 0
     if frame.status in (DaliStatus.OK, DaliStatus.FRAME, DaliStatus.LOOPBACK):
-        decoding = Decode(frame, process_line.active_device_type)
-        data, address, command = decoding.get_strings()
-        print_command(absolute_time, frame.timestamp, delta_s, data, address, command)
-        process_line.active_device_type = decoding.get_next_device_type()
+        decoding = Decode(frame, state.active_device_type)
+        print_command(state, frame.timestamp, delta_s, decoding.dali_frame)
+        state.active_device_type = decoding.next_device_type
     else:
-        print_error(absolute_time, frame.timestamp, delta_s, frame.message)
-    process_line.last_timestamp = frame.timestamp
+        print_error(state, frame.timestamp, delta_s, frame.message)
+    state.last_timestamp = frame.timestamp
 
 
-def exit_with_error(message: str) -> None:
+def exit_with_error(message: str) -> NoReturn:
     cprint(f"\r{message}", color="red", file=sys.stderr)
     sys.exit(1)
 
 
-def open_connection(open_interface, name: str) -> DaliInterface:
+def open_connection(
+    open_interface: Callable[[], DaliInterface], name: str
+) -> DaliInterface:
     try:
         return open_interface()
     except (OSError, ValueError) as error:
@@ -95,7 +133,8 @@ GET_TIMEOUT_S = 0.5
 
 class EchoFrame(DaliFrame):
     """DALI frame together with the unprocessed input line, for --echo.
-    A line without DALI information gives a frame that is only echoed."""
+    A line without a frame to decode, e.g. a timeout, gives a frame that is only
+    echoed (is_dali is False)."""
 
     line = ""
     is_dali = True
@@ -113,15 +152,18 @@ class DaliSerialEcho(DaliSerial):
         frame = self.parse(line)
         # the receive thread drops timeout frames, so a timeout line travels
         # as a frame that is only echoed
-        is_dali = frame is not None and frame.status != DaliStatus.TIMEOUT
-        echo = EchoFrame(*frame) if is_dali else EchoFrame(status=DaliStatus.OK)
+        if frame is not None and frame.status != DaliStatus.TIMEOUT:
+            echo = EchoFrame(**frame._asdict())
+            echo.is_dali = True
+        else:
+            echo = EchoFrame(status=DaliStatus.OK)
+            echo.is_dali = False
         echo.line = line
-        echo.is_dali = is_dali
         return echo
 
 
 def main_connection(
-    absolute_time: bool, connection: DaliInterface, on: bool, off: bool
+    state: MonitorState, connection: DaliInterface, on: bool, off: bool
 ) -> None:
     logger.debug("read from connection")
     try:
@@ -142,7 +184,7 @@ def main_connection(
                     print(frame.line)
                     if not frame.is_dali:
                         continue
-                process_line(frame, absolute_time)
+                process_line(state, frame)
         except RuntimeError as error:
             # the receive thread of the interface stopped
             exit_with_error(f"connection lost: {error.__cause__ or error}")
@@ -150,15 +192,15 @@ def main_connection(
         connection.close()
 
 
-def process_tty_line(line: str, transparent: bool, absolute_time: bool) -> None:
+def process_tty_line(state: MonitorState, line: str) -> None:
     line = line.strip(" \r\n")
     if len(line) > 0:
-        if transparent:
+        if state.echo:
             print(line)
-        process_line(DaliSerial.parse(line), absolute_time)
+        process_line(state, DaliSerial.parse(line))
 
 
-def main_tty(transparent: bool, absolute_time: bool) -> None:
+def main_tty(state: MonitorState) -> None:
     logger.debug("read from tty device")
     stdin = sys.stdin.fileno()
     poller = select.poll()
@@ -182,17 +224,17 @@ def main_tty(transparent: bool, absolute_time: bool) -> None:
         pending = pending + data.decode(encoding="ascii", errors="ignore")
         *lines, pending = pending.split("\n")
         for line in lines:
-            process_tty_line(line, transparent, absolute_time)
+            process_tty_line(state, line)
 
 
-def main_file(transparent: bool, absolute_time: bool) -> None:
+def main_file(state: MonitorState) -> None:
     logger.debug("read from file")
     for line in sys.stdin:
         if len(line) > 0:
-            if transparent:
+            if state.echo:
                 print(line, end="")
             frame = DaliSerial.parse(line)
-            process_line(frame, absolute_time)
+            process_line(state, frame)
 
 
 @click.command(name="dali_mon")
@@ -208,6 +250,15 @@ def main_file(transparent: bool, absolute_time: bool) -> None:
 @click.option("--debug", help="Enable debug level logging.", hidden=True, is_flag=True)
 @click.option("--echo", help="Echo unprocessed input line to output.", is_flag=True)
 @click.option("--absolute", help="Add absolute local time to output.", is_flag=True)
+@click.option(
+    "--no-standard", help="Hide the standard that defines a command.", is_flag=True
+)
+@click.option(
+    "--no-clause", help="Hide the clause that defines a command.", is_flag=True
+)
+@click.option(
+    "--no-reference", help="Hide standard and clause of a command.", is_flag=True
+)
 @click.option("--on", help="Enable power supply (if available).", is_flag=True)
 @click.option("--off", help="Disable power supply (if available).", is_flag=True)
 @click.option(
@@ -218,7 +269,18 @@ def main_file(transparent: bool, absolute_time: bool) -> None:
     show_envvar=True,
     type=click.Path(dir_okay=False),
 )
-def dali_mon(hid, debug, echo, absolute, serial_port, on, off):
+def dali_mon(
+    hid: bool,
+    debug: bool,
+    echo: bool,
+    absolute: bool,
+    serial_port: str | None,
+    on: bool,
+    off: bool,
+    no_standard: bool,
+    no_clause: bool,
+    no_reference: bool,
+) -> None:
     """
     Monitor for DALI commands.
     sevenlab engineering 2026
@@ -251,22 +313,26 @@ def dali_mon(hid, debug, echo, absolute, serial_port, on, off):
         parameter = next(p for p in context.command.params if p.name == "serial_port")
         click.Path(exists=True, dir_okay=False).convert(serial_port, parameter, context)
 
-    process_line.last_timestamp = 0
-    process_line.active_device_type = DeviceType.NONE
+    state = MonitorState(
+        absolute_time=absolute,
+        echo=echo,
+        show_standard=not (no_standard or no_reference),
+        show_clause=not (no_clause or no_reference),
+    )
     try:
         if hid:
             connection = open_connection(DaliUsb, "DALI USB converter")
-            main_connection(absolute, connection, on, off)
+            main_connection(state, connection, on, off)
         elif serial_port:
-            serial_class = DaliSerialEcho if echo else DaliSerial
+            serial_class = DaliSerialEcho if state.echo else DaliSerial
             connection = open_connection(
                 lambda: serial_class(serial_port), f"serial port {serial_port}"
             )
-            main_connection(absolute, connection, on, off)
+            main_connection(state, connection, on, off)
         elif sys.stdin.isatty():
-            main_tty(echo, absolute)
+            main_tty(state)
         else:
-            main_file(echo, absolute)
+            main_file(state)
     except KeyboardInterrupt:
         # Ctrl-C is the expected end of a connection
         print("\rinterrupted", file=sys.stderr)

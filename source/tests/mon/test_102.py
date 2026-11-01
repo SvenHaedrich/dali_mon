@@ -11,7 +11,8 @@ def build_16bit_frame_and_test(
 ) -> None:
     test_frame = DaliFrame(length=ForwardFrame16Bit.LENGTH, data=test_data)
     target_data = f"{test_data:04X}"
-    data_str, adr, cmd = Decode(test_frame).get_strings()
+    decoded = Decode(test_frame).dali_frame
+    data_str, adr, cmd = decoded.data(), decoded.address(), decoded.command()
     assert data_str == target_data
     assert adr == target_adr
     assert cmd[: len(target_cmd)] == target_cmd
@@ -20,8 +21,12 @@ def build_16bit_frame_and_test(
 def test_backframe():
     for data in range(0x100):
         test_frame = DaliFrame(length=Backframe8Bit.LENGTH, data=data)
-        decoder = Decode(test_frame)
-        data_str, address, command = decoder.get_strings()
+        decoded = Decode(test_frame).dali_frame
+        data_str, address, command = (
+            decoded.data(),
+            decoded.address(),
+            decoded.command(),
+        )
         target_command = f"DATA 0x{data:02X}"
         assert data_str == f"{data:02X}"
         assert address == ""
@@ -243,12 +248,13 @@ def test_initialise_special_cases(test_data, target_cmd):
 )
 def test_standard_command_after_enable_device_type(device_type):
     enable_frame = DaliFrame(length=ForwardFrame16Bit.LENGTH, data=0xC100 + device_type)
-    active_device_type = Decode(enable_frame).get_next_device_type()
+    active_device_type = Decode(enable_frame).next_device_type
     assert active_device_type == device_type
     for opcode in range(0xE0):
         test_frame = DaliFrame(length=ForwardFrame16Bit.LENGTH, data=0xFF00 + opcode)
-        _, _, target_cmd = Decode(test_frame).get_strings()
-        _, adr, cmd = Decode(test_frame, active_device_type).get_strings()
+        target_cmd = Decode(test_frame).dali_frame.command()
+        decoded = Decode(test_frame, active_device_type).dali_frame
+        adr, cmd = decoded.address(), decoded.command()
         assert adr == "BC GEAR"
         assert cmd == target_cmd, f"opcode 0x{opcode:02X}"
 
@@ -257,10 +263,12 @@ def decode_sequence(frames: list[DaliFrame]) -> str:
     # pass the device type from frame to frame like dali_mon does,
     # return the command of the last frame
     device_type = DeviceType.NONE
+    command = ""
     for frame in frames:
         decoding = Decode(frame, device_type)
-        device_type = decoding.get_next_device_type()
-    return decoding.get_strings()[2]
+        device_type = decoding.next_device_type
+        command = decoding.dali_frame.command()
+    return command
 
 
 # refer to iec62386 102 11.2: ENABLE DEVICE TYPE stays active until the

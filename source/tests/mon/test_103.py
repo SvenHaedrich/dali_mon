@@ -2,6 +2,7 @@ import pytest
 from dali_interface import DaliFrame
 
 from DALI.decode import Decode
+from DALI.forward_frame_16bit import ForwardFrame16Bit
 from DALI.forward_frame_24bit import ForwardFrame24Bit
 
 
@@ -10,7 +11,8 @@ def build_24bit_frame_and_test(
 ) -> None:
     test_frame = DaliFrame(length=ForwardFrame24Bit.LENGTH, data=test_data)
     target_data = f"{test_data:06X}"
-    data_str, adr, cmd = Decode(test_frame).get_strings()
+    decoded = Decode(test_frame).dali_frame
+    data_str, adr, cmd = decoded.data(), decoded.address(), decoded.command()
     assert data_str == target_data
     assert adr == target_adr
     assert cmd[: len(target_cmd)] == target_cmd
@@ -147,7 +149,7 @@ def test_power_cycle_event():
 def test_event_scheme_decoding():
     # see IEC62386-103-2022 7.2.2.1 Table 3
     # eventScheme Device (0)
-    target_cmd = "EVENT DATA 0x000 = 0 = 000000000000b"
+    target_cmd = "EVENT DATA 0x000 = 0 = 0000000000b"
     for short_address in range(0x40):
         for instance_type in range(0x20):
             test_data = (short_address << 17) + (instance_type << 10)
@@ -325,3 +327,39 @@ def test_initialise_special_cases(test_data, target_cmd):
 def test_reserved_command_spaces(address_byte):
     test_data = address_byte << 16
     build_24bit_frame_and_test(test_data, "", "RESERVED")
+
+
+# the event information has 10 bits
+def test_event_data_bits():
+    build_24bit_frame_and_test(
+        0x0003FF, "D00,T00", "EVENT DATA 0x3FF = 1023 = 1111111111b"
+    )
+
+
+# SEARCHADDRH/M/L look the same in 16 and 24 bit frames
+@pytest.mark.parametrize(
+    "name,address_byte,instance_byte",
+    [
+        ("SEARCHADDRH", 0xB1, 0x05),
+        ("SEARCHADDRM", 0xB3, 0x06),
+        ("SEARCHADDRL", 0xB5, 0x07),
+    ],
+)
+def test_searchaddr_format(name, address_byte, instance_byte):
+    def commands(value: int) -> tuple[str, str]:
+        frame_16 = DaliFrame(
+            length=ForwardFrame16Bit.LENGTH, data=(address_byte << 8) | value
+        )
+        frame_24 = DaliFrame(
+            length=ForwardFrame24Bit.LENGTH,
+            data=(0xC1 << 16) | (instance_byte << 8) | value,
+        )
+        return (
+            Decode(frame_16).dali_frame.command(),
+            Decode(frame_24).dali_frame.command(),
+        )
+
+    for value in range(0x100):
+        command_16, command_24 = commands(value)
+        assert command_24 == command_16
+    assert commands(0x12)[0] == f"{name} (0x12) =  18 = 00010010b"

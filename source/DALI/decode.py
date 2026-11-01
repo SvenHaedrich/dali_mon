@@ -1,52 +1,47 @@
 from dali_interface import DaliFrame
 
 from .backframe_8bit import Backframe8Bit
+from .decoded_frame import DecodedFrame
 from .forward_frame_16bit import DeviceType, ForwardFrame16Bit
 from .forward_frame_24bit import ForwardFrame24Bit
 from .forward_frame_25bit import ForwardFrame25Bit
 from .forward_frame_32bit import ForwardFrame32Bit
 
 
-class UndefinedFrame:
-    def __init__(self, data: int, length: int) -> None:
-        self.data_frame = data
-        self.length = length
+class UndefinedFrame(DecodedFrame):
+    """A frame with a length that no decoder handles, only its length is shown."""
 
-    def adr(self) -> str:
-        return ""
-
-    def cmd(self) -> str:
-        return f"--- UNDEFINED FRAMELENGTH {self.length} BITS"
-
-    def data(self) -> str:
-        return f"{self.data_frame:08X}"
+    def __init__(self, frame: DaliFrame) -> None:
+        super().__init__(frame)
+        self._command = f"--- UNDEFINED FRAMELENGTH {frame.length} BITS"
 
 
 class Decode:
-    def get_strings(self) -> tuple[str, str, str]:
-        return self.dali_frame.data(), self.dali_frame.adr(), self.dali_frame.cmd()
+    """Decodes a DALI frame with the decoder for its length.
+
+    dali_frame is the decoder, its getters give the texts of the frame.
+    next_device_type is the device type to decode the next frame with: only
+    16 bit forward frames depend on the frames before, by ENABLE DEVICE TYPE.
+    """
 
     def __init__(self, frame: DaliFrame, device_type: int = DeviceType.NONE) -> None:
         # iec 62386-102 11.2: ENABLE DEVICE TYPE stays active until the next
         # command accepted by control gear, other frames don't end it
         self.next_device_type = device_type
+        self.dali_frame: DecodedFrame
         if frame.length == Backframe8Bit.LENGTH:
-            self.dali_frame = Backframe8Bit(frame.data)
+            self.dali_frame = Backframe8Bit(frame)
         elif frame.length == ForwardFrame16Bit.LENGTH:
-            self.dali_frame = ForwardFrame16Bit(frame.data, device_type)
-            address_byte = (frame.data >> 8) & 0xFF
-            if address_byte == 0xC1:
-                self.next_device_type = frame.data & 0xFF
+            self.dali_frame = ForwardFrame16Bit(frame, device_type)
+            if frame.address_byte == 0xC1:
+                self.next_device_type = frame.opcode_byte
             else:
                 self.next_device_type = DeviceType.NONE
         elif frame.length == ForwardFrame24Bit.LENGTH:
-            self.dali_frame = ForwardFrame24Bit(frame.data)
+            self.dali_frame = ForwardFrame24Bit(frame)
         elif frame.length == ForwardFrame25Bit.LENGTH:
-            self.dali_frame = ForwardFrame25Bit(frame.data)
+            self.dali_frame = ForwardFrame25Bit(frame)
         elif frame.length == ForwardFrame32Bit.LENGTH:
-            self.dali_frame = ForwardFrame32Bit(frame.data)
+            self.dali_frame = ForwardFrame32Bit(frame)
         else:
-            self.dali_frame = UndefinedFrame(frame.data, frame.length)
-
-    def get_next_device_type(self) -> DeviceType:
-        return self.next_device_type
+            self.dali_frame = UndefinedFrame(frame)

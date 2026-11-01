@@ -1,0 +1,55 @@
+---
+name: Pull-Request
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Markdown formatting
+        if: always()
+        run: |
+          npm install -g markdownlint-cli
+          markdownlint .
+
+      - name: Python formatting, linting and type checking
+        if: always()
+        run: source/tests/run_lint.sh
+
+  test:
+    name: Test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # the oldest supported and a current version
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Tests without hardware
+        run: source/tests/run_mon.sh

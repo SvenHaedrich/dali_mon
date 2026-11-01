@@ -53,6 +53,9 @@ class FakeConnection:
         self.power_calls = []
         self.timeouts = []
         self.closed = False
+        # set by the fixtures
+        self.opened = False
+        self.port: str | None = None
 
     def get(self, timeout=None):
         self.timeouts.append(timeout)
@@ -224,11 +227,11 @@ def test_sample_file():
     assert result.exit_code == 0
     assert result.stderr == ""
     assert output_lines(result) == [
-        "0.001 |    0.000 |     FF06 | BC GEAR                RECALL MIN LEVEL",
-        "0.002 |    0.001 |     FF05 | BC GEAR                RECALL MAX LEVEL",
-        "0.003 |    0.001 |     0102 | G00                    DOWN",
-        "0.004 |    0.001 |     0102 | G00                    DOWN",
-        "0.005 |    0.001 |     0100 | G00                    OFF",
+        "0.001 |    0.000 |     FF06 | BC GEAR                RECALL MIN LEVEL                                            | IEC 62386-102:2022 | 11.3.8",
+        "0.002 |    0.001 |     FF05 | BC GEAR                RECALL MAX LEVEL                                            | IEC 62386-102:2022 | 11.3.7",
+        "0.003 |    0.001 |     0102 | G00                    DOWN                                                        | IEC 62386-102:2022 | 11.3.4",
+        "0.004 |    0.001 |     0102 | G00                    DOWN                                                        | IEC 62386-102:2022 | 11.3.4",
+        "0.005 |    0.001 |     0100 | G00                    OFF                                                         | IEC 62386-102:2022 | 11.3.2",
         "0.006 |    0.001 | ERROR: SYSTEM FAILURE",
         "0.007 |    0.001 | SYSTEM RECOVER",
     ]
@@ -237,8 +240,8 @@ def test_sample_file():
 def test_delta_time():
     result = run_cli([], input="{000003E8:10 FF06}\n{00000BB8:10 FF05}\n")
     assert output_lines(result) == [
-        "1.000 |    0.000 |     FF06 | BC GEAR                RECALL MIN LEVEL",
-        "3.000 |    2.000 |     FF05 | BC GEAR                RECALL MAX LEVEL",
+        "1.000 |    0.000 |     FF06 | BC GEAR                RECALL MIN LEVEL                                            | IEC 62386-102:2022 | 11.3.8",
+        "3.000 |    2.000 |     FF05 | BC GEAR                RECALL MAX LEVEL                                            | IEC 62386-102:2022 | 11.3.7",
     ]
 
 
@@ -246,7 +249,7 @@ def test_lines_without_dali_information_are_ignored():
     text = "*** Booting Zephyr OS ***\n\n{00000001:10 FF06}\nno frame here\n"
     result = run_cli([], input=text)
     assert output_lines(result) == [
-        "0.001 |    0.000 |     FF06 | BC GEAR                RECALL MIN LEVEL",
+        "0.001 |    0.000 |     FF06 | BC GEAR                RECALL MIN LEVEL                                            | IEC 62386-102:2022 | 11.3.8",
     ]
 
 
@@ -256,7 +259,7 @@ def test_echo():
     assert output_lines(result) == [
         "*** Booting Zephyr OS ***",
         "{00000001:10 FF06}",
-        "0.001 |    0.000 |     FF06 | BC GEAR                RECALL MIN LEVEL",
+        "0.001 |    0.000 |     FF06 | BC GEAR                RECALL MIN LEVEL                                            | IEC 62386-102:2022 | 11.3.8",
     ]
 
 
@@ -269,6 +272,45 @@ def test_absolute_time():
         assert re.match(r"\d\d:\d\d:\d\d \| \d+\.\d{3} \| ", line)
 
 
+# standard and clause are shown by default and can be hidden
+RECALL_MAX_LEVEL = (
+    "0.001 |    0.000 |     FF05 | BC GEAR                RECALL MAX LEVEL"
+)
+
+
+@pytest.mark.parametrize(
+    "options,reference",
+    [
+        (
+            [],
+            "                                            | IEC 62386-102:2022 | 11.3.7",
+        ),
+        (
+            ["--no-clause"],
+            "                                            | IEC 62386-102:2022",
+        ),
+        (["--no-standard"], "                                            | 11.3.7"),
+        (["--no-reference"], ""),
+        (["--no-standard", "--no-clause"], ""),
+    ],
+)
+def test_reference_options(options, reference):
+    result = run_cli(options, input="{00000001:10 FF05}\n")
+    assert result.exit_code == 0
+    assert stdout_lines(result) == [RECALL_MAX_LEVEL + reference]
+
+
+# a command without a reference keeps the columns, without spaces at the end
+def test_command_without_reference():
+    result = run_cli([], input="{00000001:10 BD00}\n")
+    assert stdout_lines(result) == [
+        (
+            "0.001 |    0.000 |     BD00 |                        "
+            "PHYSICAL SELECTION (DEPRECATED)                             |                    |"
+        )
+    ]
+
+
 # ---- input from the interfaces
 
 
@@ -278,8 +320,8 @@ def test_hid(usb):
     # Ctrl-C is the expected end of a connection
     assert result.exit_code == 130
     assert stdout_lines(result) == [
-        "1.000 |    0.000 |     FF06 | BC GEAR                RECALL MIN LEVEL",
-        "1.250 |    0.250 |       12 |                        DATA 0x12 =  18 = 00010010b",
+        "1.000 |    0.000 |     FF06 | BC GEAR                RECALL MIN LEVEL                                            | IEC 62386-102:2022 | 11.3.8",
+        "1.250 |    0.250 |       12 |                        DATA 0x12 =  18 = 00010010b                                 | IEC 62386-101:2022 | 7.4.5",
     ]
     assert result.stderr == "\rinterrupted\n"
     assert usb.closed
@@ -318,7 +360,7 @@ def test_serial_port(serial, port, option):
     assert serial.port == port
     assert result.exit_code == 130
     assert stdout_lines(result) == [
-        "0.001 |    0.000 |     FF06 | BC GEAR                RECALL MIN LEVEL",
+        "0.001 |    0.000 |     FF06 | BC GEAR                RECALL MIN LEVEL                                            | IEC 62386-102:2022 | 11.3.8",
     ]
     assert result.stderr == "\rinterrupted\n"
     assert serial.closed
@@ -369,7 +411,7 @@ def test_serial_echo_keeps_timeout_lines(monkeypatch, port):
     assert result.exit_code == 1
     assert stdout_lines(result) == [
         "{00000001:10 FF06}",
-        "0.001 |    0.000 |     FF06 | BC GEAR                RECALL MIN LEVEL",
+        "0.001 |    0.000 |     FF06 | BC GEAR                RECALL MIN LEVEL                                            | IEC 62386-102:2022 | 11.3.8",
         "{00000002:81 0000}",
         "*** Booting Zephyr OS ***",
     ]
@@ -442,7 +484,7 @@ def test_connection_lost(usb):
     result = run_cli(["--hid"])
     assert result.exit_code == 1
     assert stdout_lines(result) == [
-        "1.000 |    0.000 |     FF06 | BC GEAR                RECALL MIN LEVEL",
+        "1.000 |    0.000 |     FF06 | BC GEAR                RECALL MIN LEVEL                                            | IEC 62386-102:2022 | 11.3.8",
     ]
     assert result.stderr == "\rconnection lost: Input/Output Error\n"
     assert usb.closed
@@ -465,8 +507,8 @@ def test_connection_waits_with_timeout(usb):
     usb.frames = [frame(1.0, 16, 0xFF06), no_frame, no_frame, frame(1.25, 8, 0x12)]
     result = run_cli(["--hid"])
     assert stdout_lines(result) == [
-        "1.000 |    0.000 |     FF06 | BC GEAR                RECALL MIN LEVEL",
-        "1.250 |    0.250 |       12 |                        DATA 0x12 =  18 = 00010010b",
+        "1.000 |    0.000 |     FF06 | BC GEAR                RECALL MIN LEVEL                                            | IEC 62386-102:2022 | 11.3.8",
+        "1.250 |    0.250 |       12 |                        DATA 0x12 =  18 = 00010010b                                 | IEC 62386-101:2022 | 7.4.5",
     ]
     assert None not in usb.timeouts
 
@@ -527,7 +569,7 @@ def test_terminal_hang_up():
     stdout, stderr = finish(process)
     assert process.returncode == 1
     assert stdout.split("\n")[:-1] == [
-        "0.001 |    0.000 |     FF06 | BC GEAR                RECALL MIN LEVEL",
+        "0.001 |    0.000 |     FF06 | BC GEAR                RECALL MIN LEVEL                                            | IEC 62386-102:2022 | 11.3.8",
     ]
     assert stderr == "\rconnection lost: device hung up\n"
 
@@ -545,7 +587,7 @@ def test_terminal_ends_with_ctrl_c_only():
         os.close(controller)
     assert process.returncode == 130
     assert stdout.split("\n")[:-1] == [
-        "0.001 |    0.000 |     FF06 | BC GEAR                RECALL MIN LEVEL",
+        "0.001 |    0.000 |     FF06 | BC GEAR                RECALL MIN LEVEL                                            | IEC 62386-102:2022 | 11.3.8",
     ]
     assert stderr == "\rinterrupted\n"
 
