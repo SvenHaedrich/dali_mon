@@ -1,0 +1,47 @@
+[project]
+name = "dali-mon"
+version = "1.8.0"
+description = "Monitor for DALI commands."
+authors = [{ name = "Sven Hädrich", email = "sven.haedrich@sevenlab.de" }]
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+
+dependencies = [
+    "dali-interface @ git+https://github.com/sevenlab-de/dali-interface@v2.0.0",
+    "termcolor",
+    "click",
+    "bitstring",
+    "typeguard",
+]
+
+[dependency-groups]
+test = [
+    "pytest",
+    "pytest-cov",
+]
+
+[project.urls]
+repository = "https://github.com/SvenHaedrich/dali_mon"
+issues = "https://github.com/SvenHaedrich/dali_mon/issues"
+changelog = "https://github.com/SvenHaedrich/dali_mon/blob/main/changelog.md"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# dali-interface is not on PyPI, it is installed from its GitHub release tag.
+[tool.hatch.metadata]
+allow-direct-references = true
+
+# The scripts run from the source tree, the project is installed for its dependencies only.
+[tool.hatch.build.targets.wheel]
+bypass-selection = true
+
+[tool.ruff]
+# the modules of the project (DALI, dali_mon) are in source/
+src = ["source"]
+
+[tool.ruff.lint]
+# never complain about line length violations
+ignore = ["E501"]

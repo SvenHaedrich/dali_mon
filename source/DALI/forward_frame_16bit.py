@@ -27,8 +27,8 @@ class ForwardFrame16Bit:
             0x08: "ON AND STEP UP",
             0x09: "ENABLE DAPC SEQUENCE",
             0x0A: "GO TO LAST ACTIVE LEVEL",
-            0x0B: "CONTINOUS UP",
-            0x0C: "CONTINOUS DOWN",
+            0x0B: "CONTINUOUS UP",
+            0x0C: "CONTINUOUS DOWN",
             0x10: "GO TO SCENE 0",
             0x11: "GO TO SCENE 1",
             0x12: "GO TO SCENE 2",
@@ -191,7 +191,7 @@ class ForwardFrame16Bit:
             0xE6: "Y-COORDINATE STEP DOWN",
             0xE7: "SET TEMPORARY COLOUR TEMPERATURE TC",
             0xE8: "COLOUR TEMPERATURE TC STEP COOLER",
-            0xE9: "COLOUR TEMPERTAURE TC STEP WARMER",
+            0xE9: "COLOUR TEMPERATURE TC STEP WARMER",
             0xEA: "SET TEMPORARY PRIMARY N DIMLEVEL",
             0xEB: "SET TEMPORARY RGB DIMLEVEL",
             0xEC: "SET TEMPORARY WAF DIMLEVEL",
@@ -345,7 +345,7 @@ class ForwardFrame16Bit:
         if (address_byte & 0x01) == 0x00:
             standard_command = False
             self.command = f"DAPC {opcode_byte}"
-        if address_byte in range(0x00, 0x80):
+        if address_byte in range(0x80):
             short_address = address_byte >> 1
             self.address = f"G{short_address:02}"
         elif address_byte in range(0x80, 0xA0):
@@ -365,9 +365,10 @@ class ForwardFrame16Bit:
             self.address = "BC GEAR"
         if standard_command:
             self.command = self.gear_command(opcode_byte)
-            if device_type == DeviceType.COLOUR:
-                self.command = self.gear_colour_command(opcode_byte)
-            elif device_type == DeviceType.SWITCH:
-                self.command = self.gear_switch_command(opcode_byte)
-            elif device_type == DeviceType.LED:
-                self.command = self.gear_led_command(opcode_byte)
+            if opcode_byte >= 0xE0:
+                if device_type == DeviceType.COLOUR:
+                    self.command = self.gear_colour_command(opcode_byte)
+                elif device_type == DeviceType.SWITCH:
+                    self.command = self.gear_switch_command(opcode_byte)
+                elif device_type == DeviceType.LED:
+                    self.command = self.gear_led_command(opcode_byte)

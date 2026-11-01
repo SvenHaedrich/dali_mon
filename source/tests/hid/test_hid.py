@@ -1,9 +1,12 @@
-import pytest
 import logging
 
-from DALI.dali_interface.dali_interface import DaliFrame, DaliStatus
-from DALI.dali_interface.serial import DaliSerial
-from DALI.dali_interface.hid import DaliUsb
+import pytest
+from dali_interface import (
+    DaliFrame,
+    DaliSerial,
+    DaliStatus,
+    DaliUsb,
+)
 
 serial_port = "/dev/ttyUSB0"
 logger = logging.getLogger(__name__)
@@ -11,7 +14,7 @@ timeout_sec = 2
 
 
 def test_8bit_frames():
-    serial = DaliSerial(serial_port, start_receive=False)
+    serial = DaliSerial(serial_port)
     usb = DaliUsb()
     for data in range(0x100):
         send_frame = DaliFrame(length=8, data=data)
@@ -50,7 +53,7 @@ def test_8bit_frames():
     ],
 )
 def test_16bit_frame(data):
-    serial = DaliSerial(serial_port, start_receive=False)
+    serial = DaliSerial(serial_port)
     usb = DaliUsb()
     send_frame = DaliFrame(length=16, data=data)
     serial.transmit(send_frame)
@@ -97,7 +100,7 @@ def test_16bit_frame(data):
 )
 def test_invalid_frame_length(length, data):
     logger.setLevel(logging.DEBUG)
-    serial = DaliSerial(serial_port, start_receive=False)
+    serial = DaliSerial(serial_port)
     usb = DaliUsb()
     send_frame = DaliFrame(length=length, data=data)
     serial.transmit(send_frame)

@@ -1,8 +1,7 @@
-from typing import Tuple
+from dali_interface import DaliFrame
 
-from .dali_interface.dali_interface import DaliFrame
 from .backframe_8bit import Backframe8Bit
-from .forward_frame_16bit import ForwardFrame16Bit, DeviceType
+from .forward_frame_16bit import DeviceType, ForwardFrame16Bit
 from .forward_frame_24bit import ForwardFrame24Bit
 from .forward_frame_25bit import ForwardFrame25Bit
 from .forward_frame_32bit import ForwardFrame32Bit
@@ -24,11 +23,13 @@ class UndefinedFrame:
 
 
 class Decode:
-    def get_strings(self) -> Tuple[str, str, str]:
+    def get_strings(self) -> tuple[str, str, str]:
         return self.dali_frame.data(), self.dali_frame.adr(), self.dali_frame.cmd()
 
     def __init__(self, frame: DaliFrame, device_type: int = DeviceType.NONE) -> None:
-        self.next_device_type = DeviceType.NONE
+        # iec 62386-102 11.2: ENABLE DEVICE TYPE stays active until the next
+        # command accepted by control gear, other frames don't end it
+        self.next_device_type = device_type
         if frame.length == Backframe8Bit.LENGTH:
             self.dali_frame = Backframe8Bit(frame.data)
         elif frame.length == ForwardFrame16Bit.LENGTH:

@@ -1,6 +1,0 @@
-pyusb
-termcolor
-click
-bitstring
-typeguard
-pyserial

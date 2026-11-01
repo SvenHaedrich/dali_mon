@@ -36,7 +36,7 @@ class ForwardFrame25Bit:
             0x40: "QUERY COMMISSIONING FEATURES",
             0x41: "QUERY CHANNEL SELECTOR",
             0x42: "QUERY PARAMETER POINTER",
-            0x43: "QUERY PARAMTER",
+            0x43: "QUERY PARAMETER",
             0x44: "QUERY NUMBER OF PARAMETERS",
             0x45: "START IDENTIFICATION",
             0x46: "STOP IDENTIFICATION",
@@ -119,7 +119,7 @@ class ForwardFrame25Bit:
             0x40: "QUERY COMMISSIONING FEATURES",
             0x41: "QUERY CHANNEL SELECTOR",
             0x42: "QUERY PARAMETER POINTER",
-            0x43: "QUERY PARAMTER",
+            0x43: "QUERY PARAMETER",
             0x44: "QUERY NUMBER OF PARAMETERS",
             0x45: "START IDENTIFICATION",
             0x46: "STOP IDENTIFICATION",
@@ -213,10 +213,10 @@ class ForwardFrame25Bit:
             if address_byte == 0xFF:
                 self.address = f"C{class_byte:1d} BC"
             elif address_byte == 0xFD:
-                self.address = f"C{class_byte:1d} BC una"
+                self.address = f"C{class_byte:1d} BC UN"
             else:
-                self.address = f"C{class_byte:1d}  G{((address_byte >> 1) & 0x3F):02d}"
+                self.address = f"C{class_byte:1d} G{((address_byte >> 1) & 0x3F):02d}"
         else:
-            self.address = f"C{class_byte:1d}  E{((address_byte >> 1) & 0x3F):02d}"
+            self.address = f"C{class_byte:1d} E{((address_byte >> 1) & 0x3F):02d}"
         self.command = self.e_DALI_command(class_byte, opcode_byte)
         return

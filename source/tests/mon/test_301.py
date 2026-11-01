@@ -1,7 +1,7 @@
-from DALI.dali_interface.dali_interface import DaliFrame
-from DALI.forward_frame_24bit import ForwardFrame24Bit
-from DALI.decode import Decode
+from dali_interface import DaliFrame
 
+from DALI.decode import Decode
+from DALI.forward_frame_24bit import ForwardFrame24Bit
 
 # TODO - make a complete test suite for all commands, for all instance addressing modes
 # TODO - do this for 302, 303, 304 as well

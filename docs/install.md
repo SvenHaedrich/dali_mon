@@ -2,20 +2,26 @@
 
     git clone https://github.com/SvenHaedrich/dali_mon.git
     cd dali_mon
-    git submodule update --init
+
+The script `dali_mon` creates a virtual environment `.venv` on its first run and installs the dependencies listed in `pyproject.toml`.
+The DALI interfaces are accessed through the python package [dali-interface](https://github.com/sevenlab-de/dali-interface), which is installed from its GitHub release tag, so the first run needs access to GitHub.
 
 ## HID-USB Support
 
-For the Lunatone USB adapter you need to copy the file `99-lunatone-dali.rules` into the `udev` folder
-and reload the `udev` rules.
+For the Lunatone USB adapter you need to copy the file `70-lunatone-dali.rules` into the `udev` folder, reload the `udev` rules and apply them to a connected adapter.
+Remove the rule `99-lunatone-dali.rules` of earlier versions, it grants read and write access to everyone.
 
-    sudo cp 99-lunatone-dali.rules /etc/udev/rules.d/
+    sudo rm -f /etc/udev/rules.d/99-lunatone-dali.rules
+    sudo cp 70-lunatone-dali.rules /etc/udev/rules.d/
     sudo udevadm control --reload-rules
+    sudo udevadm trigger --attr-match=idVendor=17b5
 
-This file grants everyone read/write access.  If you want to restrict access,
-you should modify `MODE` to `0660`.  You can then grant access to specific user
-accounts by adding them to the plugdev group. Note that some Linux dirstibutions always require a per user permission. To grant permission to a specific user:
+The rule grants access to the user logged in locally at the computer (`TAG+="uaccess"`), no group membership and no new login are needed.
+The file name must sort before `73-seat-late.rules`, which evaluates this tag, so keep the number `70` when you rename the file.
+
+`uaccess` does not grant access to users logged in remotely, e.g. via `ssh`.
+For them, replace `TAG+="uaccess"` by `GROUP="plugdev", MODE="0660"` in the rule and add the users to the `plugdev` group:
 
     sudo usermod -a -G plugdev username
 
-You will have to log out and then back in for the group change to take effect.
+They have to log out and back in for the group change to take effect.

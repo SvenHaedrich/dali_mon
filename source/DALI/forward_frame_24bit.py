@@ -183,7 +183,7 @@ class ForwardFrame24Bit:
             if instance_byte == 0x00:
                 return "TERMINATE"
             elif instance_byte == 0x01:
-                # IEC 62386-103:2022 Table 25 Device addressing with INITALISE
+                # IEC 62386-103:2022 Table 25 Device addressing with INITIALISE
                 if opcode_byte in range(0x40):
                     return f"INITIALISE (D{opcode_byte:02})"
                 if opcode_byte == 0x7F:
@@ -321,13 +321,13 @@ class ForwardFrame24Bit:
             type = self.frame_bits[11:16].uint
             address_string += f",FT{type:02}"
         elif instance_type == InstanceAddressType.FEATURE_BROADCAST:
-            address_string += "BC FEAT"
+            address_string += ",BC FEAT"
         elif instance_type == InstanceAddressType.FEATURE_ON_INSTANCE_BROADCAST:
-            address_string += "BC FEAT INST"
+            address_string += ",BC FEAT INST"
         elif instance_type == InstanceAddressType.INSTANCE_BROADCAST:
-            address_string += "BC INST"
+            address_string += ",BC INST"
         elif instance_type == InstanceAddressType.FEATURE_ON_DEVICE:
-            address_string += "FEAT DEV"
+            address_string += ",FEAT DEV"
         if (
             instance_type == InstanceAddressType.RESERVED
             or address_type == DeviceAddressType.RESERVED
